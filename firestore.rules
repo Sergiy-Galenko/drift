@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /drifts/{driftId} {
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.resource.data.authorUid == request.auth.uid;
+
+      allow update: if request.auth != null
+        && (
+          request.auth.uid == resource.data.authorUid
+          || isVoteOnlyUpdate()
+          || isViewOnlyUpdate()
+        );
+
+      function isVoteOnlyUpdate() {
+        return request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(['votesYes', 'votesNo', 'voters']);
+      }
+
+      function isViewOnlyUpdate() {
+        return request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(['viewCount']);
+      }
+    }
+
+    match /users/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid;
+    }
+  }
+}
