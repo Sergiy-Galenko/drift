@@ -1,0 +1,54 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { markNotificationRead, subscribeNotifications } from '@/lib/firebase/notifications';
+import { useAuthStore } from '@/stores/authStore';
+import { useUIStore } from '@/stores/uiStore';
+import type { NotificationItem } from '@/types/notification';
+import { firebaseErrorMessage } from '@/utils/formatters';
+import { logger } from '@/utils/logger';
+
+export function useNotifications() {
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const uid = useAuthStore((state) => state.firebaseUser?.uid);
+  const pushToast = useUIStore((state) => state.pushToast);
+
+  useEffect(() => {
+    if (!uid) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = subscribeNotifications(
+      uid,
+      (notifications) => {
+        setItems(notifications);
+        setLoading(false);
+      },
+      (message) => {
+        logger.error('Notifications subscription failed', { message });
+        pushToast({ title: 'Activity unavailable', message: firebaseErrorMessage(message), tone: 'danger' });
+        setLoading(false);
+      },
+    );
+
+    return unsubscribe;
+  }, [pushToast, uid]);
+
+  const unreadCount = useMemo(() => items.filter((item) => !item.isRead).length, [items]);
+
+  const markRead = useCallback(
+    async (itemId: string) => {
+      if (!uid) return;
+      try {
+        await markNotificationRead(uid, itemId);
+      } catch (error) {
+        logger.warn('Notification mark read failed', { error: String(error) });
+      }
+    },
+    [uid],
+  );
+
+  return { items, unreadCount, loading, markRead };
+}

@@ -1,31 +1,23 @@
-import '../global.css';
+import 'react-native-gesture-handler';
 
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
-import { JetBrainsMono_600SemiBold, JetBrainsMono_700Bold } from '@expo-google-fonts/jetbrains-mono';
-import { SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { colors } from '@/constants/colors';
+import { Toast } from '@/components/ui/Toast';
+import { fontMap } from '@/constants/fonts';
+import { Colors } from '@/constants/tokens';
 import { useAuthBootstrap } from '@/hooks/useAuth';
+import '@/lib/firebase/config';
 
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useAuthBootstrap();
-
-  const [fontsLoaded] = useFonts({
-    SpaceGrotesk: SpaceGrotesk_700Bold,
-    SpaceGroteskBold: SpaceGrotesk_700Bold,
-    Inter: Inter_400Regular,
-    InterMedium: Inter_500Medium,
-    InterSemiBold: Inter_600SemiBold,
-    JetBrainsMono: JetBrainsMono_600SemiBold,
-    JetBrainsMonoBold: JetBrainsMono_700Bold,
-  });
+  const [fontsLoaded] = useFonts(fontMap);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -38,30 +30,23 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors.bgBase }}>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.base },
+          contentStyle: { backgroundColor: Colors.bgBase },
           animation: 'fade',
-          animationDuration: 150,
         }}
       >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="feed" />
-        <Stack.Screen name="create" />
-        <Stack.Screen name="profile" />
-        <Stack.Screen name="alerts" />
-        <Stack.Screen name="drift/[id]" />
-        <Stack.Screen
-          name="modal/proof-upload"
-          options={{
-            presentation: 'modal',
-          }}
-        />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(drift)" />
+        <Stack.Screen name="(user)" />
+        <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="+not-found" />
       </Stack>
-    </>
+      <Toast />
+    </GestureHandlerRootView>
   );
 }

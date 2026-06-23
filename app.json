@@ -1,26 +1,39 @@
 {
   "expo": {
-    "name": "DRIFT",
+    "name": "Drift",
     "slug": "drift",
-    "scheme": "drift",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/logo-drift.png",
+    "backgroundColor": "#0A0A0A",
     "userInterfaceStyle": "dark",
-    "icon": "./assets/icon.png",
+    "scheme": [
+      "drift",
+      "com.googleusercontent.apps.746614969853-s16ab11ftf61daqfk2d1orpjsuqsqmen"
+    ],
     "splash": {
-      "backgroundColor": "#0D0D0D",
+      "backgroundColor": "#0A0A0A",
       "resizeMode": "contain"
     },
     "ios": {
+      "bundleIdentifier": "digitaldepthsoft",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": false,
-      "bundleIdentifier": "app.drift.mobile"
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Drift needs access to upload proof of your completed commitments.",
+        "NSCameraUsageDescription": "Drift needs camera access to capture proof."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0D0D0D"
+        "backgroundColor": "#0A0A0A"
       },
-      "package": "app.drift.mobile"
+      "package": "com.drift.app",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -28,8 +41,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "DRIFT needs access to select proof media.",
-          "cameraPermission": "DRIFT needs camera access to capture proof media."
+          "photosPermission": "Drift needs access to upload proof of your completed commitments.",
+          "cameraPermission": "Drift needs camera access to capture proof."
         }
       ],
       "expo-video"

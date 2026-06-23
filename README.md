@@ -1,50 +1,40 @@
 # DRIFT
 
-DRIFT is an Expo React Native app for posting real-life decisions, letting strangers vote, and committing publicly to the result.
-
-## Stack
-
-- Expo SDK 56, Expo Router, React Native, TypeScript strict
-- Firebase Auth, Firestore realtime listeners, Firebase Storage
-- Zustand, NativeWind, React Hook Form, Zod, Reanimated
-- Expo Image Picker, Expo AV, Expo Font, Expo Haptics
+DRIFT is an Expo / React Native social commitment app. Users post real-life decisions, strangers vote, and the author has to execute the result with proof.
 
 ## Setup
 
-1. Install dependencies:
+1. Install dependencies.
 
    ```sh
    npm install
    ```
 
-2. Copy `.env.example` to `.env` and fill in Firebase and Google OAuth values.
+2. Create a Firebase project with Firestore, Storage, Anonymous Auth, and Google Auth enabled.
 
-3. Deploy Firebase rules:
+3. Copy `.env.example` to `.env` and fill all `EXPO_PUBLIC_FIREBASE_*` values plus Google OAuth client IDs.
+
+4. Deploy rules.
 
    ```sh
    firebase deploy --only firestore:rules,storage
    ```
 
-4. Start Expo:
+5. Start Expo.
 
    ```sh
-   npm run start
+   npx expo start
    ```
 
-## Firebase
+## Architecture
 
-Create a Firebase project with:
+- `app/` contains Expo Router screens and layouts.
+- `components/` contains pure UI.
+- `hooks/` owns subscriptions, mutations, and derived UI behavior.
+- `lib/firebase/` owns Firebase Auth, Firestore, and Storage operations.
+- `stores/` contains Zustand global state.
+- `types/` contains Firestore document contracts.
 
-- Anonymous auth enabled
-- Google auth enabled
-- Firestore database
-- Storage bucket
+## Firebase Notes
 
-The app reads config from `EXPO_PUBLIC_FIREBASE_*` variables. Google sign-in uses Expo AuthSession and requires platform client IDs in `.env`.
-
-## Notes
-
-- Screens are thin route files under `app/`.
-- Firebase access is isolated under `src/lib/firebase/`.
-- Realtime data uses Firestore `onSnapshot`.
-- The DRIFT countdown ring updates every second and changes to fire red under one hour.
+Firestore persistence is initialized through the Firebase JS SDK. Proof media uploads to Storage under `proofs/{driftId}`. Avatars are allowed under `avatars/{uid}` for future profile media support.

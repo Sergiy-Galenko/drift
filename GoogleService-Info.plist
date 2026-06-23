@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>746614969853-s16ab11ftf61daqfk2d1orpjsuqsqmen.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.746614969853-s16ab11ftf61daqfk2d1orpjsuqsqmen</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBj-DA0GabN9-8VD60FyUNI77QpM2wxMx8</string>
+	<key>GCM_SENDER_ID</key>
+	<string>746614969853</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>digitaldepthsoft</string>
+	<key>PROJECT_ID</key>
+	<string>drift-a2caf</string>
+	<key>STORAGE_BUCKET</key>
+	<string>drift-a2caf.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:746614969853:ios:e9edd3695b7a1986987594</string>
+</dict>
+</plist>

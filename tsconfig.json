@@ -2,17 +2,23 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "strictNullChecks": true,
+    "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["./src/*"]
-    },
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": true
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "app",
-    "src",
-    "nativewind-env.d.ts",
+    "components",
+    "constants",
+    "hooks",
+    "lib",
+    "stores",
+    "types",
+    "utils",
     "expo-env.d.ts",
     ".expo/types/**/*.ts"
-  ]
+  ],
+  "exclude": ["src", "dist", "node_modules"]
 }
