@@ -7,17 +7,13 @@
     "icon": "./assets/logo-drift.png",
     "backgroundColor": "#0A0A0A",
     "userInterfaceStyle": "dark",
-    "scheme": [
-      "drift",
-      "com.googleusercontent.apps.746614969853-s16ab11ftf61daqfk2d1orpjsuqsqmen"
-    ],
+    "scheme": "drift",
     "splash": {
       "backgroundColor": "#0A0A0A",
       "resizeMode": "contain"
     },
     "ios": {
-      "bundleIdentifier": "digitaldepthsoft",
-      "googleServicesFile": "./GoogleService-Info.plist",
+      "bundleIdentifier": "com.drift.app",
       "supportsTablet": false,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Drift needs access to upload proof of your completed commitments.",

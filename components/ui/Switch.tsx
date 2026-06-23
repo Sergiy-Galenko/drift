@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
@@ -11,7 +12,10 @@ type SwitchProps = {
 
 export function Switch({ value, onValueChange, label }: SwitchProps) {
   const progress = useSharedValue(value ? 1 : 0);
-  progress.value = withSpring(value ? 1 : 0, { damping: 14 });
+
+  useEffect(() => {
+    progress.value = withSpring(value ? 1 : 0, { damping: 14 });
+  }, [progress, value]);
 
   const trackStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(progress.value, [0, 1], [Colors.bgInteractive, Colors.accentVolt]),

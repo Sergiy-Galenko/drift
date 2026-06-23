@@ -10,9 +10,9 @@ DRIFT is an Expo / React Native social commitment app. Users post real-life deci
    npm install
    ```
 
-2. Create a Firebase project with Firestore, Storage, Anonymous Auth, and Google Auth enabled.
+2. Create a Firebase project with Firestore, Storage, and Email/Password Auth enabled.
 
-3. Copy `.env.example` to `.env` and fill all `EXPO_PUBLIC_FIREBASE_*` values plus Google OAuth client IDs.
+3. Copy `.env.example` to `.env` and fill all `EXPO_PUBLIC_FIREBASE_*` values.
 
 4. Deploy rules.
 

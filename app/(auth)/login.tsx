@@ -1,20 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-import { GoogleMarkIcon } from '@/components/icons';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors, F, S } from '@/constants/tokens';
 import { useAuth } from '@/hooks/useAuth';
 
+type AuthMode = 'login' | 'register';
+
 export default function LoginScreen() {
-  const { firebaseUser, profile, loading, signInGuest, signInGoogle, completeProfile } = useAuth();
+  const { firebaseUser, profile, loading, signInWithPassword, registerWithPassword, completeProfile } = useAuth();
+  const [mode, setMode] = useState<AuthMode>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [fallbackUsername, setFallbackUsername] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [savingUsername, setSavingUsername] = useState(false);
   const underline = useSharedValue(0);
+
+  const isRegister = mode === 'register';
 
   useEffect(() => {
     underline.value = withSpring(1, { damping: 14 });
@@ -24,35 +32,104 @@ export default function LoginScreen() {
     transform: [{ scaleX: underline.value }],
   }));
 
-  const save = async () => {
+  const submit = async () => {
+    setSubmitting(true);
+    try {
+      if (isRegister) {
+        await registerWithPassword(email, password, username);
+      } else {
+        await signInWithPassword(email, password);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const saveFallbackUsername = async () => {
     setSavingUsername(true);
-    await completeProfile(username);
-    setSavingUsername(false);
+    try {
+      await completeProfile(fallbackUsername);
+    } finally {
+      setSavingUsername(false);
+    }
+  };
+
+  const switchMode = () => {
+    setMode(isRegister ? 'login' : 'register');
+    setPassword('');
   };
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar hidden />
-      <View style={styles.brand}>
-        <Text style={styles.logo}>D R I F T</Text>
-        <Text style={styles.tagline}>Decide less. Live more.</Text>
-        <Animated.View style={[styles.underline, underlineStyle]} />
-      </View>
-      <View style={styles.authArea}>
-        <Button label="Continue with Google" onPress={signInGoogle} loading={loading} icon={<GoogleMarkIcon color={Colors.bgBase} size={18} />} />
-        <Button label="Enter anonymous" variant="secondary" onPress={signInGuest} loading={loading} />
-        <Text style={styles.terms}>Votes are public. Commitments are social. Proof matters.</Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.brand}>
+          <Text style={styles.logo}>D R I F T</Text>
+          <Text style={styles.tagline}>Decide less. Live more.</Text>
+          <Animated.View style={[styles.underline, underlineStyle]} />
+        </View>
+
+        <View style={styles.form}>
+          <View style={styles.formHeader}>
+            <Text style={styles.formTitle}>{isRegister ? 'Create account' : 'Welcome back'}</Text>
+            <Text style={styles.formCopy}>{isRegister ? 'Start with email, password, and your public handle.' : 'Log in with your email and password.'}</Text>
+          </View>
+
+          {isRegister ? (
+            <Input
+              label="Username"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={username}
+              onChangeText={setUsername}
+              placeholder="your_handle"
+              returnKeyType="next"
+            />
+          ) : null}
+
+          <Input
+            label="Email"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            returnKeyType="next"
+          />
+
+          <Input
+            label="Password"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete={isRegister ? 'new-password' : 'current-password'}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            placeholder={isRegister ? 'At least 6 characters' : 'Your password'}
+            returnKeyType="done"
+            onSubmitEditing={() => void submit()}
+          />
+
+          <Button label={isRegister ? 'Create account' : 'Log in'} onPress={() => void submit()} loading={submitting || loading} />
+
+          <Pressable onPress={switchMode} style={styles.switchMode}>
+            <Text style={styles.switchText}>{isRegister ? 'Already have an account? Log in' : 'New here? Create account'}</Text>
+          </Pressable>
+
+          <Text style={styles.terms}>Votes are public. Commitments are social. Proof matters.</Text>
+        </View>
+      </ScrollView>
+
       <BottomSheet visible={Boolean(firebaseUser && !profile)} onClose={() => undefined}>
         <Text style={styles.sheetTitle}>Claim your handle</Text>
-        <Text style={styles.sheetBody}>This is how people track your commitments and reputation.</Text>
-        <Input label="Username" autoCapitalize="none" value={username} onChangeText={setUsername} placeholder="your_handle" />
-        <Button label="Start drifting" onPress={() => void save()} loading={savingUsername} />
-        <Pressable>
-          <Text style={styles.locked}>You can edit display details later.</Text>
-        </Pressable>
+        <Text style={styles.sheetBody}>Choose a public username so people can track your commitments and reputation.</Text>
+        <Input label="Username" autoCapitalize="none" value={fallbackUsername} onChangeText={setFallbackUsername} placeholder="your_handle" />
+        <Button label="Start drifting" onPress={() => void saveFallbackUsername()} loading={savingUsername} />
+        <Text style={styles.locked}>You can edit display details later.</Text>
       </BottomSheet>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -61,17 +138,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgBase,
   },
+  content: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: S.x2,
+    paddingVertical: S.x6,
+    gap: S.x5,
+  },
   brand: {
-    flex: 0.4,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingBottom: S.x6,
     gap: S.sm,
   },
   logo: {
     color: Colors.accentVolt,
     fontFamily: F.family.displayBlack,
-    fontSize: 52,
+    fontSize: 48,
     letterSpacing: 8,
   },
   tagline: {
@@ -85,10 +166,31 @@ const styles = StyleSheet.create({
     width: S.x4,
     backgroundColor: Colors.accentVolt,
   },
-  authArea: {
-    flex: 0.6,
-    paddingHorizontal: S.x2,
+  form: {
     gap: S.lg,
+  },
+  formHeader: {
+    gap: S.sm,
+  },
+  formTitle: {
+    color: Colors.textPrimary,
+    fontFamily: F.family.displayBlack,
+    fontSize: F.size.x2,
+  },
+  formCopy: {
+    color: Colors.textSecondary,
+    fontFamily: F.family.bodyRegular,
+    fontSize: F.size.base,
+    lineHeight: F.size.base * F.lineHeight.normal,
+  },
+  switchMode: {
+    alignSelf: 'center',
+    padding: S.sm,
+  },
+  switchText: {
+    color: Colors.accentVolt,
+    fontFamily: F.family.bodySemi,
+    fontSize: F.size.sm,
   },
   terms: {
     color: Colors.textMuted,

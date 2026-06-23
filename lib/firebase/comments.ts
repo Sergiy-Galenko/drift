@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from './config';
+import { timestampToDate } from './timestamps';
 import type { Comment, CommentDoc } from '@/types/comment';
 import type { UserProfile } from '@/types/user';
 
@@ -32,11 +33,11 @@ function driftRef(driftId: string) {
 }
 
 function mapComment(snapshot: QueryDocumentSnapshot<DocumentData>): Comment {
-  const data = snapshot.data() as CommentDoc;
+  const data = snapshot.data({ serverTimestamps: 'estimate' }) as CommentDoc;
   return {
     ...data,
     id: data.id || snapshot.id,
-    createdAt: data.createdAt.toDate(),
+    createdAt: timestampToDate(data.createdAt),
   };
 }
 

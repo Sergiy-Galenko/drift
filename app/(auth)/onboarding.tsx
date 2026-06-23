@@ -1,34 +1,45 @@
 import { useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import {
+  FlatList,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+  type ImageSourcePropType,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { Button } from '@/components/ui/Button';
-import { ChatVoteIcon, HourglassIcon, PhoneProofIcon, type AppIcon } from '@/components/icons';
 import { Colors, F, S } from '@/constants/tokens';
 
 type Slide = {
   title: string;
   body: string;
-  Icon: AppIcon;
+  image: ImageSourcePropType;
 };
 
 const slides: Slide[] = [
   {
     title: 'Your life.\nTheir vote.',
-    body: 'Post a real decision.\nStrangers decide.',
-    Icon: ChatVoteIcon,
+    body: 'Post a real decision and let the room choose the path.',
+    image: require('../../assets/onboarding/decision-vote.png') as ImageSourcePropType,
   },
   {
     title: 'Commit\nor quit.',
-    body: "The vote ends. You promised.\nEveryone's watching.",
-    Icon: HourglassIcon,
+    body: 'When the vote ends, the decision becomes a promise.',
+    image: require('../../assets/onboarding/commit-time.png') as ImageSourcePropType,
   },
   {
     title: "Proof or it\ndidn't happen.",
-    body: 'Upload your evidence.\nBuild your reputation.',
-    Icon: PhoneProofIcon,
+    body: 'Upload evidence, close the loop, and build reputation.',
+    image: require('../../assets/onboarding/proof-reputation.png') as ImageSourcePropType,
   },
 ];
 
@@ -41,7 +52,7 @@ function PaginatorDot({ active }: { active: boolean }) {
 
   const style = useAnimatedStyle(() => ({
     width: width.value,
-    backgroundColor: active ? Colors.accentVolt : Colors.stroke,
+    backgroundColor: active ? Colors.accentVolt : Colors.strokeStrong,
   }));
 
   return <Animated.View style={[styles.dot, style]} />;
@@ -76,6 +87,7 @@ export default function OnboardingScreen() {
       <Pressable onPress={() => void complete()} style={styles.skip}>
         <Text style={styles.skipText}>Skip</Text>
       </Pressable>
+
       <FlatList
         ref={listRef}
         data={slides}
@@ -87,20 +99,24 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         renderItem={({ item }) => (
-          <View style={[styles.slide, { width }]}>
-            <item.Icon size={80} color={Colors.accentVolt} strokeWidth={1.5} />
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.body}>{item.body}</Text>
-          </View>
+          <ImageBackground source={item.image} resizeMode="cover" style={[styles.slide, { width }]}>
+            <LinearGradient colors={['rgba(10,10,10,0.18)', 'rgba(10,10,10,0.45)', Colors.bgBase]} style={styles.overlay} />
+            <View style={styles.copy}>
+              <Text style={styles.logo}>D R I F T</Text>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.body}>{item.body}</Text>
+            </View>
+          </ImageBackground>
         )}
       />
+
       <View style={styles.footer}>
         <View style={styles.dots}>
           {slides.map((slide, index) => (
             <PaginatorDot key={slide.title} active={activeIndex === index} />
           ))}
         </View>
-        <Button label={activeIndex === slides.length - 1 ? "Let's go ->" : 'Next'} onPress={next} />
+        <Button label={activeIndex === slides.length - 1 ? 'Start' : 'Next'} onPress={next} />
       </View>
     </View>
   );
@@ -115,36 +131,49 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: S.x6,
     right: S.lg,
-    zIndex: 2,
+    zIndex: 3,
     padding: S.sm,
   },
   skipText: {
-    color: Colors.textMuted,
-    fontFamily: F.family.bodyRegular,
+    color: Colors.textPrimary,
+    fontFamily: F.family.bodySemi,
     fontSize: F.size.sm,
   },
   slide: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  copy: {
     paddingHorizontal: S.x3,
-    gap: S.x2,
+    paddingBottom: S.x8 + S.x7,
+    gap: S.lg,
+  },
+  logo: {
+    color: Colors.accentVolt,
+    fontFamily: F.family.monoBold,
+    fontSize: F.size.xs,
+    letterSpacing: 0,
   },
   title: {
     color: Colors.textPrimary,
     fontFamily: F.family.displayBlack,
-    fontSize: 44,
-    lineHeight: 44 * F.lineHeight.tight,
-    textAlign: 'center',
+    fontSize: 46,
+    lineHeight: 46 * F.lineHeight.tight,
   },
   body: {
     color: Colors.textSecondary,
-    fontFamily: F.family.bodyRegular,
-    fontSize: 16,
-    lineHeight: 16 * F.lineHeight.normal,
-    textAlign: 'center',
+    fontFamily: F.family.bodyMedium,
+    fontSize: F.size.md,
+    lineHeight: F.size.md * F.lineHeight.normal,
   },
   footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     padding: S.x2,
     gap: S.x2,
   },

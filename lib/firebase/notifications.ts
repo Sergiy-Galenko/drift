@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from './config';
+import { timestampToDate } from './timestamps';
 import type { NotificationDoc, NotificationItem, NotificationType } from '@/types/notification';
 
 function notificationsRef(uid: string) {
@@ -26,11 +27,11 @@ function notificationRef(uid: string, itemId: string) {
 }
 
 function mapNotification(snapshot: QueryDocumentSnapshot<DocumentData>): NotificationItem {
-  const data = snapshot.data() as NotificationDoc;
+  const data = snapshot.data({ serverTimestamps: 'estimate' }) as NotificationDoc;
   return {
     ...data,
     id: data.id || snapshot.id,
-    createdAt: data.createdAt.toDate(),
+    createdAt: timestampToDate(data.createdAt),
   };
 }
 

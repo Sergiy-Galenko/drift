@@ -23,6 +23,13 @@ export function formatVoteCount(total: number): string {
 }
 
 export function firebaseErrorMessage(codeOrMessage: string): string {
+  if (codeOrMessage.includes('auth/operation-not-allowed')) return 'Enable Email/Password in Firebase Authentication -> Sign-in method.';
+  if (codeOrMessage.includes('auth/email-already-in-use')) return 'This email is already registered.';
+  if (codeOrMessage.includes('auth/invalid-email')) return 'Enter a valid email address.';
+  if (codeOrMessage.includes('auth/invalid-credential')) return 'Email or password is incorrect.';
+  if (codeOrMessage.includes('auth/user-not-found')) return 'Email or password is incorrect.';
+  if (codeOrMessage.includes('auth/wrong-password')) return 'Email or password is incorrect.';
+  if (codeOrMessage.includes('auth/weak-password')) return 'Password must be at least 6 characters.';
   if (codeOrMessage.includes('auth/popup-closed')) return 'Sign in was cancelled.';
   if (codeOrMessage.includes('auth/network-request-failed')) return 'Network connection failed.';
   if (codeOrMessage.includes('permission-denied')) return 'You do not have permission to do that.';

@@ -13,7 +13,7 @@ import { Colors } from '@/constants/tokens';
 import { useAuthBootstrap } from '@/hooks/useAuth';
 import '@/lib/firebase/config';
 
-void SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
   useAuthBootstrap();
@@ -21,7 +21,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      void SplashScreen.hideAsync();
+      void SplashScreen.hideAsync().catch(() => undefined);
     }
   }, [fontsLoaded]);
 

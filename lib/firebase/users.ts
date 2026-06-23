@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from './config';
+import { timestampToDate } from './timestamps';
 import type { UserDoc, UserProfile, UserProfileInput, UserSettings } from '@/types/user';
 import { calcReputationTier } from '@/utils/reputation';
 
@@ -35,11 +36,14 @@ export function mapUser(snapshot: QueryDocumentSnapshot<DocumentData> | Document
     return null;
   }
 
-  const data = snapshot.data() as UserDoc;
+  const data = snapshot.data({ serverTimestamps: 'estimate' }) as UserDoc;
+  const now = new Date();
+  const joinedAt = timestampToDate(data.joinedAt, now);
+
   return {
     ...data,
-    joinedAt: data.joinedAt.toDate(),
-    lastActiveAt: data.lastActiveAt.toDate(),
+    joinedAt,
+    lastActiveAt: timestampToDate(data.lastActiveAt, joinedAt),
   };
 }
 

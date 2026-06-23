@@ -24,6 +24,7 @@ import {
 import { getDownloadURL, ref as storageRef, uploadBytesResumable } from 'firebase/storage';
 
 import { db, storage } from './config';
+import { nullableTimestampToDate, timestampToDate } from './timestamps';
 import type { CategoryFilter } from '@/constants/categories';
 import type { CreateDriftInput, Drift, DriftDoc, ReportDoc } from '@/types/drift';
 import type { UserProfile } from '@/types/user';
@@ -41,25 +42,21 @@ function userRef(uid: string) {
   return doc(db, 'users', uid);
 }
 
-function nullableDate(value: Timestamp | null): Date | null {
-  return value ? value.toDate() : null;
-}
-
 export function mapDrift(snapshot: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>): Drift | null {
   if (!snapshot.exists()) {
     return null;
   }
 
-  const data = snapshot.data() as DriftDoc;
+  const data = snapshot.data({ serverTimestamps: 'estimate' }) as DriftDoc;
   return {
     ...data,
     id: data.id || snapshot.id,
-    createdAt: data.createdAt.toDate(),
-    expiresAt: data.expiresAt.toDate(),
-    decidedAt: nullableDate(data.decidedAt),
-    proofUploadedAt: nullableDate(data.proofUploadedAt),
-    proofDeadline: nullableDate(data.proofDeadline),
-    featuredAt: nullableDate(data.featuredAt),
+    createdAt: timestampToDate(data.createdAt),
+    expiresAt: timestampToDate(data.expiresAt),
+    decidedAt: nullableTimestampToDate(data.decidedAt),
+    proofUploadedAt: nullableTimestampToDate(data.proofUploadedAt),
+    proofDeadline: nullableTimestampToDate(data.proofDeadline),
+    featuredAt: nullableTimestampToDate(data.featuredAt),
   };
 }
 
