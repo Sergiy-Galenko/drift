@@ -62,6 +62,30 @@ service cloud.firestore {
                     && resource.data.followerId == request.auth.uid;
     }
 
+    match /conversations/{conversationId} {
+      allow read: if isAuthenticated()
+                  && resource.data.participants.hasAny([request.auth.uid]);
+      allow create: if isAuthenticated()
+                    && request.resource.data.participants.hasAny([request.auth.uid]);
+      allow update: if isAuthenticated()
+                    && resource.data.participants.hasAny([request.auth.uid]);
+      allow delete: if false;
+    }
+
+    match /conversations/{conversationId}/messages/{messageId} {
+      allow read: if isAuthenticated()
+                  && get(/databases/$(database)/documents/conversations/$(conversationId))
+                      .data.participants.hasAny([request.auth.uid]);
+      allow create: if isAuthenticated()
+                    && get(/databases/$(database)/documents/conversations/$(conversationId))
+                        .data.participants.hasAny([request.auth.uid])
+                    && request.resource.data.senderUid == request.auth.uid;
+      allow update: if isAuthenticated()
+                    && get(/databases/$(database)/documents/conversations/$(conversationId))
+                        .data.participants.hasAny([request.auth.uid]);
+      allow delete: if false;
+    }
+
     match /notifications/{uid}/items/{itemId} {
       allow read, write: if isOwner(uid);
     }

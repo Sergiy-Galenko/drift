@@ -24,18 +24,19 @@ export function Header({ title, showBack = false, right }: HeaderProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    minHeight: S.x8,
-    paddingHorizontal: S.lg,
-    paddingBottom: S.md,
+    minHeight: 44,
+    paddingHorizontal: S.md,
+    paddingBottom: S.sm,
     borderBottomWidth: S.px,
-    borderBottomColor: Colors.stroke,
-    backgroundColor: Colors.bgBase,
+    borderBottomColor: Colors.separator,
+    backgroundColor: Colors.black,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: S.md,
+    gap: S.sm,
   },
   side: {
-    width: S.x5,
+    minWidth: S.x4,
+    flexShrink: 0,
     alignItems: 'center',
   },
   title: {

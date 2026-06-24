@@ -27,6 +27,18 @@ export async function impactHeavy(): Promise<void> {
   }
 }
 
+export async function selection(): Promise<void> {
+  if (!useAuthStore.getState().profile?.settings.vibrationEnabled) {
+    return;
+  }
+
+  try {
+    await Haptics.selectionAsync();
+  } catch (error) {
+    logger.warn('Haptic selection failed', { error: String(error) });
+  }
+}
+
 export async function notifySuccess(): Promise<void> {
   try {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

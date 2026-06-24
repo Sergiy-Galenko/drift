@@ -93,8 +93,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgBase,
   },
   content: {
-    padding: S.lg,
-    gap: S.x2,
+    padding: S.md,
+    gap: S.lg,
   },
   grid: {
     flexDirection: 'row',
@@ -102,17 +102,17 @@ const styles = StyleSheet.create({
     gap: S.md,
   },
   category: {
-    width: '30%',
+    width: '31%',
     minWidth: 96,
-    borderRadius: R.md,
-    borderWidth: S.px,
-    borderColor: Colors.strokeStrong,
-    backgroundColor: Colors.bgSurface,
-    padding: S.lg,
+    aspectRatio: 1,
+    borderRadius: R.sm,
+    backgroundColor: Colors.surface,
+    padding: S.md,
+    justifyContent: 'flex-end',
   },
   categoryText: {
     fontFamily: F.family.displayBold,
-    fontSize: F.size.base,
+    fontSize: F.size.sm,
   },
   section: {
     gap: S.lg,
@@ -126,11 +126,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: S.md,
-    borderRadius: R.md,
-    borderWidth: S.px,
-    borderColor: Colors.stroke,
-    backgroundColor: Colors.bgSurface,
-    padding: S.md,
+    paddingVertical: S.sm,
   },
   userText: {
     flex: 1,

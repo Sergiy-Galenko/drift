@@ -8,13 +8,14 @@ type AvatarProps = {
   avatarUrl: string | null;
   reputationScore?: number;
   size?: number;
+  showReputationRing?: boolean;
 };
 
-export function Avatar({ username, avatarUrl, reputationScore = 50, size = 44 }: AvatarProps) {
+export function Avatar({ username, avatarUrl, reputationScore = 50, size = 44, showReputationRing = true }: AvatarProps) {
   const initial = username.slice(0, 1).toUpperCase();
   return (
     <View style={styles.wrap}>
-      <ReputationRing score={reputationScore} size={size + S.sm} strokeWidth={2} />
+      {showReputationRing ? <ReputationRing score={reputationScore} size={size + S.sm} strokeWidth={2} /> : null}
       <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}>
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={styles.image} />

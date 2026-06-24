@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Path, Polygon, Rect } from 'react-native-svg';
 
 import { Colors } from '@/constants/tokens';
 
@@ -7,23 +7,25 @@ export type IconProps = {
   size?: number;
   color?: string;
   strokeWidth?: number;
+  filled?: boolean;
 };
 
 function iconDefaults(props: IconProps) {
   return {
     size: props.size ?? 24,
     color: props.color ?? Colors.textPrimary,
-    strokeWidth: props.strokeWidth ?? 1.8,
+    strokeWidth: props.strokeWidth ?? 1.5,
+    filled: props.filled ?? false,
   };
 }
 
 export const HomeIcon = (props: IconProps) => {
-  const { size, color, strokeWidth } = iconDefaults(props);
+  const { size, color, strokeWidth, filled } = iconDefaults(props);
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
       <Path d="M3 10.5 12 3l9 7.5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
       <Path d="M6 10v10h12V10" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M10 20v-5h4v5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M10 20v-5h4v5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill={Colors.black} />
     </Svg>
   );
 };
@@ -43,8 +45,19 @@ export const CreateIcon = (props: IconProps) => {
   const { size, color, strokeWidth } = iconDefaults(props);
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="8" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="4" y="4" width="16" height="16" rx="4" stroke={color} strokeWidth={strokeWidth} />
       <Path d="M12 8v8M8 12h8" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+};
+
+export const ReelsIcon = (props: IconProps) => {
+  const { size, color, strokeWidth, filled } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
+      <Rect x="4" y="5" width="16" height="15" rx="3" stroke={color} strokeWidth={strokeWidth} />
+      <Path d="M8 5 11 10M13 5l3 5M4.5 10h15" stroke={filled ? Colors.black : color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Polygon points="11,13 16,15.5 11,18" fill={filled ? Colors.black : color} />
     </Svg>
   );
 };
@@ -55,6 +68,58 @@ export const ActivityIcon = (props: IconProps) => {
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M4 13h3l2-6 4 12 2-6h5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
       <Circle cx="19" cy="6" r="2" stroke={color} strokeWidth={strokeWidth} />
+    </Svg>
+  );
+};
+
+export const HeartIcon = (props: IconProps) => {
+  const { size, color, strokeWidth, filled } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
+      <Path
+        d="M20.4 5.6c-1.8-1.9-4.7-1.8-6.4.1L12 7.8 10 5.7C8.3 3.8 5.4 3.7 3.6 5.6 1.7 7.6 1.9 10.8 4 13l8 7 8-7c2.1-2.2 2.3-5.4.4-7.4Z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+};
+
+export const PaperPlaneIcon = (props: IconProps) => {
+  const { size, color, strokeWidth, filled } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
+      <Path d="M21 3 10.5 21l-2-8.2L3 10.5 21 3Z" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Path d="m8.5 12.8 6.6-4.3" stroke={filled ? Colors.black : color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+};
+
+export const MoreIcon = (props: IconProps) => {
+  const { size, color } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <Circle cx="5" cy="12" r="1.5" />
+      <Circle cx="12" cy="12" r="1.5" />
+      <Circle cx="19" cy="12" r="1.5" />
+    </Svg>
+  );
+};
+
+export const GridIcon = (props: IconProps) => {
+  const { size, color, strokeWidth } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="4" y="4" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="9.5" y="4" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="15" y="4" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="4" y="9.5" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="9.5" y="9.5" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="15" y="9.5" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="4" y="15" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="9.5" y="15" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
+      <Rect x="15" y="15" width="5" height="5" stroke={color} strokeWidth={strokeWidth} />
     </Svg>
   );
 };

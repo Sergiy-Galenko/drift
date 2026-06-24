@@ -5,11 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo-drift.png",
-    "backgroundColor": "#0A0A0A",
+    "backgroundColor": "#000000",
     "userInterfaceStyle": "dark",
     "scheme": "drift",
     "splash": {
-      "backgroundColor": "#0A0A0A",
+      "backgroundColor": "#000000",
       "resizeMode": "contain"
     },
     "ios": {
@@ -22,7 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0A0A0A"
+        "backgroundColor": "#000000"
       },
       "package": "com.drift.app",
       "permissions": [

@@ -7,9 +7,8 @@ import { useAuthStore } from '@/stores/authStore';
 export default function TabsLayout() {
   const profile = useAuthStore((state) => state.profile);
   const initialized = useAuthStore((state) => state.initialized);
-  const loading = useAuthStore((state) => state.loading);
 
-  if (!initialized || loading) {
+  if (!initialized) {
     return <Spinner label="Loading account" />;
   }
 
@@ -19,11 +18,13 @@ export default function TabsLayout() {
 
   return (
     <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false }}>
-      <Tabs.Screen name="feed" />
+      <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
       <Tabs.Screen name="create" />
-      <Tabs.Screen name="activity" />
+      <Tabs.Screen name="reels" />
       <Tabs.Screen name="profile" />
+      <Tabs.Screen name="feed" options={{ href: null }} />
+      <Tabs.Screen name="activity" options={{ href: null }} />
     </Tabs>
   );
 }

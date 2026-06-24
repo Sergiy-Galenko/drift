@@ -43,16 +43,16 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: S.x6,
-    borderRadius: R.pill,
+    minHeight: 48,
+    borderRadius: R.sm,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: S.x2,
     borderWidth: S.px,
   },
   primary: {
-    backgroundColor: Colors.accentVolt,
-    borderColor: Colors.accentVolt,
+    backgroundColor: Colors.blue,
+    borderColor: Colors.blue,
   },
   secondary: {
     backgroundColor: Colors.bgInteractive,
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.accentFire,
   },
   ghost: {
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: 'transparent',
     borderColor: Colors.stroke,
   },
   pressed: {
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     fontSize: F.size.base,
   },
   primaryLabel: {
-    color: Colors.bgBase,
+    color: Colors.white,
   },
   defaultLabel: {
     color: Colors.textPrimary,

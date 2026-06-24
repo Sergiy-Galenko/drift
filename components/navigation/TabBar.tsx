@@ -1,43 +1,87 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  ActivityIcon,
   CreateIcon,
   ExploreIcon,
   HomeIcon,
+  ReelsIcon,
   ProfileIcon,
   type AppIcon,
 } from '@/components/icons';
-import { Colors, F, R, S } from '@/constants/tokens';
+import { Colors, Motion, R, S } from '@/constants/tokens';
+import { useHaptics } from '@/hooks/useHaptics';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useAuthStore } from '@/stores/authStore';
 
 const icons: Record<string, AppIcon> = {
-  feed: HomeIcon,
+  index: HomeIcon,
   explore: ExploreIcon,
   create: CreateIcon,
-  activity: ActivityIcon,
+  reels: ReelsIcon,
   profile: ProfileIcon,
 };
 
-const labels: Record<string, string> = {
-  feed: 'Feed',
-  explore: 'Explore',
-  create: 'Create',
-  activity: 'Activity',
-  profile: 'Profile',
+type TabButtonProps = {
+  routeName: string;
+  focused: boolean;
+  unreadCount: number;
+  onPress: () => void;
 };
 
+function TabButton({ routeName, focused, unreadCount, onPress }: TabButtonProps) {
+  const scale = useSharedValue(1);
+  const haptics = useHaptics();
+  const profile = useAuthStore((state) => state.profile);
+  const Icon = icons[routeName] ?? HomeIcon;
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const press = () => {
+    haptics.selection();
+    onPress();
+  };
+
+  return (
+    <Pressable
+      accessibilityLabel={routeName}
+      accessibilityRole="button"
+      onPress={press}
+      onPressIn={() => {
+        scale.value = withSpring(0.88, Motion.spring.responsive);
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, Motion.spring.responsive);
+      }}
+      style={styles.item}
+    >
+      <Animated.View style={[styles.iconWrap, animatedStyle]}>
+        {routeName === 'profile' && profile?.avatarUrl ? (
+          <View style={[styles.profileAvatar, focused ? styles.profileAvatarActive : null]}>
+            <Image source={{ uri: profile.avatarUrl }} style={styles.profileImage} />
+          </View>
+        ) : (
+          <Icon size={routeName === 'create' ? 26 : 24} color={Colors.white} filled={focused} />
+        )}
+        {routeName === 'reels' && unreadCount > 0 ? <View style={styles.dot} /> : null}
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
   const { unreadCount } = useNotifications();
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { height: 49 + insets.bottom, paddingBottom: insets.bottom }]}>
       {state.routes.map((route, index) => {
         const focused = state.index === index;
         const options = descriptors[route.key]?.options;
-        const Icon = icons[route.name] ?? HomeIcon;
-        const label = labels[route.name] ?? String(options?.title ?? route.name);
         const onPress = () => {
           const event = navigation.emit({
             type: 'tabPress',
@@ -51,15 +95,13 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         };
 
         return (
-          <Pressable key={route.key} onPress={onPress} style={[styles.item, focused ? styles.activeItem : null]}>
-            <Icon size={22} color={focused ? Colors.accentVolt : Colors.textMuted} />
-            <Text style={[styles.label, focused ? styles.activeLabel : null]}>{label}</Text>
-            {route.name === 'activity' && unreadCount > 0 ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-              </View>
-            ) : null}
-          </Pressable>
+          <TabButton
+            key={route.key}
+            routeName={String(options?.title ?? route.name)}
+            focused={focused}
+            unreadCount={unreadCount}
+            onPress={onPress}
+          />
         );
       })}
     </View>
@@ -70,46 +112,44 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     borderTopWidth: S.px,
-    borderTopColor: Colors.stroke,
-    backgroundColor: Colors.bgBase,
-    paddingHorizontal: S.sm,
-    paddingTop: S.sm,
-    paddingBottom: S.lg,
+    borderTopColor: Colors.separator,
+    backgroundColor: Colors.black,
+    paddingHorizontal: S.xs,
   },
   item: {
     flex: 1,
-    minHeight: S.x6,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: S.xs,
-    borderRadius: R.md,
   },
-  activeItem: {
-    backgroundColor: Colors.bgSurface,
+  iconWrap: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  label: {
-    color: Colors.textMuted,
-    fontFamily: F.family.monoBold,
-    fontSize: F.size.micro,
-    textTransform: 'uppercase',
-  },
-  activeLabel: {
-    color: Colors.accentVolt,
-  },
-  badge: {
+  dot: {
     position: 'absolute',
-    top: S.xs,
-    right: S.md,
-    minWidth: S.xl,
-    height: S.xl,
+    top: 4,
+    right: 3,
+    width: 8,
+    height: 8,
     borderRadius: R.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.accentFire,
+    backgroundColor: Colors.fire,
   },
-  badgeText: {
-    color: Colors.textPrimary,
-    fontFamily: F.family.monoBold,
-    fontSize: F.size.micro,
+  profileAvatar: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: S.px,
+    borderColor: Colors.separatorStrong,
+    overflow: 'hidden',
+  },
+  profileAvatarActive: {
+    borderWidth: 2,
+    borderColor: Colors.white,
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
   },
 });

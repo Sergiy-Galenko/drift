@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  FadeInDown,
   interpolateColor,
   runOnJS,
   useAnimatedStyle,
@@ -11,14 +10,16 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { CategoryBadge } from './CategoryBadge';
 import { CountdownRing } from './CountdownRing';
 import { StatusBanner } from './StatusBanner';
 import { VoteBar } from './VoteBar';
 import { VoteButtons } from './VoteButtons';
-import { Colors, F, R, S, Shadows } from '@/constants/tokens';
+import { BookmarkIcon, CommentIcon, HeartIcon, MoreIcon, PaperPlaneIcon } from '@/components/icons';
+import { Avatar } from '@/components/ui/Avatar';
+import { Colors, F, S } from '@/constants/tokens';
 import { useVote } from '@/hooks/useVote';
 import type { Drift, DriftVote } from '@/types/drift';
+import { formatVoteCount } from '@/utils/formatters';
 
 type DriftCardProps = {
   drift: Drift;
@@ -26,7 +27,7 @@ type DriftCardProps = {
   preview?: boolean;
 };
 
-function DriftCardComponent({ drift, index = 0, preview = false }: DriftCardProps) {
+function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
   const router = useRouter();
   const vote = useVote(preview ? null : drift);
   const translateX = useSharedValue(0);
@@ -35,8 +36,8 @@ function DriftCardComponent({ drift, index = 0, preview = false }: DriftCardProp
     transform: [{ translateX: translateX.value }],
   }));
   const overlayStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(0.22, Math.abs(translateX.value) / 280),
-    backgroundColor: interpolateColor(translateX.value, [-120, 0, 120], [Colors.voteNo, Colors.bgSurface, Colors.voteYes]),
+    opacity: Math.min(0.18, Math.abs(translateX.value) / 280),
+    backgroundColor: interpolateColor(translateX.value, [-120, 0, 120], [Colors.fire, Colors.black, Colors.volt]),
   }));
 
   const submitSwipe = (direction: DriftVote) => {
@@ -66,23 +67,46 @@ function DriftCardComponent({ drift, index = 0, preview = false }: DriftCardProp
 
   return (
     <GestureDetector gesture={pan}>
-      <Animated.View entering={index < 5 ? FadeInDown.duration(180).springify().damping(18) : undefined} style={[styles.card, animatedCard]}>
+      <Animated.View style={[styles.post, animatedCard]}>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, overlayStyle]} />
         <Pressable disabled={preview} onPress={openDrift} style={styles.pressArea}>
           <View style={styles.header}>
-            <View style={styles.authorWrap}>
-              <Text style={styles.author}>@{drift.authorUsername}</Text>
-              <Text style={styles.rep}>{drift.authorReputationScore} REP</Text>
+            <View style={styles.authorRow}>
+              <Avatar username={drift.authorUsername} avatarUrl={null} reputationScore={drift.authorReputationScore} size={32} />
+              <View style={styles.authorWrap}>
+                <Text style={styles.author}>@{drift.authorUsername}</Text>
+                <Text style={styles.rep}>{drift.authorReputationScore} rep</Text>
+              </View>
             </View>
-            <CountdownRing expiresAt={drift.expiresAt} />
+            <View style={styles.headerRight}>
+              <CountdownRing expiresAt={drift.expiresAt} size={38} strokeWidth={3} />
+              <MoreIcon size={22} color={Colors.white} />
+            </View>
           </View>
-          <CategoryBadge category={drift.category} />
-          <Text style={styles.text}>{drift.text}</Text>
-          {drift.context ? <Text style={styles.context}>{drift.context}</Text> : null}
-          <Text style={styles.stake}>STAKE: {drift.stake}</Text>
-          <StatusBanner drift={drift} />
+
+          <View style={styles.media}>
+            <Text style={styles.category}>{drift.category}</Text>
+            <Text style={styles.text}>{drift.text}</Text>
+            {drift.context ? <Text style={styles.context}>{drift.context}</Text> : null}
+          </View>
         </Pressable>
-        <View style={styles.voteArea}>
+
+        <View style={styles.actions}>
+          <View style={styles.actionLeft}>
+            <HeartIcon size={25} color={Colors.white} />
+            <CommentIcon size={24} color={Colors.white} />
+            <PaperPlaneIcon size={24} color={Colors.white} />
+          </View>
+          <BookmarkIcon size={24} color={Colors.white} />
+        </View>
+
+        <View style={styles.metaBlock}>
+          <Text style={styles.voteCount}>{formatVoteCount(drift.votesYes + drift.votesNo)} votes</Text>
+          <Text style={styles.caption}>
+            <Text style={styles.captionUser}>@{drift.authorUsername} </Text>
+            {drift.stake}
+          </Text>
+          <StatusBanner drift={drift} />
           <VoteBar votesYes={drift.votesYes} votesNo={drift.votesNo} />
           {!preview ? (
             <VoteButtons
@@ -101,44 +125,67 @@ function DriftCardComponent({ drift, index = 0, preview = false }: DriftCardProp
 export const DriftCard = memo(DriftCardComponent);
 
 const styles = StyleSheet.create({
-  card: {
+  post: {
     overflow: 'hidden',
-    borderRadius: R.lg,
-    borderWidth: S.px,
-    borderColor: Colors.stroke,
-    backgroundColor: Colors.bgSurface,
-    padding: S.lg,
-    gap: S.lg,
-    ...Shadows.card,
+    borderBottomWidth: S.px,
+    borderBottomColor: Colors.separator,
+    backgroundColor: Colors.black,
   },
   pressArea: {
-    gap: S.lg,
+    gap: 0,
   },
   header: {
+    height: 48,
+    paddingHorizontal: S.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: S.lg,
+    gap: S.md,
+  },
+  authorRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.sm,
   },
   authorWrap: {
     flex: 1,
-    gap: S.xs,
+    gap: 1,
   },
   author: {
     color: Colors.textPrimary,
     fontFamily: F.family.bodySemi,
-    fontSize: F.size.base,
+    fontSize: 13,
   },
   rep: {
-    color: Colors.textMuted,
-    fontFamily: F.family.monoBold,
+    color: Colors.textTertiary,
+    fontFamily: F.family.bodyRegular,
     fontSize: F.size.xs,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.md,
+  },
+  media: {
+    minHeight: 360,
+    justifyContent: 'center',
+    gap: S.md,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: S.lg,
+    paddingVertical: S.x3,
+  },
+  category: {
+    color: Colors.volt,
+    fontFamily: F.family.bodySemi,
+    fontSize: F.size.xs,
+    textTransform: 'uppercase',
   },
   text: {
     color: Colors.textPrimary,
     fontFamily: F.family.displayBlack,
-    fontSize: F.size.xl,
-    lineHeight: F.size.xl * F.lineHeight.tight,
+    fontSize: 30,
+    lineHeight: 35,
   },
   context: {
     color: Colors.textSecondary,
@@ -146,13 +193,36 @@ const styles = StyleSheet.create({
     fontSize: F.size.base,
     lineHeight: F.size.base * F.lineHeight.normal,
   },
-  stake: {
-    color: Colors.accentAmber,
-    fontFamily: F.family.monoBold,
-    fontSize: F.size.sm,
-    lineHeight: F.size.sm * F.lineHeight.normal,
+  actions: {
+    minHeight: 42,
+    paddingHorizontal: S.md,
+    paddingTop: S.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  voteArea: {
-    gap: S.md,
+  actionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.lg,
+  },
+  metaBlock: {
+    paddingHorizontal: S.md,
+    paddingBottom: S.lg,
+    gap: S.sm,
+  },
+  voteCount: {
+    color: Colors.white,
+    fontFamily: F.family.bodySemi,
+    fontSize: F.size.sm,
+  },
+  caption: {
+    color: Colors.white,
+    fontFamily: F.family.bodyRegular,
+    fontSize: F.size.base,
+    lineHeight: F.size.base * F.lineHeight.normal,
+  },
+  captionUser: {
+    fontFamily: F.family.bodySemi,
   },
 });

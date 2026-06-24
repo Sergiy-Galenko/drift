@@ -32,9 +32,14 @@ export function useAuthBootstrap(): void {
 
   useEffect(() => {
     let unsubscribeProfile: (() => void) | null = null;
+    let bootstrapTimeout: ReturnType<typeof setTimeout> | null = null;
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       unsubscribeProfile?.();
       unsubscribeProfile = null;
+      if (bootstrapTimeout) {
+        clearTimeout(bootstrapTimeout);
+        bootstrapTimeout = null;
+      }
 
       if (!user) {
         reset();
@@ -42,15 +47,33 @@ export function useAuthBootstrap(): void {
       }
 
       setFirebaseUser(user);
-      setLoading(true);
+      if (!useAuthStore.getState().initialized) {
+        setLoading(true);
+        bootstrapTimeout = setTimeout(() => {
+          const state = useAuthStore.getState();
+          if (!state.initialized) {
+            logger.warn('Auth bootstrap timed out');
+            state.setLoading(false);
+            state.setInitialized(true);
+          }
+        }, 5000);
+      }
       unsubscribeProfile = subscribeUserProfile(
         user.uid,
         (profile) => {
+          if (bootstrapTimeout) {
+            clearTimeout(bootstrapTimeout);
+            bootstrapTimeout = null;
+          }
           setProfile(profile);
           setLoading(false);
           setInitialized(true);
         },
         (message) => {
+          if (bootstrapTimeout) {
+            clearTimeout(bootstrapTimeout);
+            bootstrapTimeout = null;
+          }
           logger.error('Profile subscription failed', { message });
           setProfile(null);
           setLoading(false);
@@ -62,6 +85,9 @@ export function useAuthBootstrap(): void {
     return () => {
       unsubscribeAuth();
       unsubscribeProfile?.();
+      if (bootstrapTimeout) {
+        clearTimeout(bootstrapTimeout);
+      }
     };
   }, [reset, setFirebaseUser, setInitialized, setLoading, setProfile]);
 }

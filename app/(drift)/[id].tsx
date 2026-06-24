@@ -122,17 +122,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgBase,
   },
   content: {
-    padding: S.lg,
-    gap: S.x2,
+    paddingBottom: S.x7,
+    gap: S.lg,
   },
   actions: {
     flexDirection: 'row',
     gap: S.md,
+    paddingHorizontal: S.md,
   },
   commentsHead: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: S.sm,
+    paddingHorizontal: S.md,
   },
   sectionTitle: {
     color: Colors.textPrimary,
@@ -146,6 +148,7 @@ const styles = StyleSheet.create({
   },
   commentList: {
     gap: S.lg,
+    paddingHorizontal: S.md,
   },
   commentGroup: {
     gap: S.md,

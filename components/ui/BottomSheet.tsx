@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import { BlurView } from 'expo-blur';
 
 import { Colors, R, S, Shadows } from '@/constants/tokens';
 
@@ -14,7 +13,6 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
   return (
     <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.root}>
-        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
         <Pressable accessibilityLabel="Close sheet" style={styles.backdrop} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
@@ -35,11 +33,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.overlay,
   },
   sheet: {
-    backgroundColor: Colors.bgElevated,
-    borderTopLeftRadius: R.lg,
-    borderTopRightRadius: R.lg,
-    borderWidth: S.px,
-    borderColor: Colors.strokeStrong,
+    backgroundColor: Colors.surfaceSheet,
+    borderTopLeftRadius: R.xl,
+    borderTopRightRadius: R.xl,
+    borderTopWidth: S.px,
+    borderColor: Colors.separatorStrong,
     padding: S.x2,
     gap: S.lg,
     ...Shadows.modal,

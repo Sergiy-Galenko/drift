@@ -11,7 +11,9 @@ export default function AuthLayout() {
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem('drift_onboarding_v1').then((value) => setOnboarded(value === 'done'));
+    AsyncStorage.getItem('drift_onboarding_v1')
+      .then((value) => setOnboarded(value === 'done'))
+      .catch(() => setOnboarded(false));
   }, []);
 
   if (!initialized || onboarded === null) {
@@ -19,10 +21,10 @@ export default function AuthLayout() {
   }
 
   if (profile) {
-    return <Redirect href="/(tabs)/feed" />;
+    return <Redirect href="/(tabs)" />;
   }
 
-  const screenOrder = onboarded ? ['login', 'onboarding'] : ['onboarding', 'login'];
+  const screenOrder = onboarded ? ['login', 'welcome', 'onboarding'] : ['onboarding', 'login', 'welcome'];
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

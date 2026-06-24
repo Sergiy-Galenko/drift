@@ -10,7 +10,7 @@ export default function NotFoundScreen() {
   return (
     <View style={styles.wrap}>
       <EmptyState title="404" message="This drift slipped out of range." />
-      <Button label="Back to feed" onPress={() => router.replace('/(tabs)/feed')} />
+      <Button label="Back to feed" onPress={() => router.replace('/(tabs)')} />
     </View>
   );
 }

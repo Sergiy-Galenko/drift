@@ -6,11 +6,10 @@ import { useAuthStore } from '@/stores/authStore';
 export default function IndexScreen() {
   const profile = useAuthStore((state) => state.profile);
   const initialized = useAuthStore((state) => state.initialized);
-  const loading = useAuthStore((state) => state.loading);
 
-  if (!initialized || loading) {
+  if (!initialized) {
     return <Spinner label="Starting DRIFT" />;
   }
 
-  return <Redirect href={profile ? '/(tabs)/feed' : '/(auth)/login'} />;
+  return <Redirect href={profile ? '/(tabs)' : '/(auth)/login'} />;
 }

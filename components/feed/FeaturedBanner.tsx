@@ -1,7 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { Badge } from '@/components/ui/Badge';
 import { Colors, F, R, S } from '@/constants/tokens';
 import type { Drift } from '@/types/drift';
 
@@ -18,8 +17,8 @@ export function FeaturedBanner({ drifts }: FeaturedBannerProps) {
   return (
     <View style={styles.wrap}>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>FEATURED</Text>
-        <Badge label={`${drifts.length} live`} tone="volt" />
+        <Text style={styles.title}>Featured</Text>
+        <Text style={styles.live}>{drifts.length} live</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.content}>
         {drifts.map((drift) => (
@@ -49,8 +48,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: Colors.textPrimary,
-    fontFamily: F.family.displayBold,
-    fontSize: F.size.lg,
+    fontFamily: F.family.bodySemi,
+    fontSize: F.size.base,
+  },
+  live: {
+    color: Colors.textTertiary,
+    fontFamily: F.family.bodyRegular,
+    fontSize: F.size.sm,
   },
   content: {
     gap: S.md,
@@ -59,10 +63,8 @@ const styles = StyleSheet.create({
   card: {
     width: 220,
     minHeight: 132,
-    borderRadius: R.lg,
-    borderWidth: S.px,
-    borderColor: Colors.strokeStrong,
-    backgroundColor: Colors.bgSurface,
+    borderRadius: R.sm,
+    backgroundColor: Colors.surface,
     padding: S.lg,
     justifyContent: 'space-between',
   },
@@ -73,8 +75,8 @@ const styles = StyleSheet.create({
     lineHeight: F.size.md * F.lineHeight.tight,
   },
   meta: {
-    color: Colors.accentVolt,
-    fontFamily: F.family.monoBold,
+    color: Colors.volt,
+    fontFamily: F.family.bodySemi,
     fontSize: F.size.xs,
     textTransform: 'uppercase',
   },

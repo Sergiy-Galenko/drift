@@ -13,7 +13,7 @@ export function Input({ label, error, style, ...props }: InputProps) {
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
         placeholderTextColor={Colors.textMuted}
-        selectionColor={Colors.accentVolt}
+        selectionColor={Colors.blue}
         style={[styles.input, error ? styles.errorInput : null, style]}
         {...props}
       />
@@ -34,10 +34,10 @@ const styles = StyleSheet.create({
   },
   input: {
     minHeight: S.x6,
-    borderRadius: R.md,
+    borderRadius: R.sm,
     borderWidth: S.px,
     borderColor: Colors.strokeStrong,
-    backgroundColor: Colors.bgInteractive,
+    backgroundColor: Colors.surfaceRaised,
     color: Colors.textPrimary,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.base,
@@ -45,10 +45,10 @@ const styles = StyleSheet.create({
     paddingVertical: S.md,
   },
   errorInput: {
-    borderColor: Colors.accentFire,
+    borderColor: Colors.fire,
   },
   error: {
-    color: Colors.accentFire,
+    color: Colors.fire,
     fontFamily: F.family.bodyMedium,
     fontSize: F.size.sm,
   },

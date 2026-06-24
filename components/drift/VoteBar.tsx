@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { Colors, F, R, S } from '@/constants/tokens';
 
@@ -16,13 +15,8 @@ export function VoteBar({ votesYes, votesNo }: VoteBarProps) {
   return (
     <View style={styles.wrap}>
       <View style={styles.track}>
-        <LinearGradient
-          colors={[Colors.voteYes, Colors.voteNo]}
-          locations={[Math.max(0.02, yesPercent), Math.min(0.98, yesPercent)]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.fill}
-        />
+        <View style={[styles.yesFill, { flex: Math.max(0.02, yesPercent) }]} />
+        <View style={[styles.noFill, { flex: Math.max(0.02, noPercent) }]} />
       </View>
       <View style={styles.labels}>
         <Text style={styles.yes}>{Math.round(yesPercent * 100)}% YES</Text>
@@ -41,9 +35,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: R.pill,
     backgroundColor: Colors.bgInteractive,
+    flexDirection: 'row',
   },
-  fill: {
-    flex: 1,
+  yesFill: {
+    backgroundColor: Colors.voteYes,
+  },
+  noFill: {
+    backgroundColor: Colors.voteNo,
   },
   labels: {
     flexDirection: 'row',

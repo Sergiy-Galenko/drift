@@ -1,9 +1,10 @@
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { FeaturedBanner } from '@/components/feed/FeaturedBanner';
 import { FeedList } from '@/components/feed/FeedList';
 import { FilterPills } from '@/components/feed/FilterPills';
 import { Header } from '@/components/navigation/Header';
+import { StoryPreview } from '@/components/story/StoryPreview';
 import { Colors, S } from '@/constants/tokens';
 import { useFeed } from '@/hooks/useFeed';
 
@@ -22,7 +23,16 @@ export default function FeedScreen() {
         refreshing={feed.refreshing}
         onRefresh={feed.refresh}
         onEndReached={feed.loadMore}
-        header={<FeaturedBanner drifts={feed.featured} />}
+        header={
+          <>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stories}>
+              {(feed.featured.length > 0 ? feed.featured : feed.drifts.slice(0, 8)).map((drift) => (
+                <StoryPreview key={drift.id} drift={drift} />
+              ))}
+            </ScrollView>
+            <FeaturedBanner drifts={feed.featured} />
+          </>
+        }
       />
     </View>
   );
@@ -34,6 +44,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgBase,
   },
   filters: {
+    paddingVertical: S.sm,
+    borderBottomWidth: S.px,
+    borderBottomColor: Colors.separator,
+  },
+  stories: {
+    paddingHorizontal: S.md,
     paddingVertical: S.md,
+    gap: S.sm,
   },
 });

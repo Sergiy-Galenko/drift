@@ -25,7 +25,7 @@ export function IconButton({ icon: Icon, onPress, label, active = false, disable
         pressed && !disabled ? styles.pressed : null,
       ]}
     >
-      <Icon size={20} color={active ? Colors.bgBase : Colors.textPrimary} />
+      <Icon size={20} color={active ? Colors.blue : Colors.textPrimary} filled={active} />
     </Pressable>
   );
 }
@@ -35,15 +35,12 @@ const styles = StyleSheet.create({
     width: S.x5,
     height: S.x5,
     borderRadius: R.pill,
-    borderWidth: S.px,
-    borderColor: Colors.strokeStrong,
-    backgroundColor: Colors.bgInteractive,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
   active: {
-    borderColor: Colors.accentVolt,
-    backgroundColor: Colors.accentVolt,
+    backgroundColor: 'transparent',
   },
   disabled: {
     opacity: 0.4,

@@ -12,6 +12,7 @@ import { Colors, F, S } from '@/constants/tokens';
 import { useFollow } from '@/hooks/useFollow';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { subscribeAuthorDrifts } from '@/lib/firebase/drifts';
+import { useAuthStore } from '@/stores/authStore';
 import type { Drift } from '@/types/drift';
 import { reputationLabelUpper } from '@/utils/reputation';
 
@@ -21,6 +22,7 @@ export default function PublicProfileScreen() {
   const username = typeof params.username === 'string' ? params.username : undefined;
   const { profile, loading } = useUserProfile(username, 'username');
   const follow = useFollow(profile?.uid);
+  const currentUid = useAuthStore((state) => state.firebaseUser?.uid);
   const [drifts, setDrifts] = useState<Drift[]>([]);
 
   useEffect(() => {
@@ -46,6 +48,8 @@ export default function PublicProfileScreen() {
     );
   }
 
+  const canMessage = Boolean(currentUid && profile.uid !== currentUid);
+
   return (
     <View style={styles.root}>
       <Header title={`@${profile.username}`} showBack />
@@ -60,8 +64,21 @@ export default function PublicProfileScreen() {
         </View>
         <View style={styles.actions}>
           <Button label={follow.following ? 'Following' : 'Follow'} onPress={() => void follow.toggle()} disabled={!follow.canFollow} />
+          {canMessage ? (
+            <Button
+              label="Message"
+              variant="secondary"
+              onPress={() =>
+                router.push({
+                  pathname: '/(chat)/new',
+                  params: { uid: profile.uid, username: profile.username },
+                })
+              }
+            />
+          ) : null}
           <Button label={`${profile.followersCount} followers`} variant="secondary" onPress={() => router.push({ pathname: '/(user)/[username]/followers', params: { username: profile.username } })} />
         </View>
+        <Text style={styles.sectionTitle}>Posts</Text>
         {drifts.map((drift) => (
           <DriftCardCompact key={drift.id} drift={drift} />
         ))}
@@ -107,5 +124,11 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: S.md,
+    flexWrap: 'wrap',
+  },
+  sectionTitle: {
+    color: Colors.textPrimary,
+    fontFamily: F.family.bodySemi,
+    fontSize: F.size.base,
   },
 });

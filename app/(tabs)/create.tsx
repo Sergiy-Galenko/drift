@@ -179,8 +179,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgBase,
   },
   content: {
-    padding: S.lg,
-    gap: S.x2,
+    padding: S.md,
+    paddingBottom: S.x7,
+    gap: S.lg,
   },
   step: {
     gap: S.lg,
@@ -199,16 +200,16 @@ const styles = StyleSheet.create({
     gap: S.md,
   },
   category: {
-    borderRadius: R.md,
+    borderRadius: R.sm,
     borderWidth: S.px,
     borderColor: Colors.strokeStrong,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.surfaceRaised,
     paddingHorizontal: S.lg,
     paddingVertical: S.md,
   },
   categorySelected: {
-    backgroundColor: Colors.accentVolt,
-    borderColor: Colors.accentVolt,
+    backgroundColor: Colors.white,
+    borderColor: Colors.white,
   },
   categoryText: {
     color: Colors.textPrimary,
@@ -216,13 +217,13 @@ const styles = StyleSheet.create({
     fontSize: F.size.sm,
   },
   categorySelectedText: {
-    color: Colors.bgBase,
+    color: Colors.black,
   },
   toggleRow: {
-    borderRadius: R.md,
+    borderRadius: R.sm,
     borderWidth: S.px,
     borderColor: Colors.strokeStrong,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.surfaceRaised,
     padding: S.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
     fontSize: F.size.sm,
   },
   toggleValue: {
-    color: Colors.accentVolt,
+    color: Colors.blue,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
   },

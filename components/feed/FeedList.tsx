@@ -15,8 +15,6 @@ type FeedListProps = {
   header?: React.ReactElement;
 };
 
-const ITEM_HEIGHT = 380;
-
 export function FeedList({ drifts, loading, refreshing, onRefresh, onEndReached, header }: FeedListProps) {
   if (loading && drifts.length === 0) {
     return <Spinner label="Loading drifts" />;
@@ -33,17 +31,16 @@ export function FeedList({ drifts, loading, refreshing, onRefresh, onEndReached,
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.accentVolt} />}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
-      getItemLayout={(_, index) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index })}
     />
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    padding: S.lg,
-    gap: S.lg,
+    paddingBottom: S.x7,
   },
   header: {
-    gap: S.lg,
+    gap: S.md,
+    paddingBottom: S.sm,
   },
 });

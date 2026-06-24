@@ -42,6 +42,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(drift)" />
+        <Stack.Screen name="(chat)" />
         <Stack.Screen name="(user)" />
         <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
         <Stack.Screen name="+not-found" />

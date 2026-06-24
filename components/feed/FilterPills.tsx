@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
     paddingVertical: S.sm,
   },
   active: {
-    borderColor: Colors.accentVolt,
-    backgroundColor: Colors.accentVolt,
+    borderColor: Colors.white,
+    backgroundColor: Colors.white,
   },
   label: {
     color: Colors.textSecondary,
@@ -55,6 +55,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   activeLabel: {
-    color: Colors.bgBase,
+    color: Colors.black,
   },
 });
