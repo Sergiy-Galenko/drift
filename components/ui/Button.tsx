@@ -17,6 +17,7 @@ type ButtonProps = {
 
 export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, icon }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const spinnerColor = variant === 'primary' || variant === 'danger' ? Colors.white : Colors.textPrimary;
   return (
     <Pressable
       accessibilityRole="button"
@@ -30,7 +31,7 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
       ]}
     >
       {loading ? (
-        <Spinner label={label} />
+        <Spinner label={label} inline color={spinnerColor} />
       ) : (
         <View style={styles.content}>
           {icon}

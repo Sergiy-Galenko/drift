@@ -122,7 +122,26 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
   );
 }
 
-export const DriftCard = memo(DriftCardComponent);
+export const DriftCard = memo(DriftCardComponent, (prev, next) => {
+  const left = prev.drift;
+  const right = next.drift;
+
+  return (
+    prev.preview === next.preview &&
+    left.id === right.id &&
+    left.authorUsername === right.authorUsername &&
+    left.authorReputationScore === right.authorReputationScore &&
+    left.text === right.text &&
+    left.context === right.context &&
+    left.stake === right.stake &&
+    left.category === right.category &&
+    left.status === right.status &&
+    left.result === right.result &&
+    left.votesYes === right.votesYes &&
+    left.votesNo === right.votesNo &&
+    left.expiresAt.getTime() === right.expiresAt.getTime()
+  );
+});
 
 const styles = StyleSheet.create({
   post: {

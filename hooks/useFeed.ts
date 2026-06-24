@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { InteractionManager } from 'react-native';
 
 import type { CategoryFilter } from '@/constants/categories';
 import { subscribeFeaturedDrifts, subscribeFeedDrifts } from '@/lib/firebase/drifts';
@@ -11,6 +12,7 @@ import { logger } from '@/utils/logger';
 export function useFeed() {
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [limitCount, setLimitCount] = useState(20);
+  const [reloadToken, setReloadToken] = useState(0);
   const [featured, setFeatured] = useState<Drift[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -20,34 +22,58 @@ export function useFeed() {
 
   useEffect(() => {
     setLoading(true);
-    const unsubscribe = subscribeFeedDrifts(
-      category,
-      limitCount,
-      (items) => {
-        setDrifts(items);
-        setLoading(false);
-        setRefreshing(false);
-      },
-      (message) => {
-        logger.error('Feed subscription failed', { message });
-        pushToast({ title: 'Feed unavailable', message: firebaseErrorMessage(message), tone: 'danger' });
-        setLoading(false);
-        setRefreshing(false);
-      },
-    );
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    const task = InteractionManager.runAfterInteractions(() => {
+      if (!active) {
+        return;
+      }
 
-    return unsubscribe;
-  }, [category, limitCount, pushToast, setDrifts]);
+      unsubscribe = subscribeFeedDrifts(
+        category,
+        limitCount,
+        (items) => {
+          setDrifts(items);
+          setLoading(false);
+          setRefreshing(false);
+        },
+        (message) => {
+          logger.error('Feed subscription failed', { message });
+          pushToast({ title: 'Feed unavailable', message: firebaseErrorMessage(message), tone: 'danger' });
+          setLoading(false);
+          setRefreshing(false);
+        },
+      );
+    });
+
+    return () => {
+      active = false;
+      task.cancel();
+      unsubscribe?.();
+    };
+  }, [category, limitCount, pushToast, reloadToken, setDrifts]);
 
   useEffect(() => {
-    const unsubscribe = subscribeFeaturedDrifts(
-      setFeatured,
-      (message) => {
-        logger.warn('Featured subscription failed', { message });
-      },
-    );
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    const task = InteractionManager.runAfterInteractions(() => {
+      if (!active) {
+        return;
+      }
 
-    return unsubscribe;
+      unsubscribe = subscribeFeaturedDrifts(
+        setFeatured,
+        (message) => {
+          logger.warn('Featured subscription failed', { message });
+        },
+      );
+    });
+
+    return () => {
+      active = false;
+      task.cancel();
+      unsubscribe?.();
+    };
   }, []);
 
   const drifts = useMemo(
@@ -57,7 +83,7 @@ export function useFeed() {
 
   const refresh = useCallback(() => {
     setRefreshing(true);
-    setLimitCount((count) => count);
+    setReloadToken((value) => value + 1);
   }, []);
 
   const loadMore = useCallback(() => {

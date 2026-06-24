@@ -19,12 +19,12 @@ export default function TabsLayout() {
   return (
     <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="explore" />
-      <Tabs.Screen name="create" />
-      <Tabs.Screen name="reels" />
-      <Tabs.Screen name="profile" />
+      <Tabs.Screen name="activity" />
+      <Tabs.Screen name="create" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
       <Tabs.Screen name="feed" options={{ href: null }} />
-      <Tabs.Screen name="activity" options={{ href: null }} />
+      <Tabs.Screen name="explore" options={{ href: null }} />
+      <Tabs.Screen name="reels" options={{ href: null }} />
     </Tabs>
   );
 }

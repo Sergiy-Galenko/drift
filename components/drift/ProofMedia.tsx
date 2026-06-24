@@ -1,4 +1,5 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -20,7 +21,7 @@ export function ProofMedia({ url, type }: ProofMediaProps) {
 
   return (
     <View style={styles.frame}>
-      <Image source={{ uri: url }} style={styles.media} />
+      <Image source={url} style={styles.media} cachePolicy="memory-disk" contentFit="cover" transition={160} />
     </View>
   );
 }

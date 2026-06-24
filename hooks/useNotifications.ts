@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { InteractionManager } from 'react-native';
 
 import { markNotificationRead, subscribeNotifications } from '@/lib/firebase/notifications';
 import { useAuthStore } from '@/stores/authStore';
@@ -20,20 +21,33 @@ export function useNotifications() {
       return;
     }
 
-    const unsubscribe = subscribeNotifications(
-      uid,
-      (notifications) => {
-        setItems(notifications);
-        setLoading(false);
-      },
-      (message) => {
-        logger.error('Notifications subscription failed', { message });
-        pushToast({ title: 'Activity unavailable', message: firebaseErrorMessage(message), tone: 'danger' });
-        setLoading(false);
-      },
-    );
+    setLoading(true);
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    const task = InteractionManager.runAfterInteractions(() => {
+      if (!active) {
+        return;
+      }
 
-    return unsubscribe;
+      unsubscribe = subscribeNotifications(
+        uid,
+        (notifications) => {
+          setItems(notifications);
+          setLoading(false);
+        },
+        (message) => {
+          logger.error('Notifications subscription failed', { message });
+          pushToast({ title: 'Activity unavailable', message: firebaseErrorMessage(message), tone: 'danger' });
+          setLoading(false);
+        },
+      );
+    });
+
+    return () => {
+      active = false;
+      task.cancel();
+      unsubscribe?.();
+    };
   }, [pushToast, uid]);
 
   const unreadCount = useMemo(() => items.filter((item) => !item.isRead).length, [items]);

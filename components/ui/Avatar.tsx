@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 
 import { ReputationRing } from '@/components/drift/ReputationRing';
 import { Colors, F, S } from '@/constants/tokens';
@@ -18,7 +19,13 @@ export function Avatar({ username, avatarUrl, reputationScore = 50, size = 44, s
       {showReputationRing ? <ReputationRing score={reputationScore} size={size + S.sm} strokeWidth={2} /> : null}
       <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}>
         {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.image} />
+          <Image
+            source={avatarUrl}
+            style={styles.image}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            transition={120}
+          />
         ) : (
           <Text style={styles.initial}>{initial}</Text>
         )}

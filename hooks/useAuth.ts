@@ -5,15 +5,18 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
+  type User as FirebaseUser,
 } from 'firebase/auth';
 
 import { auth, isFirebaseConfigured } from '@/lib/firebase/config';
-import { createUserProfile, subscribeUserProfile, updateUserProfile } from '@/lib/firebase/users';
+import { createUserProfile, getUserByUsername, subscribeUserProfile, updateUserProfile } from '@/lib/firebase/users';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
+import type { UserProfile } from '@/types/user';
 import { firebaseErrorMessage } from '@/utils/formatters';
 import { logger } from '@/utils/logger';
-import { UsernameSchema } from '@/utils/validation';
+import { CreatePasswordSchema, EmailSchema, SignInPasswordSchema, UsernameSchema } from '@/utils/validation';
+import { calcReputationTier } from '@/utils/reputation';
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -21,6 +24,48 @@ function normalizeEmail(email: string): string {
 
 function isAuthProviderDisabled(error: unknown): boolean {
   return String(error).includes('auth/operation-not-allowed');
+}
+
+function isUnavailableError(error: unknown): boolean {
+  const message = String(error).toLowerCase();
+  return message.includes('unavailable') || message.includes('offline');
+}
+
+function buildFallbackProfile(user: FirebaseUser): UserProfile {
+  const now = new Date();
+  const rawUsername = user.displayName?.trim() || user.email?.split('@')[0] || `user_${user.uid.slice(0, 6)}`;
+  const sanitized = rawUsername.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^_+|_+$/g, '').toLowerCase();
+  const username = sanitized.slice(0, 20) || `user_${user.uid.slice(0, 6)}`;
+  const reputationScore = 50;
+
+  return {
+    uid: user.uid,
+    username,
+    displayName: user.displayName ?? username,
+    avatarUrl: user.photoURL,
+    bio: null,
+    reputationScore,
+    reputationTier: calcReputationTier(reputationScore),
+    streakCurrent: 0,
+    streakBest: 0,
+    streakLastDate: null,
+    driftsCreated: 0,
+    driftsVotedOn: 0,
+    driftsExecuted: 0,
+    driftsFailed: 0,
+    totalVotesReceived: 0,
+    followersCount: 0,
+    followingCount: 0,
+    joinedAt: now,
+    lastActiveAt: now,
+    isAnonymous: false,
+    isVerified: false,
+    settings: {
+      notificationsEnabled: true,
+      anonymousDefault: false,
+      vibrationEnabled: true,
+    },
+  };
 }
 
 export function useAuthBootstrap(): void {
@@ -52,11 +97,11 @@ export function useAuthBootstrap(): void {
         bootstrapTimeout = setTimeout(() => {
           const state = useAuthStore.getState();
           if (!state.initialized) {
-            logger.warn('Auth bootstrap timed out');
+            state.setProfile(buildFallbackProfile(user));
             state.setLoading(false);
             state.setInitialized(true);
           }
-        }, 5000);
+        }, 8000);
       }
       unsubscribeProfile = subscribeUserProfile(
         user.uid,
@@ -74,8 +119,12 @@ export function useAuthBootstrap(): void {
             clearTimeout(bootstrapTimeout);
             bootstrapTimeout = null;
           }
-          logger.error('Profile subscription failed', { message });
-          setProfile(null);
+          if (isUnavailableError(message)) {
+            setProfile(buildFallbackProfile(user));
+          } else {
+            logger.error('Profile subscription failed', { message });
+            setProfile(null);
+          }
           setLoading(false);
           setInitialized(true);
         },
@@ -105,13 +154,20 @@ export function useAuth() {
         return false;
       }
 
-      if (!email.trim() || !password) {
-        pushToast({ title: 'Missing credentials', message: 'Enter your email and password.', tone: 'warning' });
+      const parsedEmail = EmailSchema.safeParse(email);
+      if (!parsedEmail.success) {
+        pushToast({ title: 'Invalid email', message: parsedEmail.error.issues[0]?.message, tone: 'warning' });
+        return false;
+      }
+
+      const parsedPassword = SignInPasswordSchema.safeParse(password);
+      if (!parsedPassword.success) {
+        pushToast({ title: 'Missing password', message: parsedPassword.error.issues[0]?.message, tone: 'warning' });
         return false;
       }
 
       try {
-        await signInWithEmailAndPassword(auth, normalizeEmail(email), password);
+        await signInWithEmailAndPassword(auth, normalizeEmail(parsedEmail.data), password);
         return true;
       } catch (error) {
         if (!isAuthProviderDisabled(error)) {
@@ -137,13 +193,26 @@ export function useAuth() {
         return false;
       }
 
-      if (!email.trim() || password.length < 6) {
-        pushToast({ title: 'Invalid credentials', message: 'Use a valid email and at least 6 characters for password.', tone: 'warning' });
+      const parsedEmail = EmailSchema.safeParse(email);
+      if (!parsedEmail.success) {
+        pushToast({ title: 'Invalid email', message: parsedEmail.error.issues[0]?.message, tone: 'warning' });
+        return false;
+      }
+
+      const parsedPassword = CreatePasswordSchema.safeParse(password);
+      if (!parsedPassword.success) {
+        pushToast({ title: 'Invalid password', message: parsedPassword.error.issues[0]?.message, tone: 'warning' });
+        return false;
+      }
+
+      const existingUser = await getUserByUsername(parsedUsername.data);
+      if (existingUser) {
+        pushToast({ title: 'Username unavailable', message: 'Choose another public handle.', tone: 'warning' });
         return false;
       }
 
       try {
-        const credential = await createUserWithEmailAndPassword(auth, normalizeEmail(email), password);
+        const credential = await createUserWithEmailAndPassword(auth, normalizeEmail(parsedEmail.data), parsedPassword.data);
         await updateProfile(credential.user, { displayName: parsedUsername.data });
         await createUserProfile(credential.user.uid, {
           username: parsedUsername.data,
@@ -178,6 +247,12 @@ export function useAuth() {
       }
 
       try {
+        const existingUser = await getUserByUsername(parsed.data);
+        if (existingUser && existingUser.uid !== firebaseUser.uid) {
+          pushToast({ title: 'Username unavailable', message: 'Choose another public handle.', tone: 'warning' });
+          return false;
+        }
+
         if (profile) {
           await updateUserProfile(firebaseUser.uid, { username: parsed.data, displayName: displayName ?? profile.displayName });
         } else {

@@ -1,41 +1,41 @@
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useRouter } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
+  ActivityIcon,
   CreateIcon,
-  ExploreIcon,
   HomeIcon,
-  ReelsIcon,
-  ProfileIcon,
   type AppIcon,
 } from '@/components/icons';
 import { Colors, Motion, R, S } from '@/constants/tokens';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useAuthStore } from '@/stores/authStore';
 
-const icons: Record<string, AppIcon> = {
-  index: HomeIcon,
-  explore: ExploreIcon,
-  create: CreateIcon,
-  reels: ReelsIcon,
-  profile: ProfileIcon,
-};
+const VISIBLE_TABS: {
+  routeName: 'index' | 'activity';
+  label: string;
+  icon: AppIcon;
+}[] = [
+  { routeName: 'index', label: 'Feed', icon: HomeIcon },
+  { routeName: 'activity', label: 'Activity', icon: ActivityIcon },
+];
 
 type TabButtonProps = {
-  routeName: string;
+  routeName?: string;
+  label: string;
+  icon: AppIcon;
   focused: boolean;
-  unreadCount: number;
+  unreadCount?: number;
+  fab?: boolean;
   onPress: () => void;
 };
 
-function TabButton({ routeName, focused, unreadCount, onPress }: TabButtonProps) {
+function TabButton({ routeName, label, icon: Icon, focused, unreadCount = 0, fab = false, onPress }: TabButtonProps) {
   const scale = useSharedValue(1);
   const haptics = useHaptics();
-  const profile = useAuthStore((state) => state.profile);
-  const Icon = icons[routeName] ?? HomeIcon;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -48,58 +48,104 @@ function TabButton({ routeName, focused, unreadCount, onPress }: TabButtonProps)
 
   return (
     <Pressable
-      accessibilityLabel={routeName}
+      accessibilityLabel={label}
       accessibilityRole="button"
       onPress={press}
       onPressIn={() => {
-        scale.value = withSpring(0.88, Motion.spring.responsive);
+        scale.value = withSpring(fab ? 0.94 : 0.88, Motion.spring.responsive);
       }}
       onPressOut={() => {
         scale.value = withSpring(1, Motion.spring.responsive);
       }}
-      style={styles.item}
+      style={[styles.item, fab ? styles.fabItem : null]}
     >
-      <Animated.View style={[styles.iconWrap, animatedStyle]}>
-        {routeName === 'profile' && profile?.avatarUrl ? (
-          <View style={[styles.profileAvatar, focused ? styles.profileAvatarActive : null]}>
-            <Image source={{ uri: profile.avatarUrl }} style={styles.profileImage} />
-          </View>
-        ) : (
-          <Icon size={routeName === 'create' ? 26 : 24} color={Colors.white} filled={focused} />
-        )}
-        {routeName === 'reels' && unreadCount > 0 ? <View style={styles.dot} /> : null}
+      <Animated.View style={[fab ? styles.fabWrap : styles.iconWrap, animatedStyle]}>
+        <Icon size={fab ? 24 : 23} color={fab ? Colors.black : Colors.white} filled={focused} />
+        {routeName === 'activity' && unreadCount > 0 ? <View style={styles.dot} /> : null}
       </Animated.View>
     </Pressable>
   );
 }
 
-export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+export function TabBar({ state, navigation }: BottomTabBarProps) {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { unreadCount } = useNotifications();
+  const focusedRouteName = state.routes[state.index]?.name;
 
   return (
-    <View style={[styles.wrap, { height: 49 + insets.bottom, paddingBottom: insets.bottom }]}>
-      {state.routes.map((route, index) => {
-        const focused = state.index === index;
-        const options = descriptors[route.key]?.options;
+    <View style={[styles.wrap, { height: 58 + insets.bottom, paddingBottom: insets.bottom }]}>
+      {VISIBLE_TABS.slice(0, 1).map((tab) => {
+        const route = state.routes.find((item) => item.name === tab.routeName);
+        const focused = focusedRouteName === tab.routeName;
+        const routeKey = route?.key;
+        const routeIndex = route ? state.routes.findIndex((item) => item.key === route.key) : -1;
+
         const onPress = () => {
+          if (!routeKey || routeIndex < 0) {
+            return;
+          }
+
           const event = navigation.emit({
             type: 'tabPress',
-            target: route.key,
+            target: routeKey,
             canPreventDefault: true,
           });
 
           if (!focused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
+            navigation.navigate(tab.routeName);
           }
         };
 
         return (
           <TabButton
-            key={route.key}
-            routeName={String(options?.title ?? route.name)}
+            key={tab.routeName}
+            routeName={tab.routeName}
+            label={tab.label}
+            icon={tab.icon}
             focused={focused}
-            unreadCount={unreadCount}
+            unreadCount={tab.routeName === 'activity' ? unreadCount : 0}
+            onPress={onPress}
+          />
+        );
+      })}
+      <TabButton
+        label="Create drift"
+        icon={CreateIcon}
+        focused={false}
+        fab
+        onPress={() => router.push('/(modals)/create')}
+      />
+      {VISIBLE_TABS.slice(1).map((tab) => {
+        const route = state.routes.find((item) => item.name === tab.routeName);
+        const focused = focusedRouteName === tab.routeName;
+        const routeKey = route?.key;
+        const routeIndex = route ? state.routes.findIndex((item) => item.key === route.key) : -1;
+
+        const onPress = () => {
+          if (!routeKey || routeIndex < 0) {
+            return;
+          }
+
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: routeKey,
+            canPreventDefault: true,
+          });
+
+          if (!focused && !event.defaultPrevented) {
+            navigation.navigate(tab.routeName);
+          }
+        };
+
+        return (
+          <TabButton
+            key={tab.routeName}
+            routeName={tab.routeName}
+            label={tab.label}
+            icon={tab.icon}
+            focused={focused}
+            unreadCount={tab.routeName === 'activity' ? unreadCount : 0}
             onPress={onPress}
           />
         );
@@ -114,18 +160,31 @@ const styles = StyleSheet.create({
     borderTopWidth: S.px,
     borderTopColor: Colors.separator,
     backgroundColor: Colors.black,
-    paddingHorizontal: S.xs,
+    paddingHorizontal: S.md,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   item: {
-    flex: 1,
+    width: 72,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fabItem: {
+    width: 84,
   },
   iconWrap: {
     width: 36,
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fabWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: R.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
   },
   dot: {
     position: 'absolute',
@@ -135,21 +194,5 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: R.pill,
     backgroundColor: Colors.fire,
-  },
-  profileAvatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: S.px,
-    borderColor: Colors.separatorStrong,
-    overflow: 'hidden',
-  },
-  profileAvatarActive: {
-    borderWidth: 2,
-    borderColor: Colors.white,
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
   },
 });

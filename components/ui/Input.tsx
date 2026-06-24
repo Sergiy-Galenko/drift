@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Colors, F, R, S } from '@/constants/tokens';
@@ -7,11 +8,12 @@ type InputProps = TextInputProps & {
   error?: string | null;
 };
 
-export function Input({ label, error, style, ...props }: InputProps) {
+export const Input = forwardRef<TextInput, InputProps>(function Input({ label, error, style, ...props }, ref) {
   return (
     <View style={styles.wrap}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
+        ref={ref}
         placeholderTextColor={Colors.textMuted}
         selectionColor={Colors.blue}
         style={[styles.input, error ? styles.errorInput : null, style]}
@@ -20,7 +22,7 @@ export function Input({ label, error, style, ...props }: InputProps) {
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrap: {

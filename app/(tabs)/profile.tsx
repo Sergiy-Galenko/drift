@@ -37,7 +37,7 @@ export default function ProfileScreen() {
   if (!profile) {
     return (
       <View style={styles.root}>
-        <Header title="Profile" />
+        <Header title="Profile" showBack />
         <EmptyState title="No profile" message="Sign in to build reputation." />
       </View>
     );
@@ -49,6 +49,7 @@ export default function ProfileScreen() {
     <View style={styles.root}>
       <Header
         title="Profile"
+        showBack
         right={
           <View style={styles.headerActions}>
             <IconButton icon={PaperPlaneIcon} label="Messages" onPress={() => router.push('/(chat)')} />

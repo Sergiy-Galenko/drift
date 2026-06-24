@@ -80,9 +80,9 @@ export default function DriftDetailScreen() {
         <View style={styles.actions}>
           <IconButton icon={BookmarkIcon} label="Bookmark" active={bookmark.saved} onPress={() => void bookmark.toggle()} />
           <IconButton icon={ShareIcon} label="Share" onPress={() => void share()} />
-          <IconButton icon={UsersIcon} label="Voters" onPress={() => router.push({ pathname: '/(drift)/[id]/voters', params: { id: drift.id } })} />
+          <IconButton icon={UsersIcon} label="Voters" onPress={() => router.push({ pathname: '/(drift)/voters/[id]', params: { id: drift.id } })} />
           {canUploadProof ? (
-            <IconButton icon={UploadIcon} label="Upload proof" onPress={() => router.push({ pathname: '/(drift)/[id]/proof', params: { id: drift.id } })} />
+            <IconButton icon={UploadIcon} label="Upload proof" onPress={() => router.push({ pathname: '/(drift)/proof/[id]', params: { id: drift.id } })} />
           ) : null}
         </View>
         {uid !== drift.authorUid ? (

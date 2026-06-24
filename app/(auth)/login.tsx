@@ -1,44 +1,114 @@
-import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Colors, F, S } from '@/constants/tokens';
+import { Colors, F, R, S } from '@/constants/tokens';
 import { useAuth } from '@/hooks/useAuth';
+import { CreatePasswordSchema, EmailSchema, LoginSchema, RegisterSchema, SignInPasswordSchema, UsernameSchema } from '@/utils/validation';
 
 type AuthMode = 'login' | 'register';
+type LoginForm = {
+  email: string;
+  password: string;
+};
+type RegisterForm = {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+type LoginErrors = Partial<Record<keyof LoginForm, string>>;
+type RegisterErrors = Partial<Record<keyof RegisterForm, string>>;
+
+function mapIssues<T extends string>(
+  issues: {
+    path: (string | number)[];
+    message: string;
+  }[],
+): Partial<Record<T, string>> {
+  const next: Partial<Record<T, string>> = {};
+
+  for (const issue of issues) {
+    const key = issue.path[0];
+    if (typeof key === 'string' && !next[key as T]) {
+      next[key as T] = issue.message;
+    }
+  }
+
+  return next;
+}
 
 export default function LoginScreen() {
   const { firebaseUser, profile, loading, signInWithPassword, registerWithPassword, completeProfile } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
+  const [loginForm, setLoginForm] = useState<LoginForm>({ email: '', password: '' });
+  const [registerForm, setRegisterForm] = useState<RegisterForm>({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [loginErrors, setLoginErrors] = useState<LoginErrors>({});
+  const [registerErrors, setRegisterErrors] = useState<RegisterErrors>({});
   const [fallbackUsername, setFallbackUsername] = useState('');
+  const [fallbackError, setFallbackError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [savingUsername, setSavingUsername] = useState(false);
-  const underline = useSharedValue(0);
+  const loginPasswordRef = useRef<TextInput>(null);
+  const registerEmailRef = useRef<TextInput>(null);
+  const registerPasswordRef = useRef<TextInput>(null);
+  const registerConfirmPasswordRef = useRef<TextInput>(null);
 
   const isRegister = mode === 'register';
 
   useEffect(() => {
-    underline.value = withSpring(1, { damping: 14 });
-  }, [underline]);
+    if (firebaseUser && !profile && fallbackUsername.length === 0) {
+      const seed = registerForm.username || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '';
+      setFallbackUsername(seed.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase());
+    }
+  }, [fallbackUsername.length, firebaseUser, profile, registerForm.username]);
 
-  const underlineStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: underline.value }],
-  }));
+  const primaryLabel = useMemo(() => (isRegister ? 'Create account' : 'Log in'), [isRegister]);
+
+  const updateLoginForm = <T extends keyof LoginForm>(field: T, value: LoginForm[T]) => {
+    setLoginForm((current) => ({ ...current, [field]: value }));
+    setLoginErrors((current) => (current[field] ? { ...current, [field]: undefined } : current));
+  };
+
+  const updateRegisterForm = <T extends keyof RegisterForm>(field: T, value: RegisterForm[T]) => {
+    setRegisterForm((current) => ({ ...current, [field]: value }));
+    setRegisterErrors((current) => (current[field] ? { ...current, [field]: undefined } : current));
+  };
 
   const submit = async () => {
+    if (submitting || loading) {
+      return;
+    }
+
+    if (isRegister) {
+      const parsed = RegisterSchema.safeParse(registerForm);
+      if (!parsed.success) {
+        setRegisterErrors(mapIssues<keyof RegisterForm>(parsed.error.issues));
+        return;
+      }
+    } else {
+      const parsed = LoginSchema.safeParse(loginForm);
+      if (!parsed.success) {
+        setLoginErrors(mapIssues<keyof LoginForm>(parsed.error.issues));
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       if (isRegister) {
-        await registerWithPassword(email, password, username);
+        setFallbackUsername(registerForm.username.trim().toLowerCase());
+        await registerWithPassword(registerForm.email, registerForm.password, registerForm.username);
       } else {
-        await signInWithPassword(email, password);
+        await signInWithPassword(loginForm.email, loginForm.password);
       }
     } finally {
       setSubmitting(false);
@@ -46,45 +116,93 @@ export default function LoginScreen() {
   };
 
   const saveFallbackUsername = async () => {
+    const parsed = UsernameSchema.safeParse(fallbackUsername.trim());
+    if (!parsed.success) {
+      setFallbackError(parsed.error.issues[0]?.message ?? 'Invalid username');
+      return;
+    }
+
     setSavingUsername(true);
     try {
-      await completeProfile(fallbackUsername);
+      setFallbackError(null);
+      await completeProfile(parsed.data);
     } finally {
       setSavingUsername(false);
     }
   };
 
+  const changeMode = (nextMode: AuthMode) => {
+    setMode(nextMode);
+    setLoginErrors({});
+    setRegisterErrors({});
+    setFallbackError(null);
+
+    if (nextMode === 'register' && !registerForm.email && loginForm.email) {
+      setRegisterForm((current) => ({ ...current, email: loginForm.email }));
+    }
+
+    if (nextMode === 'login' && !loginForm.email && registerForm.email) {
+      setLoginForm((current) => ({ ...current, email: registerForm.email }));
+    }
+  };
+
   const switchMode = () => {
-    setMode(isRegister ? 'login' : 'register');
-    setPassword('');
+    changeMode(isRegister ? 'login' : 'register');
   };
 
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <StatusBar hidden />
+      <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.brand}>
           <Text style={styles.logo}>D R I F T</Text>
           <Text style={styles.tagline}>Decide less. Live more.</Text>
-          <Animated.View style={[styles.underline, underlineStyle]} />
+          <Text style={styles.brandCopy}>Public commitments, private credentials.</Text>
         </View>
 
         <View style={styles.form}>
+          <View style={styles.modeSwitch}>
+            <Pressable onPress={() => changeMode('login')} style={[styles.modeButton, mode === 'login' ? styles.modeButtonActive : null]}>
+              <Text style={[styles.modeLabel, mode === 'login' ? styles.modeLabelActive : null]}>Log In</Text>
+            </Pressable>
+            <Pressable onPress={() => changeMode('register')} style={[styles.modeButton, mode === 'register' ? styles.modeButtonActive : null]}>
+              <Text style={[styles.modeLabel, mode === 'register' ? styles.modeLabelActive : null]}>Register</Text>
+            </Pressable>
+          </View>
+
           <View style={styles.formHeader}>
             <Text style={styles.formTitle}>{isRegister ? 'Create account' : 'Welcome back'}</Text>
-            <Text style={styles.formCopy}>{isRegister ? 'Start with email, password, and your public handle.' : 'Log in with your email and password.'}</Text>
+            <Text style={styles.formCopy}>
+              {isRegister
+                ? 'Use a public username, your email, and a password you can actually remember.'
+                : 'Sign in with the email and password attached to your DRIFT account.'}
+            </Text>
           </View>
 
           {isRegister ? (
-            <Input
-              label="Username"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={username}
-              onChangeText={setUsername}
-              placeholder="your_handle"
-              returnKeyType="next"
-            />
+            <View style={styles.group}>
+              <Input
+                label="Public username"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="username"
+                textContentType="username"
+                value={registerForm.username}
+                onBlur={() => {
+                  const parsed = UsernameSchema.safeParse(registerForm.username.trim());
+                  setRegisterErrors((current) => ({
+                    ...current,
+                    username: parsed.success ? undefined : parsed.error.issues[0]?.message,
+                  }));
+                }}
+                onChangeText={(value) => updateRegisterForm('username', value)}
+                placeholder="your_handle"
+                returnKeyType="next"
+                error={registerErrors.username}
+                onSubmitEditing={() => registerEmailRef.current?.focus()}
+              />
+              <Text style={styles.helper}>Letters, numbers, and underscores only. This will be visible to everyone.</Text>
+            </View>
           ) : null}
 
           <Input
@@ -92,11 +210,24 @@ export default function LoginScreen() {
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="email"
+            textContentType="emailAddress"
             keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
+            value={isRegister ? registerForm.email : loginForm.email}
+            onBlur={() => {
+              const target = isRegister ? registerForm : loginForm;
+              const parsed = EmailSchema.safeParse(target.email);
+              if (isRegister) {
+                setRegisterErrors((current) => ({ ...current, email: parsed.success ? undefined : parsed.error.issues[0]?.message }));
+              } else {
+                setLoginErrors((current) => ({ ...current, email: parsed.success ? undefined : parsed.error.issues[0]?.message }));
+              }
+            }}
+            onChangeText={(value) => (isRegister ? updateRegisterForm('email', value) : updateLoginForm('email', value))}
             placeholder="you@example.com"
             returnKeyType="next"
+            ref={isRegister ? registerEmailRef : undefined}
+            error={isRegister ? registerErrors.email : loginErrors.email}
+            onSubmitEditing={() => (isRegister ? registerPasswordRef.current?.focus() : loginPasswordRef.current?.focus())}
           />
 
           <Input
@@ -104,28 +235,88 @@ export default function LoginScreen() {
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete={isRegister ? 'new-password' : 'current-password'}
+            textContentType={isRegister ? 'newPassword' : 'password'}
             secureTextEntry
-            value={password}
-            onChangeText={setPassword}
+            value={isRegister ? registerForm.password : loginForm.password}
+            onBlur={() => {
+              const value = isRegister ? registerForm.password : loginForm.password;
+              const parsed = isRegister ? CreatePasswordSchema.safeParse(value) : SignInPasswordSchema.safeParse(value);
+              if (isRegister) {
+                setRegisterErrors((current) => ({ ...current, password: parsed.success ? undefined : parsed.error.issues[0]?.message }));
+              } else {
+                setLoginErrors((current) => ({ ...current, password: parsed.success ? undefined : parsed.error.issues[0]?.message }));
+              }
+            }}
+            onChangeText={(value) => (isRegister ? updateRegisterForm('password', value) : updateLoginForm('password', value))}
             placeholder={isRegister ? 'At least 6 characters' : 'Your password'}
-            returnKeyType="done"
-            onSubmitEditing={() => void submit()}
+            returnKeyType={isRegister ? 'next' : 'done'}
+            ref={isRegister ? registerPasswordRef : loginPasswordRef}
+            error={isRegister ? registerErrors.password : loginErrors.password}
+            onSubmitEditing={() => (isRegister ? registerConfirmPasswordRef.current?.focus() : void submit())}
           />
 
-          <Button label={isRegister ? 'Create account' : 'Log in'} onPress={() => void submit()} loading={submitting || loading} />
+          {isRegister ? (
+            <View style={styles.group}>
+              <Input
+                ref={registerConfirmPasswordRef}
+                label="Confirm password"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="new-password"
+                textContentType="newPassword"
+                secureTextEntry
+                value={registerForm.confirmPassword}
+                onBlur={() => {
+                  const parsed = RegisterSchema.safeParse(registerForm);
+                  setRegisterErrors((current) => ({
+                    ...current,
+                    confirmPassword: parsed.success
+                      ? undefined
+                      : mapIssues<keyof RegisterForm>(parsed.error.issues).confirmPassword,
+                  }));
+                }}
+                onChangeText={(value) => updateRegisterForm('confirmPassword', value)}
+                placeholder="Repeat your password"
+                returnKeyType="done"
+                error={registerErrors.confirmPassword}
+                onSubmitEditing={() => void submit()}
+              />
+              <Text style={styles.helper}>Passwords must match before the account is created.</Text>
+            </View>
+          ) : null}
+
+          <Button label={primaryLabel} onPress={() => void submit()} loading={submitting || loading} />
 
           <Pressable onPress={switchMode} style={styles.switchMode}>
-            <Text style={styles.switchText}>{isRegister ? 'Already have an account? Log in' : 'New here? Create account'}</Text>
+            <Text style={styles.switchText}>
+              {isRegister ? 'Already have an account? Switch to login' : 'Need an account? Switch to registration'}
+            </Text>
           </Pressable>
 
-          <Text style={styles.terms}>Votes are public. Commitments are social. Proof matters.</Text>
+          <Text style={styles.terms}>
+            Your email stays private. Your username, votes, and commitment history are part of your public DRIFT identity.
+          </Text>
         </View>
       </ScrollView>
 
       <BottomSheet visible={Boolean(firebaseUser && !profile)} onClose={() => undefined}>
-        <Text style={styles.sheetTitle}>Claim your handle</Text>
-        <Text style={styles.sheetBody}>Choose a public username so people can track your commitments and reputation.</Text>
-        <Input label="Username" autoCapitalize="none" value={fallbackUsername} onChangeText={setFallbackUsername} placeholder="your_handle" />
+        <Text style={styles.sheetTitle}>Finish your profile</Text>
+        <Text style={styles.sheetBody}>Choose a public username so people can find your posts, follows, and reputation history.</Text>
+        <Input
+          label="Username"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="username"
+          value={fallbackUsername}
+          onChangeText={(value) => {
+            setFallbackUsername(value);
+            if (fallbackError) {
+              setFallbackError(null);
+            }
+          }}
+          placeholder="your_handle"
+          error={fallbackError}
+        />
         <Button label="Start drifting" onPress={() => void saveFallbackUsername()} loading={savingUsername} />
         <Text style={styles.locked}>You can edit display details later.</Text>
       </BottomSheet>
@@ -147,13 +338,13 @@ const styles = StyleSheet.create({
   },
   brand: {
     alignItems: 'center',
-    gap: S.sm,
-    paddingTop: S.x6,
+    gap: S.xs,
+    paddingTop: S.x5,
   },
   logo: {
     color: Colors.white,
     fontFamily: F.family.displayBlack,
-    fontSize: 42,
+    fontSize: 40,
     letterSpacing: 1,
   },
   tagline: {
@@ -161,15 +352,39 @@ const styles = StyleSheet.create({
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.base,
   },
-  underline: {
-    marginTop: S.md,
-    height: S.px * 2,
-    width: S.x4,
-    backgroundColor: Colors.white,
+  brandCopy: {
+    color: Colors.textMuted,
+    fontFamily: F.family.bodyRegular,
+    fontSize: F.size.sm,
   },
   form: {
     gap: S.lg,
     paddingBottom: S.x2,
+  },
+  modeSwitch: {
+    flexDirection: 'row',
+    gap: S.sm,
+    borderRadius: R.pill,
+    backgroundColor: Colors.surfaceRaised,
+    padding: S.xs,
+  },
+  modeButton: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: R.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeButtonActive: {
+    backgroundColor: Colors.white,
+  },
+  modeLabel: {
+    color: Colors.textSecondary,
+    fontFamily: F.family.bodySemi,
+    fontSize: F.size.sm,
+  },
+  modeLabelActive: {
+    color: Colors.black,
   },
   formHeader: {
     gap: S.sm,
@@ -184,6 +399,15 @@ const styles = StyleSheet.create({
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.base,
     lineHeight: F.size.base * F.lineHeight.normal,
+  },
+  group: {
+    gap: S.sm,
+  },
+  helper: {
+    color: Colors.textMuted,
+    fontFamily: F.family.bodyRegular,
+    fontSize: F.size.sm,
+    lineHeight: F.size.sm * F.lineHeight.normal,
   },
   switchMode: {
     alignSelf: 'center',

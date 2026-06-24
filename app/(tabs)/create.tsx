@@ -67,7 +67,7 @@ export default function CreateScreen() {
   if (!profile) {
     return (
       <View style={styles.root}>
-        <Header title="Create" />
+        <Header title="Create" showBack />
         <EmptyState title="Profile required" message="Choose a username before posting a drift." />
       </View>
     );
@@ -105,7 +105,7 @@ export default function CreateScreen() {
 
   return (
     <View style={styles.root}>
-      <Header title="Create Drift" />
+      <Header title="Create Drift" showBack />
       <ScrollView contentContainerStyle={styles.content}>
         <ProgressBar progress={(step + 1) / 4} />
         {step === 0 ? (

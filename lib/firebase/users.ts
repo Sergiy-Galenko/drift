@@ -131,3 +131,8 @@ export async function searchUsers(term: string): Promise<UserProfile[]> {
 
   return snapshot.docs.map((document) => mapUser(document)).filter((profile): profile is UserProfile => profile !== null);
 }
+
+export async function getDiscoverUsers(limitCount = 12): Promise<UserProfile[]> {
+  const snapshot = await getDocs(query(usersRef(), orderBy('followersCount', 'desc'), limit(limitCount)));
+  return snapshot.docs.map((document) => mapUser(document)).filter((profile): profile is UserProfile => profile !== null);
+}
