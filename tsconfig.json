@@ -12,6 +12,7 @@
     "app",
     "components",
     "constants",
+    "features",
     "hooks",
     "lib",
     "stores",

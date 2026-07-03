@@ -244,6 +244,73 @@ export const BellIcon = (props: IconProps) => {
   );
 };
 
+export const LockIcon = (props: IconProps) => {
+  const { size, color, strokeWidth } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="5" y="10" width="14" height="10" rx="2.5" stroke={color} strokeWidth={strokeWidth} />
+      <Path d="M8 10V8a4 4 0 0 1 8 0v2" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Path d="M12 14v2.5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+};
+
+export const BoxIcon = (props: IconProps) => {
+  const { size, color, strokeWidth } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5v-7Z" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Path d="m4.5 8.8 7.5 4.3 7.5-4.3M12 13.2V20" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="m8 6.2 8 4.6" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+};
+
+export const RouletteIcon = (props: IconProps) => {
+  const { size, color, strokeWidth } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="8" stroke={color} strokeWidth={strokeWidth} />
+      <Circle cx="12" cy="12" r="2" stroke={color} strokeWidth={strokeWidth} />
+      <Path d="M12 4v6M12 14v6M4 12h6M14 12h6" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Path d="m6.3 6.3 4.2 4.2M13.5 13.5l4.2 4.2M17.7 6.3l-4.2 4.2M10.5 13.5l-4.2 4.2" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+};
+
+export const MarketIcon = (props: IconProps) => {
+  const { size, color, strokeWidth } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M5 9h14l-1 11H6L5 9Z" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Path d="M8 9V7a4 4 0 0 1 8 0v2" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Path d="M9 14h6M9 17h4" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+};
+
+export const EyeIcon = (props: IconProps) => {
+  const { size, color, strokeWidth } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6Z" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth={strokeWidth} />
+    </Svg>
+  );
+};
+
+export const EyeOffIcon = (props: IconProps) => {
+  const { size, color, strokeWidth } = iconDefaults(props);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 4l16 16" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Path d="M9.5 5.4A9.4 9.4 0 0 1 12 5c5.8 0 9 7 9 7a15.2 15.2 0 0 1-3.1 4.1" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M14.1 14.1A3 3 0 0 1 9.9 9.9" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Path d="M6.4 7.2C4.2 8.8 3 12 3 12s3.2 7 9 7c1.1 0 2.2-.2 3.1-.6" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
 export const PhoneProofIcon = (props: IconProps) => {
   const { size, color, strokeWidth } = iconDefaults(props);
   return (

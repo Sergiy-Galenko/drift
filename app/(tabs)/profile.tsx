@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { IconButton } from '@/components/ui/IconButton';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Colors, F, R, S } from '@/constants/tokens';
+import { ProfileCardShowcase } from '@/features/roulette/components/ProfileCardShowcase';
 import { subscribeAuthorDrifts, subscribeVotedDrifts } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
 import type { Drift } from '@/types/drift';
@@ -91,6 +92,7 @@ export default function ProfileScreen() {
             <ProgressBar progress={Math.min(1, profile.streakCurrent / 7)} tone="amber" />
           </View>
         </View>
+        <ProfileCardShowcase />
         <View style={styles.tabs}>
           {(['created', 'voted', 'saved'] as ProfileTab[]).map((item, index) => (
             <Pressable key={item} onPress={() => setTab(item)} style={[styles.tab, tab === item ? styles.activeTab : null]}>

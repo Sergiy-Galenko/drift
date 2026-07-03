@@ -9,6 +9,7 @@ import { ProfileShortcut } from '@/components/navigation/ProfileShortcut';
 import { SearchShortcut } from '@/components/navigation/SearchShortcut';
 import { StoryPreview } from '@/components/story/StoryPreview';
 import { Colors, S } from '@/constants/tokens';
+import { RouletteEntryCard } from '@/features/roulette/components/RouletteEntryCard';
 import { useFeed } from '@/hooks/useFeed';
 
 export default function FeedScreen() {
@@ -22,6 +23,7 @@ export default function FeedScreen() {
           ))}
         </ScrollView>
         <FeaturedBanner drifts={feed.featured} />
+        <RouletteEntryCard />
       </>
     ),
     [feed.drifts, feed.featured],

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
+import { EyeIcon, EyeOffIcon } from '@/components/icons';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -57,6 +58,8 @@ export default function LoginScreen() {
   const [fallbackError, setFallbackError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [savingUsername, setSavingUsername] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const loginPasswordRef = useRef<TextInput>(null);
   const registerEmailRef = useRef<TextInput>(null);
   const registerPasswordRef = useRef<TextInput>(null);
@@ -150,6 +153,16 @@ export default function LoginScreen() {
     changeMode(isRegister ? 'login' : 'register');
   };
 
+  const renderPasswordToggle = (visible: boolean, onPress: () => void, label: string) => {
+    const Icon = visible ? EyeOffIcon : EyeIcon;
+
+    return (
+      <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.passwordToggle}>
+        <Icon size={20} color={Colors.textSecondary} />
+      </Pressable>
+    );
+  };
+
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="light" />
@@ -236,7 +249,7 @@ export default function LoginScreen() {
             autoCorrect={false}
             autoComplete={isRegister ? 'new-password' : 'current-password'}
             textContentType={isRegister ? 'newPassword' : 'password'}
-            secureTextEntry
+            secureTextEntry={!passwordVisible}
             value={isRegister ? registerForm.password : loginForm.password}
             onBlur={() => {
               const value = isRegister ? registerForm.password : loginForm.password;
@@ -253,6 +266,11 @@ export default function LoginScreen() {
             ref={isRegister ? registerPasswordRef : loginPasswordRef}
             error={isRegister ? registerErrors.password : loginErrors.password}
             onSubmitEditing={() => (isRegister ? registerConfirmPasswordRef.current?.focus() : void submit())}
+            right={renderPasswordToggle(
+              passwordVisible,
+              () => setPasswordVisible((value) => !value),
+              passwordVisible ? 'Hide password' : 'Show password',
+            )}
           />
 
           {isRegister ? (
@@ -264,7 +282,7 @@ export default function LoginScreen() {
                 autoCorrect={false}
                 autoComplete="new-password"
                 textContentType="newPassword"
-                secureTextEntry
+                secureTextEntry={!confirmPasswordVisible}
                 value={registerForm.confirmPassword}
                 onBlur={() => {
                   const parsed = RegisterSchema.safeParse(registerForm);
@@ -280,6 +298,11 @@ export default function LoginScreen() {
                 returnKeyType="done"
                 error={registerErrors.confirmPassword}
                 onSubmitEditing={() => void submit()}
+                right={renderPasswordToggle(
+                  confirmPasswordVisible,
+                  () => setConfirmPasswordVisible((value) => !value),
+                  confirmPasswordVisible ? 'Hide confirmed password' : 'Show confirmed password',
+                )}
               />
               <Text style={styles.helper}>Passwords must match before the account is created.</Text>
             </View>
@@ -408,6 +431,13 @@ const styles = StyleSheet.create({
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.sm,
     lineHeight: F.size.sm * F.lineHeight.normal,
+  },
+  passwordToggle: {
+    width: S.x5,
+    height: S.x5,
+    borderRadius: R.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   switchMode: {
     alignSelf: 'center',

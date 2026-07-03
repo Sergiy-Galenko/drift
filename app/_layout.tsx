@@ -44,6 +44,7 @@ export default function RootLayout() {
         <Stack.Screen name="(drift)" />
         <Stack.Screen name="(chat)" />
         <Stack.Screen name="(user)" />
+        <Stack.Screen name="(roulette)" />
         <Stack.Screen name="profile" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="search" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
