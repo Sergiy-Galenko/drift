@@ -10,7 +10,7 @@ import { ProfileShortcut } from '@/components/navigation/ProfileShortcut';
 import { SearchShortcut } from '@/components/navigation/SearchShortcut';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Colors, F, R, S } from '@/constants/tokens';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationsContext } from '@/hooks/useNotifications';
 import { subscribeAuthorDrifts } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
 import type { NotificationItem } from '@/types/notification';
@@ -37,15 +37,14 @@ function NotificationRow({
 
 export default function ActivityScreen() {
   const router = useRouter();
-  const profile = useAuthStore((state) => state.profile);
-  const { items, unreadCount, loading, markRead } = useNotifications();
+  const profileUid = useAuthStore((state) => state.profile?.uid);
+  const { items, unreadCount, loading, markRead } = useNotificationsContext();
   const [tab, setTab] = useState<ActivityTab>('mine');
   const [myDrifts, setMyDrifts] = useState<Drift[]>([]);
   const [mineLoading, setMineLoading] = useState(true);
 
   useEffect(() => {
-    if (!profile) {
-      setMyDrifts([]);
+    if (!profileUid || tab !== 'mine') {
       setMineLoading(false);
       return;
     }
@@ -59,7 +58,7 @@ export default function ActivityScreen() {
       }
 
       unsubscribe = subscribeAuthorDrifts(
-        profile.uid,
+        profileUid,
         (drifts) => {
           setMyDrifts(drifts);
           setMineLoading(false);
@@ -75,7 +74,7 @@ export default function ActivityScreen() {
       task.cancel();
       unsubscribe?.();
     };
-  }, [profile]);
+  }, [profileUid, tab]);
 
   const tabs = useMemo(
     () => [

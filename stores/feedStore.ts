@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import type { CategoryFilter } from '@/constants/categories';
 import type { Drift, DriftVote } from '@/types/drift';
 
 type VoteSnapshot = {
@@ -9,9 +10,10 @@ type VoteSnapshot = {
 
 interface FeedState {
   drifts: Record<string, Drift>;
+  activeCategory: CategoryFilter | null;
   userVotes: Record<string, DriftVote>;
   voteSnapshots: Record<string, VoteSnapshot>;
-  setDrifts: (drifts: Drift[]) => void;
+  setDrifts: (drifts: Drift[], category: CategoryFilter) => void;
   optimisticVote: (driftId: string, direction: DriftVote) => void;
   rollbackVote: (driftId: string) => void;
   commitVote: (driftId: string, direction: DriftVote) => void;
@@ -20,11 +22,13 @@ interface FeedState {
 
 export const useFeedStore = create<FeedState>((set) => ({
   drifts: {},
+  activeCategory: null,
   userVotes: {},
   voteSnapshots: {},
-  setDrifts: (drifts) =>
+  setDrifts: (drifts, category) =>
     set(() => ({
       drifts: Object.fromEntries(drifts.map((drift) => [drift.id, drift])),
+      activeCategory: category,
     })),
   optimisticVote: (driftId, direction) =>
     set((state) => {

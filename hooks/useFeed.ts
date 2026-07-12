@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InteractionManager } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 
 import type { CategoryFilter } from '@/constants/categories';
 import { subscribeFeaturedDrifts, subscribeFeedDrifts } from '@/lib/firebase/drifts';
@@ -9,18 +10,31 @@ import type { Drift } from '@/types/drift';
 import { firebaseErrorMessage } from '@/utils/formatters';
 import { logger } from '@/utils/logger';
 
-export function useFeed() {
+type UseFeedOptions = {
+  includeFeatured?: boolean;
+};
+
+const EMPTY_DRIFTS: Record<string, Drift> = {};
+
+export function useFeed({ includeFeatured = true }: UseFeedOptions = {}) {
+  const isFocused = useIsFocused();
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [limitCount, setLimitCount] = useState(20);
   const [reloadToken, setReloadToken] = useState(0);
   const [featured, setFeatured] = useState<Drift[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const driftsById = useFeedStore((state) => state.drifts);
+  const [hasMore, setHasMore] = useState(true);
+  const loadingMoreRef = useRef(false);
+  const driftsById = useFeedStore((state) => (state.activeCategory === category ? state.drifts : EMPTY_DRIFTS));
   const setDrifts = useFeedStore((state) => state.setDrifts);
   const pushToast = useUIStore((state) => state.pushToast);
 
   useEffect(() => {
+    if (!isFocused) {
+      return undefined;
+    }
+
     setLoading(true);
     let active = true;
     let unsubscribe: (() => void) | undefined;
@@ -33,13 +47,16 @@ export function useFeed() {
         category,
         limitCount,
         (items) => {
-          setDrifts(items);
+          setDrifts(items, category);
+          setHasMore(items.length >= limitCount);
+          loadingMoreRef.current = false;
           setLoading(false);
           setRefreshing(false);
         },
         (message) => {
           logger.error('Feed subscription failed', { message });
           pushToast({ title: 'Feed unavailable', message: firebaseErrorMessage(message), tone: 'danger' });
+          loadingMoreRef.current = false;
           setLoading(false);
           setRefreshing(false);
         },
@@ -51,9 +68,13 @@ export function useFeed() {
       task.cancel();
       unsubscribe?.();
     };
-  }, [category, limitCount, pushToast, reloadToken, setDrifts]);
+  }, [category, isFocused, limitCount, pushToast, reloadToken, setDrifts]);
 
   useEffect(() => {
+    if (!isFocused || !includeFeatured) {
+      return undefined;
+    }
+
     let active = true;
     let unsubscribe: (() => void) | undefined;
     const task = InteractionManager.runAfterInteractions(() => {
@@ -74,7 +95,7 @@ export function useFeed() {
       task.cancel();
       unsubscribe?.();
     };
-  }, []);
+  }, [includeFeatured, isFocused]);
 
   const drifts = useMemo(
     () => Object.values(driftsById).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
@@ -82,17 +103,31 @@ export function useFeed() {
   );
 
   const refresh = useCallback(() => {
+    loadingMoreRef.current = false;
+    setHasMore(true);
     setRefreshing(true);
     setReloadToken((value) => value + 1);
   }, []);
 
-  const loadMore = useCallback(() => {
-    setLimitCount((count) => count + 10);
+  const setFeedCategory = useCallback((nextCategory: CategoryFilter) => {
+    loadingMoreRef.current = false;
+    setHasMore(true);
+    setLimitCount(20);
+    setCategory(nextCategory);
   }, []);
+
+  const loadMore = useCallback(() => {
+    if (loading || !hasMore || loadingMoreRef.current) {
+      return;
+    }
+
+    loadingMoreRef.current = true;
+    setLimitCount((count) => count + 10);
+  }, [hasMore, loading]);
 
   return {
     category,
-    setCategory,
+    setCategory: setFeedCategory,
     drifts,
     featured,
     loading,

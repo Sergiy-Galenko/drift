@@ -4,14 +4,11 @@ import { useRouter } from 'expo-router';
 import { BoxIcon, GridIcon, MarketIcon, RouletteIcon } from '@/components/icons';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Colors, F, R, S } from '@/constants/tokens';
-import { useAuthStore } from '@/stores/authStore';
 
-import { getRouletteProgress, useRouletteStore, useRouletteSync } from '../store/useRouletteStore';
+import { getRouletteProgress, useRouletteStore } from '../store/useRouletteStore';
 
 export function RouletteEntryCard() {
   const router = useRouter();
-  const profile = useAuthStore((state) => state.profile);
-  useRouletteSync(profile);
   const userState = useRouletteStore((state) => state.userState);
   const progress = getRouletteProgress(userState);
 

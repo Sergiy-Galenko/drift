@@ -37,11 +37,25 @@ export function useComments(driftId: string | undefined) {
     return unsubscribe;
   }, [driftId, pushToast]);
 
-  const topLevel = useMemo(() => comments.filter((comment) => comment.parentId === null), [comments]);
+  const { topLevel, repliesByParent } = useMemo(() => {
+    const nextTopLevel: Comment[] = [];
+    const nextRepliesByParent: Record<string, Comment[]> = {};
+
+    for (const comment of comments) {
+      if (comment.parentId === null) {
+        nextTopLevel.push(comment);
+        continue;
+      }
+
+      (nextRepliesByParent[comment.parentId] ??= []).push(comment);
+    }
+
+    return { topLevel: nextTopLevel, repliesByParent: nextRepliesByParent };
+  }, [comments]);
 
   const repliesFor = useCallback(
-    (commentId: string) => comments.filter((comment) => comment.parentId === commentId),
-    [comments],
+    (commentId: string) => repliesByParent[commentId] ?? [],
+    [repliesByParent],
   );
 
   const postComment = useCallback(

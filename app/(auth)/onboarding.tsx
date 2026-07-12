@@ -29,17 +29,17 @@ const slides: Slide[] = [
   {
     title: 'Your life.\nTheir vote.',
     body: 'Post a real decision and let the room choose the path.',
-    image: require('../../assets/onboarding/decision-vote.png') as ImageSourcePropType,
+    image: require('../../assets/onboarding/webp/decision-vote.webp') as ImageSourcePropType,
   },
   {
     title: 'Commit\nor quit.',
     body: 'When the vote ends, the decision becomes a promise.',
-    image: require('../../assets/onboarding/commit-time.png') as ImageSourcePropType,
+    image: require('../../assets/onboarding/webp/commit-time.webp') as ImageSourcePropType,
   },
   {
     title: "Proof or it\ndidn't happen.",
     body: 'Upload evidence, close the loop, and build reputation.',
-    image: require('../../assets/onboarding/proof-reputation.png') as ImageSourcePropType,
+    image: require('../../assets/onboarding/webp/proof-reputation.webp') as ImageSourcePropType,
   },
 ];
 

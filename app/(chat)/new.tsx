@@ -52,24 +52,29 @@ export default function NewConversationScreen() {
   }, [currentUid, directUid, directUsername, pushToast, router]);
 
   useEffect(() => {
-    if (!term.trim()) {
+    const normalizedTerm = term.trim();
+
+    if (!normalizedTerm) {
       setResults([]);
-      return;
+      return undefined;
     }
 
     let mounted = true;
-    searchUsers(term)
-      .then((users) => {
-        if (mounted) {
-          setResults(users.filter((user) => user.uid !== currentUid));
-        }
-      })
-      .catch((error: unknown) => {
-        logger.error('User search failed', { error: String(error) });
-      });
+    const timeout = setTimeout(() => {
+      searchUsers(normalizedTerm)
+        .then((users) => {
+          if (mounted) {
+            setResults(users.filter((user) => user.uid !== currentUid));
+          }
+        })
+        .catch((error: unknown) => {
+          logger.error('User search failed', { error: String(error) });
+        });
+    }, 250);
 
     return () => {
       mounted = false;
+      clearTimeout(timeout);
     };
   }, [currentUid, term]);
 

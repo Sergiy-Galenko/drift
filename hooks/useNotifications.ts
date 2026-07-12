@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import { InteractionManager } from 'react-native';
 
 import { markNotificationRead, subscribeNotifications } from '@/lib/firebase/notifications';
@@ -65,4 +65,28 @@ export function useNotifications() {
   );
 
   return { items, unreadCount, loading, markRead };
+}
+
+type NotificationsContextValue = ReturnType<typeof useNotifications>;
+
+const NotificationsContext = createContext<NotificationsContextValue | null>(null);
+
+export function NotificationsProvider({ children }: PropsWithChildren) {
+  const { items, unreadCount, loading, markRead } = useNotifications();
+  const value = useMemo(
+    () => ({ items, unreadCount, loading, markRead }),
+    [items, loading, markRead, unreadCount],
+  );
+
+  return createElement(NotificationsContext.Provider, { value }, children);
+}
+
+export function useNotificationsContext(): NotificationsContextValue {
+  const notifications = useContext(NotificationsContext);
+
+  if (!notifications) {
+    throw new Error('useNotificationsContext must be used within NotificationsProvider');
+  }
+
+  return notifications;
 }

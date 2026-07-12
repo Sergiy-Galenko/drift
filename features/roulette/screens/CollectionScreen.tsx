@@ -3,14 +3,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Header } from '@/components/navigation/Header';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Colors, F, R, S } from '@/constants/tokens';
-import { useAuthStore } from '@/stores/authStore';
 
 import { CollectionGrid } from '../components/CollectionGrid';
-import { getRouletteProgress, useRouletteStore, useRouletteSync } from '../store/useRouletteStore';
+import { getRouletteProgress, useRouletteStore } from '../store/useRouletteStore';
 
 export function CollectionScreen() {
-  const profile = useAuthStore((state) => state.profile);
-  useRouletteSync(profile);
   const userState = useRouletteStore((state) => state.userState);
   const toggleShowcaseCard = useRouletteStore((state) => state.toggleShowcaseCard);
   const progress = getRouletteProgress(userState);

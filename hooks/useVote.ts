@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { castVote } from '@/lib/firebase/votes';
 import { useAuthStore } from '@/stores/authStore';
@@ -15,13 +15,10 @@ export function useVote(drift: Drift | null) {
   const optimisticVote = useFeedStore((state) => state.optimisticVote);
   const rollbackVote = useFeedStore((state) => state.rollbackVote);
   const commitVote = useFeedStore((state) => state.commitVote);
-  const userVotes = useFeedStore((state) => state.userVotes);
+  const storedVote = useFeedStore((state) => (drift ? state.userVotes[drift.id] : undefined));
   const pushToast = useUIStore((state) => state.pushToast);
 
-  const currentVote = useMemo(() => {
-    if (!drift || !uid) return null;
-    return userVotes[drift.id] ?? drift.voters[uid] ?? null;
-  }, [drift, uid, userVotes]);
+  const currentVote = drift && uid ? storedVote ?? drift.voters[uid] ?? null : null;
 
   const canVote = Boolean(drift && uid && drift.status === 'active' && drift.authorUid !== uid);
 

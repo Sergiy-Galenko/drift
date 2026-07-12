@@ -21,19 +21,28 @@ type ProfileTab = 'created' | 'voted' | 'saved';
 export default function ProfileScreen() {
   const router = useRouter();
   const profile = useAuthStore((state) => state.profile);
+  const profileUid = profile?.uid;
   const [tab, setTab] = useState<ProfileTab>('created');
   const [created, setCreated] = useState<Drift[]>([]);
   const [voted, setVoted] = useState<Drift[]>([]);
 
   useEffect(() => {
-    if (!profile) return;
-    const unsubscribeCreated = subscribeAuthorDrifts(profile.uid, setCreated, () => undefined);
-    const unsubscribeVoted = subscribeVotedDrifts(profile.uid, setVoted, () => undefined);
-    return () => {
-      unsubscribeCreated();
-      unsubscribeVoted();
-    };
-  }, [profile]);
+    if (!profileUid) {
+      setCreated([]);
+      setVoted([]);
+      return undefined;
+    }
+
+    if (tab === 'created') {
+      return subscribeAuthorDrifts(profileUid, setCreated, () => undefined);
+    }
+
+    if (tab === 'voted') {
+      return subscribeVotedDrifts(profileUid, setVoted, () => undefined);
+    }
+
+    return undefined;
+  }, [profileUid, tab]);
 
   if (!profile) {
     return (

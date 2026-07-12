@@ -24,11 +24,16 @@ export default function PublicProfileScreen() {
   const follow = useFollow(profile?.uid);
   const currentUid = useAuthStore((state) => state.firebaseUser?.uid);
   const [drifts, setDrifts] = useState<Drift[]>([]);
+  const profileUid = profile?.uid;
 
   useEffect(() => {
-    if (!profile) return;
-    return subscribeAuthorDrifts(profile.uid, setDrifts, () => undefined);
-  }, [profile]);
+    if (!profileUid) {
+      setDrifts([]);
+      return undefined;
+    }
+
+    return subscribeAuthorDrifts(profileUid, setDrifts, () => undefined);
+  }, [profileUid]);
 
   if (loading) {
     return (

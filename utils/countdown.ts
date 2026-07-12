@@ -1,5 +1,5 @@
-export function formatCountdown(expiresAt: Date): string {
-  const ms = expiresAt.getTime() - Date.now();
+export function formatCountdown(expiresAt: Date, now = Date.now()): string {
+  const ms = expiresAt.getTime() - now;
   if (ms <= 0) return 'Expired';
   const totalSecs = Math.floor(ms / 1000);
   const h = Math.floor(totalSecs / 3600);
@@ -10,8 +10,8 @@ export function formatCountdown(expiresAt: Date): string {
   return `${s}s`;
 }
 
-export function formatCountdownShort(expiresAt: Date): string {
-  const ms = expiresAt.getTime() - Date.now();
+export function formatCountdownShort(expiresAt: Date, now = Date.now()): string {
+  const ms = expiresAt.getTime() - now;
   if (ms <= 0) return 'Done';
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
@@ -21,14 +21,14 @@ export function formatCountdownShort(expiresAt: Date): string {
   return `${s}s`;
 }
 
-export function getCountdownProgress(expiresAt: Date): number {
+export function getCountdownProgress(expiresAt: Date, now = Date.now()): number {
   const total = 24 * 3600 * 1000;
-  const remaining = Math.max(0, expiresAt.getTime() - Date.now());
+  const remaining = Math.max(0, expiresAt.getTime() - now);
   return remaining / total;
 }
 
-export function isExpiringSoon(expiresAt: Date): boolean {
-  return expiresAt.getTime() - Date.now() < 3600000;
+export function isExpiringSoon(expiresAt: Date, now = Date.now()): boolean {
+  return expiresAt.getTime() - now < 3600000;
 }
 
 export function isExpired(expiresAt: Date): boolean {

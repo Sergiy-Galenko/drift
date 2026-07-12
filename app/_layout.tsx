@@ -10,13 +10,17 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Toast } from '@/components/ui/Toast';
 import { fontMap } from '@/constants/fonts';
 import { Colors } from '@/constants/tokens';
+import { useRouletteSync } from '@/features/roulette/store/useRouletteStore';
 import { useAuthBootstrap } from '@/hooks/useAuth';
 import '@/lib/firebase/config';
+import { useAuthStore } from '@/stores/authStore';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
   useAuthBootstrap();
+  const profile = useAuthStore((state) => state.profile);
+  useRouletteSync(profile);
   const [fontsLoaded] = useFonts(fontMap);
 
   useEffect(() => {

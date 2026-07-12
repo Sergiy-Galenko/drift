@@ -12,7 +12,7 @@ import {
 } from '@/components/icons';
 import { Colors, Motion, R, S } from '@/constants/tokens';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationsContext } from '@/hooks/useNotifications';
 
 const VISIBLE_TABS: {
   routeName: 'index' | 'activity';
@@ -70,7 +70,7 @@ function TabButton({ routeName, label, icon: Icon, focused, unreadCount = 0, fab
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { unreadCount } = useNotifications();
+  const { unreadCount } = useNotificationsContext();
   const focusedRouteName = state.routes[state.index]?.name;
 
   return (

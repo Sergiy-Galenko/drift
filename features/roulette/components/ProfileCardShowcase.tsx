@@ -3,20 +3,16 @@ import { useRouter } from 'expo-router';
 
 import { MarketIcon } from '@/components/icons';
 import { Colors, F, R, S } from '@/constants/tokens';
-import { useAuthStore } from '@/stores/authStore';
 
 import { CardArtwork } from './CardArtwork';
 import { RARITY_LABELS } from '../config/rouletteConfig';
 import {
   getProfileShowcaseCards,
   useRouletteStore,
-  useRouletteSync,
 } from '../store/useRouletteStore';
 
 export function ProfileCardShowcase() {
   const router = useRouter();
-  const profile = useAuthStore((state) => state.profile);
-  useRouletteSync(profile);
   const userState = useRouletteStore((state) => state.userState);
   const cards = getProfileShowcaseCards(userState);
 

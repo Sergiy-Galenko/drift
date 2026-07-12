@@ -11,14 +11,12 @@ import { CaseCard } from '../components/CaseCard';
 import {
   getRouletteCaseViews,
   useRouletteStore,
-  useRouletteSync,
 } from '../store/useRouletteStore';
 import type { OpenCaseResult } from '../types/roulette.types';
 
 export function CasesScreen() {
   const haptics = useHaptics();
   const profile = useAuthStore((state) => state.profile);
-  useRouletteSync(profile);
   const userState = useRouletteStore((state) => state.userState);
   const committing = useRouletteStore((state) => state.committing);
   const openCase = useRouletteStore((state) => state.openCase);

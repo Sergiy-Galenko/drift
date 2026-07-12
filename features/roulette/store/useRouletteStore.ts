@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { create } from 'zustand';
 
 import { useUIStore } from '@/stores/uiStore';
@@ -36,6 +36,7 @@ type RouletteStore = {
   committing: boolean;
   error: string | null;
   startSync: (profile: UserProfile) => () => void;
+  refreshAchievementUnlocks: (profile: UserProfile) => void;
   spin: () => SpinResult | null;
   openCase: (caseId: string, profile: UserProfile | null) => OpenCaseResult | null;
   grantTokens: (quantity: number, source: SpinTokenGrantSource) => void;
@@ -174,6 +175,22 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
         toast('Roulette sync failed', 'Your collection will retry when Firestore is reachable.', 'warning');
       },
     );
+  },
+  refreshAchievementUnlocks: (profile) => {
+    const current = get().userState;
+
+    if (!current || current.uid !== profile.uid) {
+      return;
+    }
+
+    const nextState = applyAchievementUnlocks(current, profile);
+
+    if (nextState === current) {
+      return;
+    }
+
+    persistAchievementUnlocks(profile.uid, current, profile);
+    set({ userState: nextState });
   },
   spin: () => {
     const current = get().userState;
@@ -397,14 +414,27 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
 
 export function useRouletteSync(profile: UserProfile | null): void {
   const startSync = useRouletteStore((state) => state.startSync);
+  const refreshAchievementUnlocks = useRouletteStore((state) => state.refreshAchievementUnlocks);
+  const profileRef = useRef(profile);
+  const uid = profile?.uid;
+
+  profileRef.current = profile;
 
   useEffect(() => {
-    if (!profile) {
+    const syncProfile = profileRef.current;
+
+    if (!syncProfile) {
       return undefined;
     }
 
-    return startSync(profile);
-  }, [profile, startSync]);
+    return startSync(syncProfile);
+  }, [startSync, uid]);
+
+  useEffect(() => {
+    if (profile) {
+      refreshAchievementUnlocks(profile);
+    }
+  }, [profile, refreshAchievementUnlocks]);
 }
 
 export { SPIN_PACK_SIZE };

@@ -19,7 +19,7 @@ import {
 
 import { db } from './config';
 import { nullableTimestampToDate, timestampToDate } from './timestamps';
-import { getUserProfile } from './users';
+import { getUserProfiles } from './users';
 import type { ChatMessage, ConversationDoc, ConversationPreview, MessageDoc } from '@/types/message';
 
 function normalizeConversationParticipants(uidA: string, uidB: string): [string, string] {
@@ -85,29 +85,37 @@ export function subscribeConversations(
   return onSnapshot(
     query(conversationsRef(), where('participants', 'array-contains', uid), limit(50)),
     (snapshot) => {
-      Promise.all(
-        snapshot.docs.map(async (document) => {
+      const otherUids = snapshot.docs
+        .map((document) => {
           const data = document.data({ serverTimestamps: 'estimate' }) as ConversationDoc;
-          const otherUid = data.participants.find((participant) => participant !== uid) ?? null;
-          const otherUser = otherUid ? await getUserProfile(otherUid) : null;
+          return data.participants.find((participant) => participant !== uid) ?? null;
+        })
+        .filter((otherUid): otherUid is string => Boolean(otherUid));
 
-          return {
-            ...data,
-            id: data.id || document.id,
-            createdAt: timestampToDate(data.createdAt),
-            lastMessageAt: nullableTimestampToDate(data.lastMessageAt),
-            otherUser: otherUser
-              ? {
-                  uid: otherUser.uid,
-                  username: otherUser.username,
-                  avatarUrl: otherUser.avatarUrl,
-                  reputationScore: otherUser.reputationScore,
-                }
-              : null,
-            unread: data.unreadCount[uid] ?? 0,
-          } satisfies ConversationPreview;
-        }),
-      )
+      getUserProfiles(otherUids)
+        .then((profilesByUid) =>
+          snapshot.docs.map((document) => {
+            const data = document.data({ serverTimestamps: 'estimate' }) as ConversationDoc;
+            const otherUid = data.participants.find((participant) => participant !== uid) ?? null;
+            const otherUser = otherUid ? profilesByUid.get(otherUid) ?? null : null;
+
+            return {
+              ...data,
+              id: data.id || document.id,
+              createdAt: timestampToDate(data.createdAt),
+              lastMessageAt: nullableTimestampToDate(data.lastMessageAt),
+              otherUser: otherUser
+                ? {
+                    uid: otherUser.uid,
+                    username: otherUser.username,
+                    avatarUrl: otherUser.avatarUrl,
+                    reputationScore: otherUser.reputationScore,
+                  }
+                : null,
+              unread: data.unreadCount[uid] ?? 0,
+            } satisfies ConversationPreview;
+          }),
+        )
         .then((items) =>
           onData(
             items.sort((left, right) => {

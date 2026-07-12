@@ -1,5 +1,6 @@
 import {
   collection,
+  documentId,
   doc,
   getDoc,
   getDocs,
@@ -22,6 +23,16 @@ import { db } from './config';
 import { timestampToDate } from './timestamps';
 import type { UserDoc, UserProfile, UserProfileInput, UserSettings } from '@/types/user';
 import { calcReputationTier } from '@/utils/reputation';
+
+const USER_PROFILE_BATCH_SIZE = 30;
+const USER_PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+type CachedUserProfile = {
+  profile: UserProfile | null;
+  expiresAt: number;
+};
+
+const userProfileCache = new Map<string, CachedUserProfile>();
 
 function usersRef() {
   return collection(db, 'users');
@@ -49,7 +60,58 @@ export function mapUser(snapshot: QueryDocumentSnapshot<DocumentData> | Document
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snapshot = await getDoc(userRef(uid));
-  return mapUser(snapshot);
+  const profile = mapUser(snapshot);
+  userProfileCache.set(uid, { profile, expiresAt: Date.now() + USER_PROFILE_CACHE_TTL_MS });
+  return profile;
+}
+
+export async function getUserProfiles(uids: readonly string[]): Promise<Map<string, UserProfile | null>> {
+  const uniqueUids = Array.from(new Set(uids.filter(Boolean)));
+  const profiles = new Map<string, UserProfile | null>();
+  const now = Date.now();
+  const missingUids: string[] = [];
+
+  for (const uid of uniqueUids) {
+    const cached = userProfileCache.get(uid);
+
+    if (cached && cached.expiresAt > now) {
+      profiles.set(uid, cached.profile);
+    } else {
+      missingUids.push(uid);
+    }
+  }
+
+  if (missingUids.length === 0) {
+    return profiles;
+  }
+
+  const snapshots = await Promise.all(
+    Array.from({ length: Math.ceil(missingUids.length / USER_PROFILE_BATCH_SIZE) }, (_, index) => {
+      const batch = missingUids.slice(index * USER_PROFILE_BATCH_SIZE, (index + 1) * USER_PROFILE_BATCH_SIZE);
+      return getDocs(query(usersRef(), where(documentId(), 'in', batch)));
+    }),
+  );
+  const fetchedProfiles = new Map<string, UserProfile>();
+
+  for (const snapshot of snapshots) {
+    for (const document of snapshot.docs) {
+      const profile = mapUser(document);
+
+      if (profile) {
+        fetchedProfiles.set(profile.uid, profile);
+      }
+    }
+  }
+
+  const expiresAt = Date.now() + USER_PROFILE_CACHE_TTL_MS;
+
+  for (const uid of missingUids) {
+    const profile = fetchedProfiles.get(uid) ?? null;
+    profiles.set(uid, profile);
+    userProfileCache.set(uid, { profile, expiresAt });
+  }
+
+  return profiles;
 }
 
 export async function getUserByUsername(username: string): Promise<UserProfile | null> {
@@ -98,6 +160,7 @@ export async function createUserProfile(uid: string, input: UserProfileInput): P
   };
 
   await setDoc(userRef(uid), user);
+  userProfileCache.delete(uid);
 }
 
 export async function updateUserProfile(
@@ -110,6 +173,7 @@ export async function updateUserProfile(
   if (input.bio !== undefined) update.bio = input.bio?.trim() || null;
   if (input.username !== undefined) update.username = input.username.trim().toLowerCase();
   await updateDoc(userRef(uid), { ...update, lastActiveAt: serverTimestamp() });
+  userProfileCache.delete(uid);
 }
 
 export async function updateUserSettings(uid: string, settings: Partial<UserSettings>): Promise<void> {

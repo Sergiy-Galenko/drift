@@ -4,12 +4,11 @@ import { Header } from '@/components/navigation/Header';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Colors, F, R, S } from '@/constants/tokens';
-import { useAuthStore } from '@/stores/authStore';
 
 import { CardArtwork } from '../components/CardArtwork';
 import { ROULETTE_CARD_BY_ID } from '../config/cardsData';
 import { RARITY_BADGE_TONES, RARITY_LABELS } from '../config/rouletteConfig';
-import { useRouletteStore, useRouletteSync } from '../store/useRouletteStore';
+import { useRouletteStore } from '../store/useRouletteStore';
 import type { Card, UserCardEntry } from '../types/roulette.types';
 
 type MarketEntry = {
@@ -18,8 +17,6 @@ type MarketEntry = {
 };
 
 export function MarketScreen() {
-  const profile = useAuthStore((state) => state.profile);
-  useRouletteSync(profile);
   const userState = useRouletteStore((state) => state.userState);
   const committing = useRouletteStore((state) => state.committing);
   const sellCard = useRouletteStore((state) => state.sellCard);

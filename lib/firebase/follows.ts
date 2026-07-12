@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from './config';
-import { getUserProfile } from './users';
+import { getUserProfiles } from './users';
 import type { FollowDoc } from '@/types/drift';
 import type { UserProfile } from '@/types/user';
 
@@ -75,8 +75,16 @@ export function subscribeFollowers(
   return onSnapshot(
     query(collection(db, 'follows'), where('followingId', '==', uid), limit(80)),
     (snapshot) => {
-      Promise.all(snapshot.docs.map((document) => getUserProfile((document.data() as FollowDoc).followerId)))
-        .then((profiles) => onData(profiles.filter((profile): profile is UserProfile => profile !== null)))
+      const followerIds = snapshot.docs.map((document) => (document.data() as FollowDoc).followerId);
+
+      getUserProfiles(followerIds)
+        .then((profilesByUid) =>
+          onData(
+            followerIds
+              .map((followerId) => profilesByUid.get(followerId) ?? null)
+              .filter((profile): profile is UserProfile => profile !== null),
+          ),
+        )
         .catch((error: unknown) => onError(String(error)));
     },
     (error) => onError(error.code),

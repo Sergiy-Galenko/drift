@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useAuthStore } from '@/stores/authStore';
 
 import { CardRevealModal } from '../components/CardRevealModal';
 import { RouletteWheel } from '../components/RouletteWheel';
@@ -19,15 +18,12 @@ import {
   getRouletteProgress,
   SPIN_PACK_SIZE,
   useRouletteStore,
-  useRouletteSync,
 } from '../store/useRouletteStore';
 import type { SpinResult } from '../types/roulette.types';
 
 export function RouletteScreen() {
   const router = useRouter();
   const haptics = useHaptics();
-  const profile = useAuthStore((state) => state.profile);
-  useRouletteSync(profile);
   const userState = useRouletteStore((state) => state.userState);
   const committing = useRouletteStore((state) => state.committing);
   const spin = useRouletteStore((state) => state.spin);
