@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { Colors, F, R, S } from '@/constants/tokens';
@@ -17,6 +17,8 @@ type RouletteWheelProps = {
 const CELL_WIDTH = 112;
 const CELL_GAP = 12;
 const RESULT_INDEX = 8;
+const REEL_PADDING_LEFT = S.x2;
+const INDICATOR_WIDTH = 3;
 
 function buildIdleReel(cards: Card[]): Card[] {
   return cards.slice(0, 8);
@@ -31,10 +33,19 @@ function buildSpinReel(cards: Card[], resultCard: Card, seed: number): Card[] {
 export function RouletteWheel({ cards, resultCard, spinNonce, onSettled }: RouletteWheelProps) {
   const translateX = useSharedValue(0);
   const [reelCards, setReelCards] = useState<Card[]>(() => buildIdleReel(cards));
-  const targetOffset = -(RESULT_INDEX * (CELL_WIDTH + CELL_GAP) - CELL_WIDTH * 0.58);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const targetOffset = useMemo(() => {
+    const resultCenter = REEL_PADDING_LEFT + RESULT_INDEX * (CELL_WIDTH + CELL_GAP) + CELL_WIDTH / 2;
+    return viewportWidth / 2 - resultCenter;
+  }, [viewportWidth]);
+
+  const handleLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width } = event.nativeEvent.layout;
+    setViewportWidth((currentWidth) => (currentWidth === width ? currentWidth : width));
+  }, []);
 
   useEffect(() => {
-    if (!resultCard || cards.length === 0 || spinNonce === 0) {
+    if (!resultCard || cards.length === 0 || spinNonce === 0 || viewportWidth === 0) {
       return;
     }
 
@@ -49,7 +60,7 @@ export function RouletteWheel({ cards, resultCard, spinNonce, onSettled }: Roule
         }
       },
     );
-  }, [cards, onSettled, resultCard, spinNonce, targetOffset, translateX]);
+  }, [cards, onSettled, resultCard, spinNonce, targetOffset, translateX, viewportWidth]);
 
   useEffect(() => {
     if (spinNonce === 0) {
@@ -61,10 +72,13 @@ export function RouletteWheel({ cards, resultCard, spinNonce, onSettled }: Roule
     transform: [{ translateX: translateX.value }],
   }));
 
-  const reelWidth = useMemo(() => reelCards.length * CELL_WIDTH + Math.max(0, reelCards.length - 1) * CELL_GAP, [reelCards.length]);
+  const reelWidth = useMemo(
+    () => REEL_PADDING_LEFT + reelCards.length * CELL_WIDTH + Math.max(0, reelCards.length - 1) * CELL_GAP,
+    [reelCards.length],
+  );
 
   return (
-    <View style={styles.wrap}>
+    <View style={styles.wrap} onLayout={handleLayout}>
       <View pointerEvents="none" style={styles.indicator}>
         <View style={styles.indicatorLine} />
       </View>
@@ -93,7 +107,7 @@ const styles = StyleSheet.create({
   reel: {
     flexDirection: 'row',
     gap: CELL_GAP,
-    paddingLeft: S.x2,
+    paddingLeft: REEL_PADDING_LEFT,
     alignItems: 'center',
   },
   cell: {
@@ -115,10 +129,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   indicatorLine: {
-    width: 3,
+    width: INDICATOR_WIDTH,
     height: '100%',
     borderRadius: R.pill,
     backgroundColor: Colors.white,
     opacity: 0.86,
+    marginLeft: -INDICATOR_WIDTH / 2,
   },
 });
