@@ -17,19 +17,55 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const profile = useAuthStore((state) => state.profile);
   const pushToast = useUIStore((state) => state.pushToast);
+
   const [username, setUsername] = useState(profile?.username ?? '');
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [saving, setSaving] = useState(false);
 
+  const validateUsername = (value: string) => {
+    const result = UsernameSchema.safeParse(value);
+    if (!result.success) {
+      return result.error.issues[0]?.message;
+    }
+    return null;
+  };
+
+  const validateBio = (value: string) => {
+    const result = BioSchema.safeParse(value);
+    if (!result.success) {
+      return result.error.issues[0]?.message;
+    }
+    return null;
+  };
+
   const save = async () => {
-    if (!profile) return;
-    const parsedUsername = UsernameSchema.safeParse(username);
-    const parsedBio = BioSchema.safeParse(bio);
-    if (!parsedUsername.success || !parsedBio.success) {
+    if (!profile) {
       pushToast({
-        title: 'Profile invalid',
-        message: parsedUsername.error?.issues[0]?.message ?? parsedBio.error?.issues[0]?.message,
+        title: 'Error',
+        message: 'Profile not found',
+        tone: 'danger',
+      });
+      return;
+    }
+
+    // Validate username
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      pushToast({
+        title: 'Invalid username',
+        message: usernameError,
+        tone: 'warning',
+      });
+      return;
+    }
+
+    // Validate bio
+    const bioError = validateBio(bio);
+    if (bioError) {
+      pushToast({
+        title: 'Invalid bio',
+        message: bioError,
         tone: 'warning',
       });
       return;
@@ -38,40 +74,80 @@ export default function EditProfileScreen() {
     setSaving(true);
     try {
       await updateUserProfile(profile.uid, {
-        username: parsedUsername.data,
-        displayName,
-        bio: parsedBio.data,
+        username: username.trim(),
+        displayName: displayName.trim() || username.trim(),
+        bio: bio.trim(),
       });
+
+      // Update local profile data
+      // The auth store should refresh automatically via the listener
+
+      pushToast({
+        title: 'Success',
+        message: 'Profile updated successfully',
+        tone: 'success',
+      });
+
       router.back();
     } catch (error) {
       logger.error('Edit profile failed', { error: String(error) });
-      pushToast({ title: 'Save failed', message: firebaseErrorMessage(String(error)), tone: 'danger' });
+      pushToast({
+        title: 'Save failed',
+        message: firebaseErrorMessage(String(error)),
+        tone: 'danger',
+      });
     } finally {
       setSaving(false);
     }
+  };
+
+  const isFormValid = () => {
+    return username.trim().length > 0 && bio.length <= 110;
   };
 
   return (
     <View style={styles.root}>
       <Header title="Edit Profile" showBack />
       <View style={styles.content}>
-        <Input label="Username" value={username} onChangeText={setUsername} autoCapitalize="none" />
-        <Input label="Display name" value={displayName} onChangeText={setDisplayName} />
-        {/* Bio input with character counter */}
         <Input
-          label="Bio"
-          value={bio}
-          onChangeText={setBio}
-          maxLength={110}
-          multiline
-          style={styles.bio}
+          label="Username"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder="Enter username"
+          maxLength={30}
         />
-        <View style={{ alignItems: 'flex-end', marginBottom: 8 }}>
-          <Text style={{ color: Colors.textSecondary, fontSize: 12 }}>
+
+        <Input
+          label="Display name (optional)"
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="Your display name"
+          maxLength={50}
+        />
+
+        <View style={styles.bioContainer}>
+          <Input
+            label="Bio"
+            value={bio}
+            onChangeText={setBio}
+            maxLength={110}
+            multiline
+            style={styles.bio}
+            placeholder="Tell us about yourself"
+          />
+          <Text style={styles.characterCount}>
             {bio.length}/110
           </Text>
         </View>
-        <Button label="Save profile" onPress={() => void save()} loading={saving} />
+
+        <Button
+          label="Save profile"
+          onPress={save}
+          loading={saving}
+          disabled={!isFormValid() || saving}
+        />
       </View>
     </View>
   );
@@ -86,8 +162,20 @@ const styles = StyleSheet.create({
     padding: S.lg,
     gap: S.lg,
   },
+  bioContainer: {
+    position: 'relative',
+  },
   bio: {
     minHeight: 110,
     textAlignVertical: 'top',
+    paddingBottom: 35, // Space for character counter
+  },
+  characterCount: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    color: Colors.textSecondary,
+    fontSize: 12,
+    fontFamily: 'monospace',
   },
 });

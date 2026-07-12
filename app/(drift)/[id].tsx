@@ -80,36 +80,80 @@ export default function DriftDetailScreen() {
         <View style={styles.actions}>
           <IconButton icon={BookmarkIcon} label="Bookmark" active={bookmark.saved} onPress={() => void bookmark.toggle()} />
           <IconButton icon={ShareIcon} label="Share" onPress={() => void share()} />
-          <IconButton icon={UsersIcon} label="Voters" onPress={() => router.push({ pathname: '/(drift)/voters/[id]', params: { id: drift.id } })} />
+          <IconButton
+            icon={UsersIcon}
+            label="Voters"
+            onPress={() =>
+              router.push({
+                pathname: '/(drift)/voters/[id]',
+                params: { id: drift.id },
+              })
+            }
+          />
           {canUploadProof ? (
-            <IconButton icon={UploadIcon} label="Upload proof" onPress={() => router.push({ pathname: '/(drift)/proof/[id]', params: { id: drift.id } })} />
+            <IconButton
+              icon={UploadIcon}
+              label="Upload proof"
+              onPress={() =>
+                router.push({
+                  pathname: '/(drift)/proof/[id]',
+                  params: { id: drift.id },
+                })
+              }
+            />
           ) : null}
         </View>
         {uid !== drift.authorUid ? (
-          <Button label={follow.following ? 'Following author' : 'Follow author'} variant="secondary" onPress={() => void follow.toggle()} disabled={!follow.canFollow} />
+          <Button
+            label={follow.following ? 'Following author' : 'Follow author'}
+            variant="secondary"
+            onPress={() => void follow.toggle()}
+            disabled={!follow.canFollow}
+          />
         ) : null}
-        {drift.proofUrl || drift.status !== 'active' ? <ProofMedia url={drift.proofUrl} type={drift.proofType} /> : null}
+        {drift.proofUrl || drift.status !== 'active' ? (
+          <ProofMedia url={drift.proofUrl} type={drift.proofType} />
+        ) : null}
         <View style={styles.commentsHead}>
           <CommentIcon color={Colors.accentVolt} />
           <Text style={styles.sectionTitle}>{drift.commentCount} COMMENTS</Text>
         </View>
         {replyTo ? (
           <Pressable onPress={() => setReplyTo(null)}>
-            <Text style={styles.replying}>Replying to @{replyTo.authorUsername}. Tap to cancel.</Text>
+            <Text style={styles.replying}>
+              Replying to @{replyTo.authorUsername}. Tap to cancel.
+            </Text>
           </Pressable>
         ) : null}
-        <Input value={commentText} onChangeText={setCommentText} placeholder="Add weight to the room..." multiline />
-        <Button label="Post comment" onPress={() => void submitComment()} variant="secondary" />
+        <Input
+          value={commentText}
+          onChangeText={setCommentText}
+          placeholder="Add weight to the room..."
+          multiline
+        />
+        <Button
+          label="Post comment"
+          onPress={() => void submitComment()}
+          variant="secondary"
+          disabled={commentText.trim().length === 0}
+        />
         <View style={styles.commentList}>
           {comments.topLevel.map((comment) => (
             <View key={comment.id} style={styles.commentGroup}>
               <CommentItem comment={comment} onLike={comments.likeComment} onReply={setReplyTo} />
               {comments.repliesFor(comment.id).map((reply) => (
-                <CommentItem key={reply.id} comment={reply} isReply onLike={comments.likeComment} />
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  isReply
+                  onLike={comments.likeComment}
+                />
               ))}
             </View>
           ))}
-          {comments.topLevel.length === 0 ? <EmptyState title="No comments" message="Be the first stranger to weigh in." /> : null}
+          {comments.topLevel.length === 0 ? (
+            <EmptyState title="No comments" message="Be the first stranger to weigh in." />
+          ) : null}
         </View>
       </ScrollView>
     </View>
