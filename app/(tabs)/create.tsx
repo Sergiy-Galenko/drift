@@ -139,7 +139,7 @@ export default function CreateScreen() {
     }
   };
 
-  const handleCategorySelect = (category: string) => {
+  const handleCategorySelect = (category: (typeof CATEGORY_ORDER)[number]) => {
     draft.saveDraft({ category });
   };
 
