@@ -39,13 +39,13 @@ export const RARITY_ORDER: Record<CardRarity, number> = {
 };
 
 function groupedByRarity(cards: Card[]): Record<CardRarity, Card[]> {
-  return cards.reduce<Record<CardRarity, Card[]>>(
-    (groups, card) => {
-      groups[card.rarity].push(card);
-      return groups;
-    },
-    { common: [], rare: [], ultra_rare: [] },
-  );
+  const groups: Record<CardRarity, Card[]> = { common: [], rare: [], ultra_rare: [] };
+
+  for (const card of cards) {
+    groups[card.rarity] = [...groups[card.rarity], card];
+  }
+
+  return groups;
 }
 
 export function getWeightedCardEntries(cards: Card[]): { card: Card; weight: number }[] {
@@ -53,9 +53,11 @@ export function getWeightedCardEntries(cards: Card[]): { card: Card; weight: num
 
   return cards.map((card) => {
     const rarityPoolSize = Math.max(groups[card.rarity].length, 1);
+    const rarityWeight = RARITY_WEIGHTS[card.rarity] ?? 0;
+
     return {
       card,
-      weight: RARITY_WEIGHTS[card.rarity] / rarityPoolSize,
+      weight: rarityWeight / rarityPoolSize,
     };
   });
 }
@@ -67,6 +69,14 @@ export function pickWeightedCard(cards: Card[], random = Math.random): Card {
 
   const entries = getWeightedCardEntries(cards);
   const totalWeight = entries.reduce((sum, entry) => sum + entry.weight, 0);
+
+  if (totalWeight <= 0) {
+    // Все веса нулевые/некорректные — выбираем равновероятно, чтобы не всегда
+    // возвращать последнюю карту молча.
+    const index = Math.floor(random() * entries.length);
+    return entries[Math.min(index, entries.length - 1)].card;
+  }
+
   let cursor = random() * totalWeight;
 
   for (const entry of entries) {

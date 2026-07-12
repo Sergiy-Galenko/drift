@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Header } from '@/components/navigation/Header';
@@ -57,7 +57,20 @@ export default function EditProfileScreen() {
       <View style={styles.content}>
         <Input label="Username" value={username} onChangeText={setUsername} autoCapitalize="none" />
         <Input label="Display name" value={displayName} onChangeText={setDisplayName} />
-        <Input label="Bio" value={bio} onChangeText={setBio} maxLength={120} multiline style={styles.bio} />
+        {/* Bio input with character counter */}
+        <Input
+          label="Bio"
+          value={bio}
+          onChangeText={setBio}
+          maxLength={110}
+          multiline
+          style={styles.bio}
+        />
+        <View style={{ alignItems: 'flex-end', marginBottom: 8 }}>
+          <Text style={{ color: Colors.textSecondary, fontSize: 12 }}>
+            {bio.length}/110
+          </Text>
+        </View>
         <Button label="Save profile" onPress={() => void save()} loading={saving} />
       </View>
     </View>
