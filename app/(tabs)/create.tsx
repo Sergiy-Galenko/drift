@@ -73,7 +73,35 @@ export default function CreateScreen() {
     );
   }
 
-  const next = () => draft.saveDraft({ currentStep: Math.min(3, step + 1) });
+  const next = () => {
+    // Validate current step before proceeding
+    if (step === 0 && !draft.text?.trim()) {
+      pushToast({ 
+        title: 'Decision required', 
+        message: 'Please enter a decision before continuing.', 
+        tone: 'warning' 
+      });
+      return;
+    }
+    if (step === 1 && !draft.stake?.trim()) {
+      pushToast({ 
+        title: 'Stake required', 
+        message: 'Please enter a stake before continuing.', 
+        tone: 'warning' 
+      });
+      return;
+    }
+    if (step === 2 && !draft.category) {
+      pushToast({ 
+        title: 'Category required', 
+        message: 'Please select a category before continuing.', 
+        tone: 'warning' 
+      });
+      return;
+    }
+    draft.saveDraft({ currentStep: Math.min(3, step + 1) });
+  };
+
   const back = () => draft.saveDraft({ currentStep: Math.max(0, step - 1) });
 
   const submit = async () => {
@@ -86,7 +114,11 @@ export default function CreateScreen() {
     });
 
     if (!parsed.success) {
-      pushToast({ title: 'Drift incomplete', message: parsed.error.issues[0]?.message, tone: 'warning' });
+      pushToast({ 
+        title: 'Drift incomplete', 
+        message: parsed.error.issues[0]?.message, 
+        tone: 'warning' 
+      });
       return;
     }
 
@@ -97,18 +129,34 @@ export default function CreateScreen() {
       router.push({ pathname: '/(drift)/[id]', params: { id: driftId } });
     } catch (error) {
       logger.error('Create drift failed', { error: String(error) });
-      pushToast({ title: 'Create failed', message: firebaseErrorMessage(String(error)), tone: 'danger' });
+      pushToast({ 
+        title: 'Create failed', 
+        message: firebaseErrorMessage(String(error)), 
+        tone: 'danger' 
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleCategorySelect = (category: string) => {
+    draft.saveDraft({ category });
+  };
+
+  const handleAnonymousToggle = () => {
+    draft.saveDraft({ isAnonymous: !draft.isAnonymous });
+  };
+
   return (
     <View style={styles.root}>
       <Header title="Create Drift" showBack />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <ProgressBar progress={(step + 1) / 4} />
-        {step === 0 ? (
+        
+        {step === 0 && (
           <Input
             label="Decision"
             multiline
@@ -118,8 +166,9 @@ export default function CreateScreen() {
             placeholder="Should I quit my job and freelance for 30 days?"
             style={styles.multiline}
           />
-        ) : null}
-        {step === 1 ? (
+        )}
+        
+        {step === 1 && (
           <Input
             label="Stake"
             multiline
@@ -129,44 +178,83 @@ export default function CreateScreen() {
             placeholder="If YES wins, I submit notice this week."
             style={styles.multilineSmall}
           />
-        ) : null}
-        {step === 2 ? (
+        )}
+        
+        {step === 2 && (
           <View style={styles.step}>
             <Input
-              label="Context"
+              label="Context (optional)"
               multiline
               maxLength={300}
-              value={draft.context}
+              value={draft.context || ''}
               onChangeText={(context) => draft.saveDraft({ context })}
               placeholder="Add the real-world context voters need."
               style={styles.multiline}
             />
+            
+            <Text style={styles.sectionLabel}>Select Category</Text>
             <View style={styles.categoryGrid}>
               {CATEGORY_ORDER.map((category) => {
-                const selected = draft.category === category;
+                const isSelected = draft.category === category;
                 return (
                   <Pressable
                     key={category}
-                    onPress={() => draft.saveDraft({ category })}
-                    style={[styles.category, selected ? styles.categorySelected : null]}
+                    onPress={() => handleCategorySelect(category)}
+                    style={[
+                      styles.category,
+                      isSelected && styles.categorySelected,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Select ${CATEGORIES[category].label} category`}
                   >
-                    <Text style={[styles.categoryText, selected ? styles.categorySelectedText : null]}>
+                    <Text style={[
+                      styles.categoryText,
+                      isSelected && styles.categorySelectedText,
+                    ]}>
                       {CATEGORIES[category].label}
                     </Text>
                   </Pressable>
                 );
               })}
             </View>
-            <Pressable onPress={() => draft.saveDraft({ isAnonymous: !draft.isAnonymous })} style={styles.toggleRow}>
+            
+            <Pressable 
+              onPress={handleAnonymousToggle} 
+              style={styles.toggleRow}
+              accessibilityRole="button"
+            >
               <Text style={styles.toggleLabel}>POST ANONYMOUSLY</Text>
-              <Text style={styles.toggleValue}>{draft.isAnonymous ? 'ON' : 'OFF'}</Text>
+              <View style={styles.toggleIndicator}>
+                <Text style={[
+                  styles.toggleValue,
+                  draft.isAnonymous && styles.toggleValueActive
+                ]}>
+                  {draft.isAnonymous ? 'ON' : 'OFF'}
+                </Text>
+              </View>
             </Pressable>
           </View>
-        ) : null}
-        {step === 3 && preview ? <DriftCard drift={preview} preview /> : null}
+        )}
+        
+        {step === 3 && preview && (
+          <View style={styles.previewContainer}>
+            <Text style={styles.previewLabel}>Preview</Text>
+            <DriftCard drift={preview} preview />
+          </View>
+        )}
+        
         <View style={styles.nav}>
-          <Button label="Back" variant="secondary" onPress={back} disabled={step === 0 || submitting} />
-          <Button label={step === 3 ? 'Launch drift' : 'Next'} onPress={step === 3 ? () => void submit() : next} loading={submitting} />
+          <Button 
+            label="Back" 
+            variant="secondary" 
+            onPress={back} 
+            disabled={step === 0 || submitting} 
+          />
+          <Button 
+            label={step === 3 ? 'Launch drift' : 'Next'} 
+            onPress={step === 3 ? () => void submit() : next} 
+            loading={submitting} 
+          />
         </View>
       </ScrollView>
     </View>
@@ -194,6 +282,12 @@ const styles = StyleSheet.create({
     minHeight: 112,
     textAlignVertical: 'top',
   },
+  sectionLabel: {
+    color: Colors.textSecondary,
+    fontFamily: F.family.monoBold,
+    fontSize: F.size.sm,
+    marginBottom: -S.sm,
+  },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -201,11 +295,13 @@ const styles = StyleSheet.create({
   },
   category: {
     borderRadius: R.sm,
-    borderWidth: S.px,
+    borderWidth: 1,
     borderColor: Colors.strokeStrong,
     backgroundColor: Colors.surfaceRaised,
     paddingHorizontal: S.lg,
     paddingVertical: S.md,
+    minWidth: 80,
+    alignItems: 'center',
   },
   categorySelected: {
     backgroundColor: Colors.white,
@@ -221,25 +317,45 @@ const styles = StyleSheet.create({
   },
   toggleRow: {
     borderRadius: R.sm,
-    borderWidth: S.px,
+    borderWidth: 1,
     borderColor: Colors.strokeStrong,
     backgroundColor: Colors.surfaceRaised,
     padding: S.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   toggleLabel: {
     color: Colors.textSecondary,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
   },
+  toggleIndicator: {
+    backgroundColor: Colors.bgBase,
+    paddingHorizontal: S.md,
+    paddingVertical: S.xs,
+    borderRadius: R.sm,
+  },
   toggleValue: {
-    color: Colors.blue,
+    color: Colors.textSecondary,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
+  },
+  toggleValueActive: {
+    color: Colors.blue,
+  },
+  previewContainer: {
+    gap: S.md,
+  },
+  previewLabel: {
+    color: Colors.textSecondary,
+    fontFamily: F.family.monoBold,
+    fontSize: F.size.sm,
+    textAlign: 'center',
   },
   nav: {
     flexDirection: 'row',
     gap: S.md,
+    marginTop: S.md,
   },
 });
