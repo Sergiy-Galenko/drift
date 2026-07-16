@@ -3,6 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "strictNullChecks": true,
+    "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./*"]
