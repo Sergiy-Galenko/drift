@@ -82,6 +82,7 @@ export default function PublicProfileScreen() {
             />
           ) : null}
           <Button label={`${profile.followersCount} followers`} variant="secondary" onPress={() => router.push({ pathname: '/(user)/[username]/followers', params: { username: profile.username } })} />
+          <Button label={`${profile.followingCount} following`} variant="secondary" onPress={() => router.push({ pathname: '/(user)/[username]/followers', params: { username: profile.username, mode: 'following' } })} />
         </View>
         <Text style={styles.sectionTitle}>Posts</Text>
         {drifts.map((drift) => (

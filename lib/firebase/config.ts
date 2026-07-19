@@ -40,7 +40,7 @@ const firebaseConfig = isFirebaseConfigured
       appId: '1:000000000000:web:0000000000000000000000',
     };
 
-const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+export const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 function initFirestore(): Firestore {
   try {

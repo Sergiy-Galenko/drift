@@ -8,11 +8,14 @@ import { formatRelativeTime } from '@/utils/formatters';
 type CommentItemProps = {
   comment: Comment;
   isReply?: boolean;
+  canDelete?: boolean;
   onLike?: (comment: Comment) => void;
   onReply?: (comment: Comment) => void;
+  onDelete?: (comment: Comment) => void;
+  onReport?: (comment: Comment) => void;
 };
 
-export function CommentItem({ comment, isReply = false, onLike, onReply }: CommentItemProps) {
+export function CommentItem({ comment, isReply = false, canDelete = false, onLike, onReply, onDelete, onReport }: CommentItemProps) {
   return (
     <View style={[styles.row, isReply ? styles.reply : null]}>
       <Avatar username={comment.authorUsername} avatarUrl={null} reputationScore={comment.authorReputationScore} size={34} />
@@ -31,6 +34,15 @@ export function CommentItem({ comment, isReply = false, onLike, onReply }: Comme
               <Text style={styles.action}>REPLY</Text>
             </Pressable>
           ) : null}
+          {canDelete ? (
+            <Pressable onPress={() => onDelete?.(comment)}>
+              <Text style={styles.dangerAction}>DELETE</Text>
+            </Pressable>
+          ) : (
+            <Pressable onPress={() => onReport?.(comment)}>
+              <Text style={styles.action}>REPORT</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </View>
@@ -77,6 +89,11 @@ const styles = StyleSheet.create({
   },
   action: {
     color: Colors.accentVolt,
+    fontFamily: F.family.monoBold,
+    fontSize: F.size.xs,
+  },
+  dangerAction: {
+    color: Colors.accentFire,
     fontFamily: F.family.monoBold,
     fontSize: F.size.xs,
   },

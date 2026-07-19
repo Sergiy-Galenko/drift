@@ -1,4 +1,4 @@
 module.exports = {
   extends: ['expo'],
-  ignorePatterns: ['dist/*', 'src/*'],
+  ignorePatterns: ['dist/*', 'src/*', 'functions/*'],
 };

@@ -3,13 +3,11 @@ import {
   deleteDoc,
   doc,
   getDoc,
-  increment,
   limit,
   onSnapshot,
   query,
   serverTimestamp,
   setDoc,
-  updateDoc,
   where,
   type Unsubscribe,
   type WithFieldValue,
@@ -26,10 +24,6 @@ function followId(followerId: string, followingId: string): string {
 
 function followRef(followerId: string, followingId: string) {
   return doc(db, 'follows', followId(followerId, followingId));
-}
-
-function userRef(uid: string) {
-  return doc(db, 'users', uid);
 }
 
 export function subscribeFollow(
@@ -57,14 +51,10 @@ export async function toggleFollow(followerId: string, followingId: string, next
       createdAt: serverTimestamp(),
     };
     await setDoc(followRef(followerId, followingId), follow);
-    await updateDoc(userRef(followerId), { followingCount: increment(1) });
-    await updateDoc(userRef(followingId), { followersCount: increment(1) });
     return;
   }
 
   await deleteDoc(followRef(followerId, followingId));
-  await updateDoc(userRef(followerId), { followingCount: increment(-1) });
-  await updateDoc(userRef(followingId), { followersCount: increment(-1) });
 }
 
 export function subscribeFollowers(
@@ -86,6 +76,21 @@ export function subscribeFollowers(
           ),
         )
         .catch((error: unknown) => onError(String(error)));
+    },
+    (error) => onError(error.code),
+  );
+}
+
+export function subscribeFollowing(
+  uid: string,
+  onData: (profiles: UserProfile[]) => void,
+  onError: (message: string) => void,
+): Unsubscribe {
+  return onSnapshot(
+    query(collection(db, 'follows'), where('followerId', '==', uid), limit(80)),
+    (snapshot) => {
+      const ids = snapshot.docs.map((document) => (document.data() as FollowDoc).followingId);
+      getUserProfiles(ids).then((profiles) => onData(ids.map((id) => profiles.get(id) ?? null).filter((profile): profile is UserProfile => profile !== null))).catch((error: unknown) => onError(String(error)));
     },
     (error) => onError(error.code),
   );

@@ -7,14 +7,15 @@ import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
 import { Colors, F, R, S } from '@/constants/tokens';
-import { subscribeFollowers } from '@/lib/firebase/follows';
+import { subscribeFollowers, subscribeFollowing } from '@/lib/firebase/follows';
 import { getUserByUsername } from '@/lib/firebase/users';
 import type { UserProfile } from '@/types/user';
 
 export default function FollowersScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ username?: string }>();
+  const params = useLocalSearchParams<{ username?: string; mode?: string }>();
   const username = typeof params.username === 'string' ? params.username : undefined;
+  const mode = params.mode === 'following' ? 'following' : 'followers';
   const [followers, setFollowers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +33,7 @@ export default function FollowersScreen() {
         return;
       }
 
-      unsubscribe = subscribeFollowers(
+      unsubscribe = (mode === 'following' ? subscribeFollowing : subscribeFollowers)(
         profile.uid,
         (items) => {
           setFollowers(items);
@@ -46,11 +47,11 @@ export default function FollowersScreen() {
       mounted = false;
       unsubscribe?.();
     };
-  }, [username]);
+  }, [mode, username]);
 
   return (
     <View style={styles.root}>
-      <Header title="Followers" showBack />
+      <Header title={mode === 'following' ? 'Following' : 'Followers'} showBack />
       {loading ? (
         <Spinner label="Loading followers" />
       ) : (
@@ -68,7 +69,7 @@ export default function FollowersScreen() {
               </View>
             </Pressable>
           ))}
-          {followers.length === 0 ? <EmptyState title="No followers" message="Follower profiles will appear here." /> : null}
+          {followers.length === 0 ? <EmptyState title={mode === 'following' ? 'Not following anyone' : 'No followers'} message="Profiles will appear here." /> : null}
         </ScrollView>
       )}
     </View>

@@ -83,8 +83,39 @@ export async function toggleCommentLike(driftId: string, comment: Comment, uid: 
 }
 
 export async function deleteComment(driftId: string, commentId: string): Promise<void> {
-  await updateDoc(commentRef(driftId, commentId), {
-    isDeleted: true,
-    text: '',
+  await runTransaction(db, async (transaction) => {
+    const ref = commentRef(driftId, commentId);
+    const snapshot = await transaction.get(ref);
+    const comment = snapshot.data() as CommentDoc | undefined;
+    if (!comment || comment.isDeleted) {
+      return;
+    }
+    transaction.update(ref, { isDeleted: true, text: '' });
+    transaction.update(driftRef(driftId), { commentCount: increment(-1) });
+  });
+}
+
+export async function createCommentReport(input: {
+  driftId: string;
+  commentId: string;
+  reporterUid: string;
+  reason: 'spam' | 'harassment' | 'inappropriate' | 'other';
+  details?: string;
+}): Promise<void> {
+  const reportRef = doc(collection(db, 'commentReports'));
+  await runTransaction(db, async (transaction) => {
+    const comment = await transaction.get(commentRef(input.driftId, input.commentId));
+    if (!comment.exists()) {
+      throw new Error('not-found');
+    }
+    transaction.set(reportRef, {
+      driftId: input.driftId,
+      commentId: input.commentId,
+      reporterUid: input.reporterUid,
+      reason: input.reason,
+      details: input.details?.trim() || null,
+      createdAt: serverTimestamp(),
+      isResolved: false,
+    });
   });
 }

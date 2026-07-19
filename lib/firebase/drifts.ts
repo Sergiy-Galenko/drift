@@ -22,8 +22,9 @@ import {
   type WithFieldValue,
 } from 'firebase/firestore';
 import { getDownloadURL, ref as storageRef, uploadBytesResumable } from 'firebase/storage';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
-import { db, storage } from './config';
+import { app, db, storage } from './config';
 import { nullableTimestampToDate, timestampToDate } from './timestamps';
 import type { CategoryFilter } from '@/constants/categories';
 import type { CreateDriftInput, Drift, DriftDoc, ReportDoc } from '@/types/drift';
@@ -177,8 +178,49 @@ export async function createDrift(input: CreateDriftInput, author: UserProfile):
   return nextRef.id;
 }
 
+export async function updateDrift(
+  driftId: string,
+  authorUid: string,
+  input: CreateDriftInput,
+): Promise<void> {
+  await runTransaction(db, async (transaction) => {
+    const ref = driftRef(driftId);
+    const snapshot = await transaction.get(ref);
+    const drift = snapshot.data() as DriftDoc | undefined;
+    if (!drift || drift.authorUid !== authorUid) {
+      throw new Error('permission-denied');
+    }
+    if (drift.status !== 'active') {
+      throw new Error('failed-precondition');
+    }
+
+    transaction.update(ref, {
+      text: input.text.trim(),
+      stake: input.stake.trim(),
+      context: input.context?.trim() || null,
+      category: input.category,
+      isAnonymous: input.isAnonymous,
+      tags: input.tags?.slice(0, 3) ?? [],
+    });
+  });
+}
+
+export async function deleteDrift(driftId: string, authorUid: string): Promise<void> {
+  await runTransaction(db, async (transaction) => {
+    const ref = driftRef(driftId);
+    const snapshot = await transaction.get(ref);
+    const drift = snapshot.data() as DriftDoc | undefined;
+    if (!drift || drift.authorUid !== authorUid) {
+      throw new Error('permission-denied');
+    }
+
+    transaction.delete(ref);
+    transaction.update(userRef(authorUid), { driftsCreated: increment(-1) });
+  });
+}
+
 export async function incrementDriftView(driftId: string): Promise<void> {
-  await updateDoc(driftRef(driftId), { viewCount: increment(1) });
+  await httpsCallable<{ driftId: string }, { ok: boolean }>(getFunctions(app), 'recordView')({ driftId });
 }
 
 export async function incrementDriftShare(driftId: string): Promise<void> {

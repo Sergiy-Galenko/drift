@@ -10,11 +10,15 @@ service cloud.firestore {
     }
     function onlyVoteFields(req) {
       return req.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['votesYes', 'votesNo', 'voters', 'viewCount', 'shareCount']);
+        .hasOnly(['votesYes', 'votesNo', 'voters', 'viewCount', 'shareCount', 'bookmarkCount', 'commentCount', 'reportCount']);
     }
     function onlyProofFields(req) {
       return req.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['proofUrl', 'proofType', 'proofUploadedAt', 'status']);
+    }
+    function onlyEditableUserFields(req) {
+      return req.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['displayName', 'avatarUrl', 'bio', 'username', 'settings', 'lastActiveAt', 'isAnonymous']);
     }
 
     match /drifts/{driftId} {
@@ -23,12 +27,8 @@ service cloud.firestore {
                     && request.resource.data.authorUid == request.auth.uid
                     && request.resource.data.text.size() <= 200
                     && request.resource.data.stake.size() <= 100;
-      allow update: if isAuthenticated() && (
-        isOwner(resource.data.authorUid)
-        || onlyVoteFields(request)
-        || onlyProofFields(request)
-      );
-      allow delete: if false;
+      allow update: if isAuthenticated() && (isOwner(resource.data.authorUid) || onlyProofFields(request));
+      allow delete: if isOwner(resource.data.authorUid);
     }
 
     match /comments/{driftId}/messages/{commentId} {
@@ -46,7 +46,7 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if true;
       allow create: if isOwner(uid);
-      allow update: if isOwner(uid);
+      allow update: if isOwner(uid) && onlyEditableUserFields(request);
       allow delete: if false;
     }
 
@@ -96,6 +96,12 @@ service cloud.firestore {
 
     match /reports/{reportId} {
       allow create: if isAuthenticated();
+      allow read: if false;
+    }
+
+    match /commentReports/{reportId} {
+      allow create: if isAuthenticated()
+                    && request.resource.data.reporterUid == request.auth.uid;
       allow read: if false;
     }
 

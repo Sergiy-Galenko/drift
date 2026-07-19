@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { addComment, subscribeComments, toggleCommentLike } from '@/lib/firebase/comments';
+import { addComment, deleteComment, subscribeComments, toggleCommentLike } from '@/lib/firebase/comments';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import type { Comment } from '@/types/comment';
@@ -104,5 +104,24 @@ export function useComments(driftId: string | undefined) {
     [driftId, pushToast, uid],
   );
 
-  return { comments, topLevel, repliesFor, loading, postComment, likeComment };
+  const removeComment = useCallback(
+    async (comment: Comment) => {
+      if (!driftId || !uid || comment.authorUid !== uid) {
+        pushToast({ title: 'Delete unavailable', message: 'You can only delete your own comments.', tone: 'warning' });
+        return false;
+      }
+
+      try {
+        await deleteComment(driftId, comment.id);
+        return true;
+      } catch (error) {
+        logger.error('Comment deletion failed', { error: String(error) });
+        pushToast({ title: 'Could not delete comment', message: firebaseErrorMessage(String(error)), tone: 'danger' });
+        return false;
+      }
+    },
+    [driftId, pushToast, uid],
+  );
+
+  return { comments, topLevel, repliesFor, loading, postComment, likeComment, removeComment };
 }

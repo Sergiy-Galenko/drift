@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { CommentItem } from '@/components/drift/CommentItem';
@@ -18,8 +18,11 @@ import { useComments } from '@/hooks/useComments';
 import { useDrift } from '@/hooks/useDrift';
 import { useFollow } from '@/hooks/useFollow';
 import { incrementDriftShare } from '@/lib/firebase/drifts';
+import { deleteDrift } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
+import { useUIStore } from '@/stores/uiStore';
 import type { Comment } from '@/types/comment';
+import { firebaseErrorMessage } from '@/utils/formatters';
 import { logger } from '@/utils/logger';
 
 export default function DriftDetailScreen() {
@@ -27,12 +30,39 @@ export default function DriftDetailScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const driftId = typeof params.id === 'string' ? params.id : undefined;
   const uid = useAuthStore((state) => state.firebaseUser?.uid);
+  const pushToast = useUIStore((state) => state.pushToast);
   const { drift, loading } = useDrift(driftId);
   const bookmark = useBookmark(driftId);
   const follow = useFollow(drift?.authorUid);
   const comments = useComments(driftId);
   const [commentText, setCommentText] = useState('');
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
+
+  const deleteOwnComment = (comment: Comment) => {
+    Alert.alert('Delete comment?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => void comments.removeComment(comment) },
+    ]);
+  };
+
+  const deleteOwnDrift = () => {
+    if (!drift || !uid) return;
+    Alert.alert('Delete drift?', 'Its comments and saved references will no longer be available.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          void deleteDrift(drift.id, uid)
+            .then(() => router.back())
+            .catch((error: unknown) => {
+              logger.error('Delete drift failed', { error: String(error) });
+              pushToast({ title: 'Could not delete drift', message: firebaseErrorMessage(String(error)), tone: 'danger' });
+            });
+        },
+      },
+    ]);
+  };
 
   const submitComment = async () => {
     const ok = await comments.postComment(commentText, replyTo?.id ?? null);
@@ -111,6 +141,12 @@ export default function DriftDetailScreen() {
             disabled={!follow.canFollow}
           />
         ) : null}
+        {uid === drift.authorUid && drift.status === 'active' ? (
+          <View style={styles.ownerActions}>
+            <Button label="Edit drift" variant="secondary" onPress={() => router.push({ pathname: '/(modals)/edit-drift', params: { id: drift.id } } as never)} />
+            <Button label="Delete drift" variant="danger" onPress={deleteOwnDrift} />
+          </View>
+        ) : null}
         {drift.proofUrl || drift.status !== 'active' ? (
           <ProofMedia url={drift.proofUrl} type={drift.proofType} />
         ) : null}
@@ -140,13 +176,16 @@ export default function DriftDetailScreen() {
         <View style={styles.commentList}>
           {comments.topLevel.map((comment) => (
             <View key={comment.id} style={styles.commentGroup}>
-              <CommentItem comment={comment} onLike={comments.likeComment} onReply={setReplyTo} />
+              <CommentItem comment={comment} canDelete={comment.authorUid === uid} onLike={comments.likeComment} onReply={setReplyTo} onDelete={deleteOwnComment} onReport={(item) => router.push({ pathname: '/(modals)/report-comment', params: { driftId: drift.id, commentId: item.id } } as never)} />
               {comments.repliesFor(comment.id).map((reply) => (
                 <CommentItem
                   key={reply.id}
                   comment={reply}
                   isReply
+                  canDelete={reply.authorUid === uid}
                   onLike={comments.likeComment}
+                  onDelete={deleteOwnComment}
+                  onReport={(item) => router.push({ pathname: '/(modals)/report-comment', params: { driftId: drift.id, commentId: item.id } } as never)}
                 />
               ))}
             </View>
@@ -170,6 +209,11 @@ const styles = StyleSheet.create({
     gap: S.lg,
   },
   actions: {
+    flexDirection: 'row',
+    gap: S.md,
+    paddingHorizontal: S.md,
+  },
+  ownerActions: {
     flexDirection: 'row',
     gap: S.md,
     paddingHorizontal: S.md,

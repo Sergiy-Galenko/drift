@@ -7,18 +7,21 @@ import { GridIcon, PaperPlaneIcon, ReelsIcon, SettingsIcon } from '@/components/
 import { Header } from '@/components/navigation/Header';
 import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { IconButton } from '@/components/ui/IconButton';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Spinner } from '@/components/ui/Spinner';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { ProfileCardShowcase } from '@/features/roulette/components/ProfileCardShowcase';
 import { subscribeAuthorDrifts, subscribeVotedDrifts } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
+import { useSavedDrifts } from '@/hooks/useSavedDrifts';
 import type { Drift } from '@/types/drift';
 import { reputationLabelUpper } from '@/utils/reputation';
 
 
-type ProfileTab = 'created' | 'voted' | 'saved';
-const PROFILE_TABS: readonly ProfileTab[] = ['created', 'voted', 'saved'];
+type ProfileTab = 'created' | 'voted' | 'completed' | 'failed' | 'saved';
+const PROFILE_TABS: readonly ProfileTab[] = ['created', 'voted', 'completed', 'failed', 'saved'];
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -27,6 +30,7 @@ export default function ProfileScreen() {
   const [tab, setTab] = useState<ProfileTab>('created');
   const [created, setCreated] = useState<Drift[]>([]);
   const [voted, setVoted] = useState<Drift[]>([]);
+  const saved = useSavedDrifts(profileUid, tab === 'saved');
 
   useEffect(() => {
     if (!profileUid) {
@@ -35,7 +39,7 @@ export default function ProfileScreen() {
       return undefined;
     }
 
-    if (tab === 'created') {
+    if (tab === 'created' || tab === 'completed' || tab === 'failed') {
       return subscribeAuthorDrifts(profileUid, setCreated, () => undefined);
     }
 
@@ -55,11 +59,15 @@ export default function ProfileScreen() {
     );
   }
 
-  let list: Drift[] = [];
+  let list: Drift[] = saved.drifts;
   if (tab === 'created') {
     list = created;
   } else if (tab === 'voted') {
     list = voted;
+  } else if (tab === 'completed') {
+    list = created.filter((drift) => drift.status === 'executed');
+  } else if (tab === 'failed') {
+    list = created.filter((drift) => drift.status === 'failed');
   }
 
   return (
@@ -117,7 +125,7 @@ export default function ProfileScreen() {
               ) : item === 'voted' ? (
                 <ReelsIcon size={22} color={tab === item ? Colors.white : Colors.textTertiary} />
               ) : (
-                <Text style={[styles.tabText, tab === item ? styles.activeTabText : null]}>Saved</Text>
+                <Text style={[styles.tabText, tab === item ? styles.activeTabText : null]}>{item === 'saved' ? 'Saved' : item.toUpperCase()}</Text>
               )}
             </Pressable>
           ))}
@@ -134,7 +142,11 @@ export default function ProfileScreen() {
             </Pressable>
           ))}
         </View>
-        {list.length === 0 ? <EmptyState title="Empty tab" message="Your history will appear here as you use DRIFT." /> : null}
+        {saved.loading ? <Spinner label="Loading saved drifts" /> : null}
+        {saved.error ? <ErrorState title="Saved posts unavailable" message="Try opening this tab again in a moment." /> : null}
+        {!saved.loading && !saved.error && list.length === 0 ? (
+          <EmptyState title="Empty tab" message="Your history will appear here as you use DRIFT." />
+        ) : null}
       </ScrollView>
     </View>
   );
