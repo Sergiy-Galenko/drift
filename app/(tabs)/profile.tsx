@@ -18,6 +18,7 @@ import { reputationLabelUpper } from '@/utils/reputation';
 
 
 type ProfileTab = 'created' | 'voted' | 'saved';
+const PROFILE_TABS: readonly ProfileTab[] = ['created', 'voted', 'saved'];
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -54,7 +55,12 @@ export default function ProfileScreen() {
     );
   }
 
-  const list = tab === 'created' ? created : tab === 'voted' ? voted : [];
+  let list: Drift[] = [];
+  if (tab === 'created') {
+    list = created;
+  } else if (tab === 'voted') {
+    list = voted;
+  }
 
   return (
     <View style={styles.root}>
@@ -104,11 +110,11 @@ export default function ProfileScreen() {
         </View>
         <ProfileCardShowcase />
         <View style={styles.tabs}>
-          {(['created', 'voted', 'saved'] as ProfileTab[]).map((item, index) => (
+          {PROFILE_TABS.map((item) => (
             <Pressable key={item} onPress={() => setTab(item)} style={[styles.tab, tab === item ? styles.activeTab : null]}>
-              {index === 0 ? (
+              {item === 'created' ? (
                 <GridIcon size={22} color={tab === item ? Colors.white : Colors.textTertiary} />
-              ) : index === 1 ? (
+              ) : item === 'voted' ? (
                 <ReelsIcon size={22} color={tab === item ? Colors.white : Colors.textTertiary} />
               ) : (
                 <Text style={[styles.tabText, tab === item ? styles.activeTabText : null]}>Saved</Text>

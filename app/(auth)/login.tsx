@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
@@ -74,7 +74,7 @@ export default function LoginScreen() {
     }
   }, [fallbackUsername.length, firebaseUser, profile, registerForm.username]);
 
-  const primaryLabel = useMemo(() => (isRegister ? 'Create account' : 'Log in'), [isRegister]);
+  const primaryLabel = isRegister ? 'Create account' : 'Log in';
 
   const updateLoginForm = <T extends keyof LoginForm>(field: T, value: LoginForm[T]) => {
     setLoginForm((current) => ({ ...current, [field]: value }));

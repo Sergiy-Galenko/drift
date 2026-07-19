@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { InteractionManager, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 
@@ -16,14 +16,16 @@ import type { Drift } from '@/types/drift';
 import { formatRelativeTime, notificationTitle } from '@/utils/formatters';
 
 type ActivityTab = 'mine' | 'updates';
-
-function NotificationRow({
-  item,
-  onPress,
-}: {
+type NotificationRowProps = Readonly<{
   item: NotificationItem;
   onPress: (item: NotificationItem) => void;
-}) {
+}>;
+
+function tabLabel(label: string, count: number): string {
+  return count > 0 ? `${label} (${count})` : label;
+}
+
+function NotificationRow({ item, onPress }: NotificationRowProps) {
   return (
     <Pressable onPress={() => onPress(item)} style={[styles.item, !item.isRead ? styles.unread : null]}>
       <Text style={styles.title}>{notificationTitle(item.type)}</Text>
@@ -48,36 +50,26 @@ export default function ActivityScreen() {
     }
 
     setMineLoading(true);
-    let active = true;
-    let unsubscribe: (() => void) | undefined;
-    const task = InteractionManager.runAfterInteractions(() => {
-      if (!active) {
-        return;
-      }
-
-      unsubscribe = subscribeAuthorDrifts(
-        profileUid,
-        (drifts) => {
-          setMyDrifts(drifts);
-          setMineLoading(false);
-        },
-        () => {
-          setMineLoading(false);
-        },
-      );
-    });
+    const unsubscribe = subscribeAuthorDrifts(
+      profileUid,
+      (drifts) => {
+        setMyDrifts(drifts);
+        setMineLoading(false);
+      },
+      () => {
+        setMineLoading(false);
+      },
+    );
 
     return () => {
-      active = false;
-      task.cancel();
-      unsubscribe?.();
+      unsubscribe();
     };
   }, [profileUid, tab]);
 
   const tabs = useMemo(
     () => [
-      { key: 'mine' as const, label: `My drifts${myDrifts.length > 0 ? ` (${myDrifts.length})` : ''}` },
-      { key: 'updates' as const, label: `Updates${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
+      { key: 'mine' as const, label: tabLabel('My drifts', myDrifts.length) },
+      { key: 'updates' as const, label: tabLabel('Updates', unreadCount) },
     ],
     [myDrifts.length, unreadCount],
   );
