@@ -6,8 +6,6 @@ import { useRouter } from 'expo-router';
 import { ActivitySkeleton } from '@/components/activity/ActivitySkeleton';
 import { DriftCardCompact } from '@/components/drift/DriftCardCompact';
 import { Header } from '@/components/navigation/Header';
-import { ProfileShortcut } from '@/components/navigation/ProfileShortcut';
-import { SearchShortcut } from '@/components/navigation/SearchShortcut';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { useNotificationsContext } from '@/hooks/useNotifications';
@@ -101,15 +99,7 @@ export default function ActivityScreen() {
 
   return (
     <View style={styles.root}>
-      <Header
-        title="Activity"
-        right={
-          <View style={styles.headerActions}>
-            <SearchShortcut />
-            <ProfileShortcut />
-          </View>
-        }
-      />
+      <Header title="Activity" />
       <View style={styles.tabs}>
         {tabs.map((item) => (
           <Pressable
@@ -166,11 +156,6 @@ const styles = StyleSheet.create({
     paddingVertical: S.sm,
     borderBottomWidth: S.px,
     borderBottomColor: Colors.separator,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: S.xs,
   },
   tabButton: {
     flex: 1,

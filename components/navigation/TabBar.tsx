@@ -8,6 +8,8 @@ import {
   ActivityIcon,
   CreateIcon,
   HomeIcon,
+  ProfileIcon,
+  SearchIcon,
   type AppIcon,
 } from '@/components/icons';
 import { Colors, Motion, R, S } from '@/constants/tokens';
@@ -15,12 +17,13 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useNotificationsContext } from '@/hooks/useNotifications';
 
 const VISIBLE_TABS: {
-  routeName: 'index' | 'activity';
+  routeName: 'index' | 'activity' | 'profile';
   label: string;
   icon: AppIcon;
 }[] = [
   { routeName: 'index', label: 'Feed', icon: HomeIcon },
   { routeName: 'activity', label: 'Activity', icon: ActivityIcon },
+  { routeName: 'profile', label: 'Profile', icon: ProfileIcon },
 ];
 
 type TabButtonProps = {
@@ -109,6 +112,12 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
           />
         );
       })}
+      <TabButton
+        label="Search people and posts"
+        icon={SearchIcon}
+        focused={false}
+        onPress={() => router.push('/search')}
+      />
       <TabButton
         label="Create drift"
         icon={CreateIcon}

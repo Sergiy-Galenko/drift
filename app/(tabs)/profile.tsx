@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/authStore';
 import type { Drift } from '@/types/drift';
 import { reputationLabelUpper } from '@/utils/reputation';
 
+
 type ProfileTab = 'created' | 'voted' | 'saved';
 
 export default function ProfileScreen() {

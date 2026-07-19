@@ -5,8 +5,6 @@ import { FeaturedBanner } from '@/components/feed/FeaturedBanner';
 import { FeedList } from '@/components/feed/FeedList';
 import { FilterPills } from '@/components/feed/FilterPills';
 import { Header } from '@/components/navigation/Header';
-import { ProfileShortcut } from '@/components/navigation/ProfileShortcut';
-import { SearchShortcut } from '@/components/navigation/SearchShortcut';
 import { StoryPreview } from '@/components/story/StoryPreview';
 import { Colors, S } from '@/constants/tokens';
 import { RouletteEntryCard } from '@/features/roulette/components/RouletteEntryCard';
@@ -31,15 +29,7 @@ export default function FeedScreen() {
 
   return (
     <View style={styles.root}>
-      <Header
-        title="DRIFT"
-        right={
-          <View style={styles.headerActions}>
-            <SearchShortcut />
-            <ProfileShortcut />
-          </View>
-        }
-      />
+      <Header title="DRIFT" />
       <View style={styles.filters}>
         <FilterPills value={feed.category} onChange={feed.setCategory} />
       </View>
@@ -64,11 +54,6 @@ const styles = StyleSheet.create({
     paddingVertical: S.sm,
     borderBottomWidth: S.px,
     borderBottomColor: Colors.separator,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: S.xs,
   },
   stories: {
     paddingHorizontal: S.md,
