@@ -82,9 +82,11 @@ export function subscribeConversations(
   onData: (items: ConversationPreview[]) => void,
   onError: (message: string) => void,
 ): Unsubscribe {
+  let snapshotVersion = 0;
   return onSnapshot(
     query(conversationsRef(), where('participants', 'array-contains', uid), limit(50)),
     (snapshot) => {
+      const version = ++snapshotVersion;
       const otherUids = snapshot.docs
         .map((document) => {
           const data = document.data({ serverTimestamps: 'estimate' }) as ConversationDoc;
@@ -116,16 +118,24 @@ export function subscribeConversations(
             } satisfies ConversationPreview;
           }),
         )
-        .then((items) =>
+        .then((items) => {
+          if (version !== snapshotVersion) {
+            return;
+          }
+
           onData(
             items.sort((left, right) => {
               const leftTime = left.lastMessageAt?.getTime() ?? left.createdAt.getTime();
               const rightTime = right.lastMessageAt?.getTime() ?? right.createdAt.getTime();
               return rightTime - leftTime;
             }),
-          ),
-        )
-        .catch((error: unknown) => onError(String(error)));
+          );
+        })
+        .catch((error: unknown) => {
+          if (version === snapshotVersion) {
+            onError(String(error));
+          }
+        });
     },
     (error) => onError(error.code),
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { incrementDriftView, settleExpiredDriftIfAuthor, subscribeDrift } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
@@ -14,16 +14,24 @@ export function useDrift(driftId: string | undefined) {
   const uid = useAuthStore((state) => state.firebaseUser?.uid);
   const upsertDrift = useFeedStore((state) => state.upsertDrift);
   const pushToast = useUIStore((state) => state.pushToast);
+  const viewedDriftIds = useRef(new Set<string>());
+  const settlingDriftIds = useRef(new Set<string>());
 
   useEffect(() => {
     if (!driftId) {
+      setDrift(null);
       setLoading(false);
       return;
     }
 
-    void incrementDriftView(driftId).catch((error: unknown) => {
-      logger.warn('View increment failed', { error: String(error) });
-    });
+    setDrift(null);
+    setLoading(true);
+    if (!viewedDriftIds.current.has(driftId)) {
+      viewedDriftIds.current.add(driftId);
+      void incrementDriftView(driftId).catch((error: unknown) => {
+        logger.warn('View increment failed', { error: String(error) });
+      });
+    }
 
     const unsubscribe = subscribeDrift(
       driftId,
@@ -31,9 +39,12 @@ export function useDrift(driftId: string | undefined) {
         setDrift(item);
         if (item) {
           upsertDrift(item);
-          if (uid) {
+          if (uid && !settlingDriftIds.current.has(item.id)) {
+            settlingDriftIds.current.add(item.id);
             void settleExpiredDriftIfAuthor(item, uid).catch((error: unknown) => {
               logger.warn('Drift settlement failed', { error: String(error) });
+            }).finally(() => {
+              settlingDriftIds.current.delete(item.id);
             });
           }
         }

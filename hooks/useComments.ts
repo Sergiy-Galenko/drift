@@ -17,9 +17,13 @@ export function useComments(driftId: string | undefined) {
 
   useEffect(() => {
     if (!driftId) {
+      setComments([]);
       setLoading(false);
       return;
     }
+
+    setComments([]);
+    setLoading(true);
 
     const unsubscribe = subscribeComments(
       driftId,

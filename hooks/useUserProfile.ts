@@ -18,6 +18,9 @@ export function useUserProfile(uidOrUsername: string | undefined, mode: 'uid' | 
       return;
     }
 
+    setProfile(null);
+    setLoading(true);
+
     if (mode === 'username') {
       let mounted = true;
       getUserByUsername(uidOrUsername)

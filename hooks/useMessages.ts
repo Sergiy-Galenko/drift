@@ -21,6 +21,7 @@ export function useMessages(conversationId: string | undefined, otherUid: string
       return;
     }
 
+    setItems([]);
     setLoading(true);
     const unsubscribe = subscribeMessages(
       conversationId,
