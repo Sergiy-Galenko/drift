@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { CountdownRing } from './CountdownRing';
+import { PollVoteOptions } from './PollVoteOptions';
 import { ProofMedia } from './ProofMedia';
 import { StatusBanner } from './StatusBanner';
 import { VoteBar } from './VoteBar';
@@ -11,6 +12,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Colors, F, S } from '@/constants/tokens';
 import { useVote } from '@/hooks/useVote';
 import type { Drift } from '@/types/drift';
+import { isBinaryPoll } from '@/utils/poll';
 
 type DriftReelCardProps = {
   drift: Drift;
@@ -20,6 +22,7 @@ type DriftReelCardProps = {
 export function DriftReelCard({ drift, height }: DriftReelCardProps) {
   const router = useRouter();
   const vote = useVote(drift);
+  const binaryPoll = isBinaryPoll(drift);
 
   return (
     <View style={[styles.root, { height }]}>
@@ -50,8 +53,17 @@ export function DriftReelCard({ drift, height }: DriftReelCardProps) {
 
       <View style={styles.actions}>
         <MoreIcon size={24} color={Colors.white} />
-        <VoteBar votesYes={drift.votesYes} votesNo={drift.votesNo} />
-        <VoteButtons currentVote={vote.currentVote} canVote={vote.canVote} loadingVote={vote.loadingVote} onVote={vote.vote} />
+        <VoteBar drift={drift} />
+        {binaryPoll ? (
+          <VoteButtons
+            currentVote={vote.currentVote === 'yes' || vote.currentVote === 'no' ? vote.currentVote : null}
+            canVote={vote.canVote}
+            loadingVote={vote.loadingVote === 'yes' || vote.loadingVote === 'no' ? vote.loadingVote : null}
+            onVote={vote.vote}
+          />
+        ) : (
+          <PollVoteOptions drift={drift} currentVote={vote.currentVote} canVote={vote.canVote} loading={vote.voting} onVote={vote.vote} />
+        )}
       </View>
     </View>
   );

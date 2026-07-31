@@ -1,9 +1,8 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 import { app } from './config';
-import type { DriftVote } from '@/types/drift';
+import type { PollVote } from '@/types/drift';
 
-export async function castVote(driftId: string, uid: string, direction: DriftVote): Promise<void> {
-  void uid;
-  await httpsCallable<{ driftId: string; direction: DriftVote }, { ok: boolean }>(getFunctions(app), 'castVote')({ driftId, direction });
+export async function castVote(driftId: string, vote: PollVote): Promise<void> {
+  await httpsCallable<{ driftId: string; vote: PollVote }, { ok: boolean }>(getFunctions(app), 'castVote')({ driftId, vote });
 }

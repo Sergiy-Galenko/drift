@@ -23,6 +23,12 @@ export const CreateDriftSchema = z.object({
   category: z.enum(['life', 'career', 'love', 'money', 'health', 'random']),
   isAnonymous: z.boolean(),
   durationHours: z.union([z.literal(1), z.literal(6), z.literal(24), z.literal(72)]),
+  pollType: z.enum(['binary', 'choice', 'ranking', 'plan']),
+  pollOptions: z.array(z.string().trim().min(1, 'Each option needs text').max(80, 'Options must be 80 characters or less')).max(4, 'Add up to 4 options'),
+}).superRefine((data, context) => {
+  if (data.pollType !== 'binary' && data.pollOptions.length < 2) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['pollOptions'], message: 'Add at least 2 options' });
+  }
 });
 
 export const UsernameSchema = z

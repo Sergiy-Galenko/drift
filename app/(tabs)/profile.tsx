@@ -18,6 +18,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSavedDrifts } from '@/hooks/useSavedDrifts';
 import type { Drift } from '@/types/drift';
 import { reputationLabelUpper } from '@/utils/reputation';
+import { voteCount } from '@/utils/poll';
 
 
 type ProfileTab = 'created' | 'voted' | 'completed' | 'failed' | 'saved';
@@ -138,7 +139,7 @@ export default function ProfileScreen() {
               style={styles.tile}
             >
               <Text numberOfLines={5} style={styles.tileText}>{drift.text}</Text>
-              <Text style={styles.tileMeta}>{drift.votesYes + drift.votesNo}</Text>
+              <Text style={styles.tileMeta}>{voteCount(drift)}</Text>
             </Pressable>
           ))}
         </View>

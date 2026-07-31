@@ -5,6 +5,7 @@ import { StoryRing } from './StoryRing';
 import { Avatar } from '@/components/ui/Avatar';
 import { Colors, F, S } from '@/constants/tokens';
 import type { Drift } from '@/types/drift';
+import { voteCount } from '@/utils/poll';
 
 type StoryPreviewProps = {
   drift: Drift;
@@ -27,7 +28,7 @@ export function StoryPreview({ drift }: StoryPreviewProps) {
           {drift.authorUsername}
         </Text>
         <Text numberOfLines={1} style={styles.meta}>
-          {drift.votesYes + drift.votesNo} votes
+          {voteCount(drift)} votes
         </Text>
       </View>
     </Pressable>

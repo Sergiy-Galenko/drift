@@ -42,7 +42,7 @@ export default function EditDriftScreen() {
 
   const save = async () => {
     if (!drift || !uid) return;
-    const parsed = CreateDriftSchema.safeParse({ text, stake, context: context || undefined, category, isAnonymous: drift.isAnonymous, durationHours: drift.votingDurationHours ?? 24 });
+    const parsed = CreateDriftSchema.safeParse({ text, stake, context: context || undefined, category, isAnonymous: drift.isAnonymous, durationHours: drift.votingDurationHours ?? 24, pollType: 'binary', pollOptions: [] });
     if (!parsed.success) {
       pushToast({ title: 'Check your changes', message: parsed.error.issues[0]?.message, tone: 'warning' });
       return;

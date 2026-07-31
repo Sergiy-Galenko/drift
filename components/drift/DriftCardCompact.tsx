@@ -19,7 +19,7 @@ export function DriftCardCompact({ drift }: DriftCardCompactProps) {
         <CategoryBadge category={drift.category} />
       </View>
       <Text numberOfLines={2} style={styles.text}>{drift.text}</Text>
-      <VoteBar votesYes={drift.votesYes} votesNo={drift.votesNo} />
+      <VoteBar drift={drift} />
     </Pressable>
   );
 }

@@ -15,6 +15,14 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "proofDeadline", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "drifts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "voterIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

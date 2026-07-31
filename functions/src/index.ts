@@ -16,6 +16,7 @@ type PushNotificationType = 'voting_started' | 'voting_last_hour' | 'proof_remin
 type ExpoPushTicket = { status?: string; id?: string; message?: string; details?: { error?: string } };
 type ExpoPushReceipt = { status?: string; message?: string; details?: { error?: string } };
 type PendingPushReceipt = { uid: string; token: string; nextCheckAt?: Timestamp; expiresAt?: Timestamp };
+type PollOption = { id: string; label: string };
 
 export function pushContent(type: string, data: Record<string, unknown>) {
   switch (type as PushNotificationType) {
@@ -24,12 +25,38 @@ export function pushContent(type: string, data: Record<string, unknown>) {
     case 'voting_last_hour':
       return { title: 'One hour left to vote', body: 'Your DRIFT closes in one hour. Share it while votes are still open.' };
     case 'proof_reminder':
-      return { title: 'Voting result is in', body: `The result is ${data.result === 'yes' ? 'YES' : 'NO'}. Upload proof within 2 hours.` };
+      {
+        const result = typeof data.result === 'string' ? data.result : 'NO RESULT';
+        return { title: 'Voting result is in', body: `The result is ${result === 'yes' || result === 'no' ? result.toUpperCase() : result}. Upload proof within 2 hours.` };
+      }
     case 'proof_deadline':
       return { title: 'Proof deadline approaching', body: 'You have 30 minutes left to upload proof.' };
     default:
       return null;
   }
+}
+
+function pollOptions(drift: FirebaseFirestore.DocumentData): PollOption[] {
+  const options = Array.isArray(drift.pollOptions) ? drift.pollOptions : [];
+  const valid = options.filter((option): option is PollOption => typeof option?.id === 'string' && /^option[1-4]$/.test(option.id) && typeof option.label === 'string');
+  return valid.length >= 2 && valid.length <= 4 && new Set(valid.map((option) => option.id)).size === valid.length ? valid : [];
+}
+
+function resultLabel(drift: FirebaseFirestore.DocumentData, result: string | null): string {
+  if (!result) return 'NO RESULT';
+  return pollOptions(drift).find((option) => option.id === result)?.label ?? result.toUpperCase();
+}
+
+export function resolvePollResult(drift: FirebaseFirestore.DocumentData): string {
+  if (drift.pollType === 'binary' || !drift.pollType) return (drift.votesYes ?? 0) >= (drift.votesNo ?? 0) ? 'yes' : 'no';
+  const options = pollOptions(drift);
+  if (options.length === 0) return 'no';
+  const tallies = drift.optionTallies ?? {};
+  return options.reduce((winner, option) => (tallies[option.id] ?? 0) > (tallies[winner.id] ?? 0) ? option : winner).id;
+}
+
+function rankingPoints(options: PollOption[], ranking: string[]): Record<string, number> {
+  return Object.fromEntries(ranking.map((optionId, index) => [optionId, options.length - index]));
 }
 
 async function sendPushNotification(uid: string, type: string, driftId: string, data: Record<string, unknown>) {
@@ -99,7 +126,7 @@ export const settleExpiredDrifts = onSchedule('every 5 minutes', async () => {
       const drift = current.data();
       const expiresAt = drift?.expiresAt as Timestamp | undefined;
       if (!drift || drift.status !== 'active' || !expiresAt || expiresAt.toMillis() > now.toMillis()) return;
-      const result = (drift.votesYes ?? 0) >= (drift.votesNo ?? 0) ? 'yes' : 'no';
+      const result = resolvePollResult(drift);
       tx.update(snap.ref, { status: 'proof_pending', result, decidedAt: now, proofDeadline: Timestamp.fromMillis(now.toMillis() + PROOF_WINDOW_MS) });
     });
   }));
@@ -137,7 +164,7 @@ export const notifyVotingResult = onDocumentUpdated('drifts/{driftId}', async (e
   const before = event.data?.before.data();
   const drift = event.data?.after.data();
   if (before?.status === 'active' && drift?.status === 'proof_pending') {
-    await notify(drift.authorUid, 'proof_reminder', drift, event.params.driftId, { result: drift.result });
+    await notify(drift.authorUid, 'proof_reminder', drift, event.params.driftId, { result: resultLabel(drift, drift.result) });
   }
 });
 
@@ -221,16 +248,52 @@ export const sendDeadlineReminders = onSchedule('every 15 minutes', async () => 
 });
 
 export const castVote = onCall(async (request) => {
-  const uid = request.auth?.uid; const { driftId, direction } = request.data as { driftId?: string; direction?: 'yes' | 'no' };
-  if (!uid || !driftId || !['yes', 'no'].includes(direction ?? '')) throw new HttpsError('invalid-argument', 'Invalid vote.');
+  const uid = request.auth?.uid; const { driftId, vote } = request.data as { driftId?: string; vote?: unknown };
+  if (!uid || !driftId) throw new HttpsError('invalid-argument', 'Invalid vote.');
   const limitRef = db.doc(`rateLimits/${uid}_vote`); const driftRef = db.doc(`drifts/${driftId}`);
   await db.runTransaction(async (tx) => {
     const [driftSnap, limitSnap] = await Promise.all([tx.get(driftRef), tx.get(limitRef)]);
     if (!driftSnap.exists) throw new HttpsError('not-found', 'Drift not found.'); const drift = driftSnap.data()!;
     if (drift.status !== 'active' || drift.authorUid === uid) throw new HttpsError('failed-precondition', 'Voting unavailable.');
     const last = limitSnap.data()?.at?.toMillis?.() ?? 0; if (Date.now() - last < 1000) throw new HttpsError('resource-exhausted', 'Slow down.');
-    const previous = drift.voters?.[uid]; const updates: Record<string, unknown> = { [`voters.${uid}`]: direction };
-    if (previous !== direction) { updates[direction === 'yes' ? 'votesYes' : 'votesNo'] = FieldValue.increment(1); if (previous) updates[previous === 'yes' ? 'votesYes' : 'votesNo'] = FieldValue.increment(-1); }
+    const pollType = drift.pollType ?? 'binary';
+    const previous = drift.voters?.[uid];
+    const updates: Record<string, unknown> = { voterIds: FieldValue.arrayUnion(uid) };
+
+    if (pollType === 'binary') {
+      if (vote !== 'yes' && vote !== 'no') throw new HttpsError('invalid-argument', 'Invalid vote.');
+      updates[`voters.${uid}`] = vote;
+      if (previous !== vote) {
+        updates[vote === 'yes' ? 'votesYes' : 'votesNo'] = FieldValue.increment(1);
+        if (previous === 'yes' || previous === 'no') updates[previous === 'yes' ? 'votesYes' : 'votesNo'] = FieldValue.increment(-1);
+      }
+    } else {
+      const options = pollOptions(drift);
+      if (options.length === 0) throw new HttpsError('failed-precondition', 'Poll options are unavailable.');
+      const optionIds = options.map((option) => option.id);
+
+      if (pollType === 'choice' || pollType === 'plan') {
+        if (typeof vote !== 'string' || !optionIds.includes(vote)) throw new HttpsError('invalid-argument', 'Invalid option.');
+        updates[`voters.${uid}`] = vote;
+        if (previous !== vote) {
+          updates[`optionTallies.${vote}`] = FieldValue.increment(1);
+          if (typeof previous === 'string' && optionIds.includes(previous)) updates[`optionTallies.${previous}`] = FieldValue.increment(-1);
+        }
+      } else if (pollType === 'ranking') {
+        if (!Array.isArray(vote) || vote.length !== optionIds.length || vote.some((optionId) => typeof optionId !== 'string') || new Set(vote).size !== optionIds.length || vote.some((optionId) => !optionIds.includes(optionId))) throw new HttpsError('invalid-argument', 'Rank every option once.');
+        const nextRanking = vote as string[];
+        updates[`voters.${uid}`] = nextRanking;
+        const previousRanking = Array.isArray(previous) ? previous.filter((optionId): optionId is string => typeof optionId === 'string' && optionIds.includes(optionId)) : [];
+        const nextPoints = rankingPoints(options, nextRanking);
+        const previousPoints = previousRanking.length === optionIds.length ? rankingPoints(options, previousRanking) : {};
+        for (const optionId of optionIds) {
+          const delta = (nextPoints[optionId] ?? 0) - (previousPoints[optionId] ?? 0);
+          if (delta !== 0) updates[`optionTallies.${optionId}`] = FieldValue.increment(delta);
+        }
+      } else {
+        throw new HttpsError('failed-precondition', 'Unsupported poll type.');
+      }
+    }
     tx.update(driftRef, updates); tx.set(limitRef, { at: FieldValue.serverTimestamp() });
   });
   return { ok: true };

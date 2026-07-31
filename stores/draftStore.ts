@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import type { DriftCategory, VotingDurationHours } from '@/types/drift';
+import type { DriftCategory, DriftPollType, VotingDurationHours } from '@/types/drift';
 
 type DraftFields = {
   hasDraft: boolean;
@@ -11,6 +11,8 @@ type DraftFields = {
   context: string;
   category: DriftCategory | null;
   durationHours: VotingDurationHours;
+  pollType: DriftPollType;
+  pollOptions: string[];
   isAnonymous: boolean;
   currentStep: number;
 };
@@ -27,6 +29,8 @@ const initialDraft: DraftFields = {
   context: '',
   category: null,
   durationHours: 24,
+  pollType: 'binary',
+  pollOptions: [],
   isAnonymous: false,
   currentStep: 0,
 };
@@ -39,7 +43,7 @@ export const useDraftStore = create<DraftStore>()(
       clearDraft: () => set(initialDraft),
     }),
     {
-      name: 'drift_create_draft_v1',
+      name: 'drift_create_draft_v2',
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

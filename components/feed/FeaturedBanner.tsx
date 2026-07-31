@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 
 import { Colors, F, R, S } from '@/constants/tokens';
 import type { Drift } from '@/types/drift';
+import { voteCount } from '@/utils/poll';
 
 type FeaturedBannerProps = {
   drifts: Drift[];
@@ -28,7 +29,7 @@ export function FeaturedBanner({ drifts }: FeaturedBannerProps) {
             style={styles.card}
           >
             <Text numberOfLines={3} style={styles.text}>{drift.text}</Text>
-            <Text style={styles.meta}>{drift.votesYes + drift.votesNo} votes</Text>
+            <Text style={styles.meta}>{voteCount(drift)} votes</Text>
           </Pressable>
         ))}
       </ScrollView>

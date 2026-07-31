@@ -14,10 +14,17 @@ import { createDrift } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
 import { useDraftStore } from '@/stores/draftStore';
 import { useUIStore } from '@/stores/uiStore';
-import { VOTING_DURATION_HOURS, type Drift } from '@/types/drift';
+import { VOTING_DURATION_HOURS, type Drift, type DriftPollType } from '@/types/drift';
 import { firebaseErrorMessage } from '@/utils/formatters';
 import { logger } from '@/utils/logger';
 import { CreateDriftSchema } from '@/utils/validation';
+
+const POLL_FORMATS: readonly { type: DriftPollType; label: string }[] = [
+  { type: 'binary', label: 'Yes / No' },
+  { type: 'choice', label: 'Choose one' },
+  { type: 'ranking', label: 'Rank options' },
+  { type: 'plan', label: 'Choose a plan' },
+];
 
 export default function CreateScreen() {
   const router = useRouter();
@@ -30,6 +37,9 @@ export default function CreateScreen() {
   const preview = useMemo<Drift | null>(() => {
     if (!profile || !draft.category) return null;
     const now = new Date();
+    const pollOptions = draft.pollType === 'binary'
+      ? []
+      : draft.pollOptions.map((label, index) => ({ id: `option${index + 1}`, label: label || `Option ${index + 1}` }));
     return {
       id: 'preview',
       authorUid: profile.uid,
@@ -41,6 +51,10 @@ export default function CreateScreen() {
       votesYes: 8,
       votesNo: 5,
       voters: {},
+      voterIds: [],
+      pollType: draft.pollType,
+      pollOptions,
+      optionTallies: Object.fromEntries(pollOptions.map((option) => [option.id, 0])),
       status: 'active',
       result: null,
       createdAt: now,
@@ -63,7 +77,7 @@ export default function CreateScreen() {
       isNSFW: false,
       reportCount: 0,
     };
-  }, [draft.category, draft.context, draft.durationHours, draft.isAnonymous, draft.stake, draft.text, profile]);
+  }, [draft.category, draft.context, draft.durationHours, draft.isAnonymous, draft.pollOptions, draft.pollType, draft.stake, draft.text, profile]);
 
   if (!profile) {
     return (
@@ -113,6 +127,8 @@ export default function CreateScreen() {
       category: draft.category,
       isAnonymous: draft.isAnonymous,
       durationHours: draft.durationHours,
+      pollType: draft.pollType,
+      pollOptions: draft.pollOptions,
     });
 
     if (!parsed.success) {
@@ -147,6 +163,17 @@ export default function CreateScreen() {
 
   const handleDurationSelect = (durationHours: (typeof VOTING_DURATION_HOURS)[number]) => {
     draft.saveDraft({ durationHours });
+  };
+
+  const handlePollTypeSelect = (pollType: DriftPollType) => {
+    draft.saveDraft({
+      pollType,
+      pollOptions: pollType === 'binary' ? [] : draft.pollOptions.length >= 2 ? draft.pollOptions : ['', ''],
+    });
+  };
+
+  const updatePollOption = (index: number, label: string) => {
+    draft.saveDraft({ pollOptions: draft.pollOptions.map((option, optionIndex) => optionIndex === index ? label : option) });
   };
 
   const handleAnonymousToggle = () => {
@@ -243,6 +270,49 @@ export default function CreateScreen() {
                 );
               })}
             </View>
+
+            <Text style={styles.sectionLabel}>Voting format</Text>
+            <View style={styles.categoryGrid}>
+              {POLL_FORMATS.map((format) => {
+                const isSelected = draft.pollType === format.type;
+                return (
+                  <Pressable
+                    key={format.type}
+                    onPress={() => handlePollTypeSelect(format.type)}
+                    style={[styles.category, isSelected && styles.categorySelected]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Select ${format.label} voting format`}
+                  >
+                    <Text style={[styles.categoryText, isSelected && styles.categorySelectedText]}>{format.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {draft.pollType !== 'binary' ? (
+              <View style={styles.pollOptions}>
+                <Text style={styles.sectionLabel}>
+                  {draft.pollType === 'ranking' ? 'Options to rank' : draft.pollType === 'plan' ? 'Action plans' : 'Options'}
+                </Text>
+                {draft.pollOptions.map((option, index) => (
+                  <View key={index} style={styles.pollOptionRow}>
+                    <Input
+                      label={`Option ${index + 1}`}
+                      value={option}
+                      onChangeText={(label) => updatePollOption(index, label)}
+                      maxLength={80}
+                      style={styles.pollOptionInput}
+                    />
+                    {draft.pollOptions.length > 2 ? (
+                      <Pressable onPress={() => draft.saveDraft({ pollOptions: draft.pollOptions.filter((_, optionIndex) => optionIndex !== index) })}>
+                        <Text style={styles.removeOption}>Remove</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ))}
+                {draft.pollOptions.length < 4 ? <Button label="Add option" variant="secondary" onPress={() => draft.saveDraft({ pollOptions: [...draft.pollOptions, ''] })} /> : null}
+              </View>
+            ) : null}
             
             <Pressable 
               onPress={handleAnonymousToggle} 
@@ -340,6 +410,21 @@ const styles = StyleSheet.create({
   },
   categorySelectedText: {
     color: Colors.black,
+  },
+  pollOptions: {
+    gap: S.md,
+  },
+  pollOptionRow: {
+    gap: S.xs,
+  },
+  pollOptionInput: {
+    flex: 1,
+  },
+  removeOption: {
+    color: Colors.accentFire,
+    fontFamily: F.family.bodySemi,
+    fontSize: F.size.sm,
+    textAlign: 'right',
   },
   toggleRow: {
     borderRadius: R.sm,

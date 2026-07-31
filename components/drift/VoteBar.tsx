@@ -1,16 +1,40 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Colors, F, R, S } from '@/constants/tokens';
+import type { Drift } from '@/types/drift';
+import { isBinaryPoll } from '@/utils/poll';
 
 type VoteBarProps = {
-  votesYes: number;
-  votesNo: number;
+  drift: Drift;
 };
 
-export function VoteBar({ votesYes, votesNo }: VoteBarProps) {
+export function VoteBar({ drift }: VoteBarProps) {
+  const { votesYes, votesNo } = drift;
   const total = votesYes + votesNo;
   const yesPercent = total > 0 ? votesYes / total : 0.5;
   const noPercent = 1 - yesPercent;
+
+  if (!isBinaryPoll(drift)) {
+    const options = drift.pollOptions ?? [];
+    const totalTallies = options.reduce((sum, option) => sum + (drift.optionTallies?.[option.id] ?? 0), 0);
+    return (
+      <View style={styles.customWrap}>
+        {options.map((option) => {
+          const tally = drift.optionTallies?.[option.id] ?? 0;
+          const percent = totalTallies > 0 ? tally / totalTallies : 0;
+          return (
+            <View key={option.id} style={styles.optionRow}>
+              <View style={styles.optionLabels}>
+                <Text numberOfLines={1} style={styles.optionLabel}>{option.label}</Text>
+                <Text style={styles.optionCount}>{drift.pollType === 'ranking' ? `${tally} pts` : `${tally} votes`}</Text>
+              </View>
+              <View style={styles.track}><View style={[styles.optionFill, { flex: Math.max(0.02, percent) }]} /><View style={{ flex: Math.max(0.02, 1 - percent) }} /></View>
+            </View>
+          );
+        })}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrap}>
@@ -46,6 +70,32 @@ const styles = StyleSheet.create({
   labels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  customWrap: {
+    gap: S.sm,
+  },
+  optionRow: {
+    gap: S.xs,
+  },
+  optionLabels: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: S.sm,
+  },
+  optionLabel: {
+    flex: 1,
+    color: Colors.textSecondary,
+    fontFamily: F.family.bodySemi,
+    fontSize: F.size.xs,
+  },
+  optionCount: {
+    color: Colors.accentVolt,
+    fontFamily: F.family.monoBold,
+    fontSize: F.size.xs,
+  },
+  optionFill: {
+    backgroundColor: Colors.accentVolt,
   },
   yes: {
     color: Colors.voteYes,

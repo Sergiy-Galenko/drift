@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { useDrift } from '@/hooks/useDrift';
+import { pollVoteLabel } from '@/utils/poll';
 
 export default function VotersScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
@@ -23,7 +24,7 @@ export default function VotersScreen() {
           {voters.map(([uid, vote]) => (
             <View key={uid} style={styles.row}>
               <Text style={styles.uid}>{uid.slice(0, 8)}</Text>
-              <Text style={vote === 'yes' ? styles.yes : styles.no}>{vote.toUpperCase()}</Text>
+              <Text style={vote === 'yes' ? styles.yes : vote === 'no' ? styles.no : styles.choice}>{pollVoteLabel(drift!, vote)}</Text>
             </View>
           ))}
           {voters.length === 0 ? <EmptyState title="No votes yet" message="The room is still quiet." /> : null}
@@ -65,5 +66,12 @@ const styles = StyleSheet.create({
     color: Colors.voteNo,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
+  },
+  choice: {
+    color: Colors.accentVolt,
+    fontFamily: F.family.monoBold,
+    fontSize: F.size.sm,
+    maxWidth: '65%',
+    textAlign: 'right',
   },
 });

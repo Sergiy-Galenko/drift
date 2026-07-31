@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { CountdownRing } from './CountdownRing';
+import { PollVoteOptions } from './PollVoteOptions';
 import { StatusBanner } from './StatusBanner';
 import { VoteBar } from './VoteBar';
 import { VoteButtons } from './VoteButtons';
@@ -20,6 +21,7 @@ import { Colors, F, S } from '@/constants/tokens';
 import { useVote } from '@/hooks/useVote';
 import type { Drift, DriftVote } from '@/types/drift';
 import { formatVoteCount } from '@/utils/formatters';
+import { isBinaryPoll, voteCount } from '@/utils/poll';
 
 type DriftCardProps = {
   drift: Drift;
@@ -31,6 +33,7 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
   const router = useRouter();
   const vote = useVote(preview ? null : drift);
   const translateX = useSharedValue(0);
+  const binaryPoll = isBinaryPoll(drift);
 
   const animatedCard = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
@@ -45,7 +48,7 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
   };
 
   const pan = Gesture.Pan()
-    .enabled(vote.canVote)
+    .enabled(vote.canVote && binaryPoll)
     .onUpdate((event) => {
       translateX.value = Math.max(-120, Math.min(120, event.translationX * 0.45));
     })
@@ -101,20 +104,24 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
         </View>
 
         <View style={styles.metaBlock}>
-          <Text style={styles.voteCount}>{formatVoteCount(drift.votesYes + drift.votesNo)} votes</Text>
+          <Text style={styles.voteCount}>{formatVoteCount(voteCount(drift))} votes</Text>
           <Text style={styles.caption}>
             <Text style={styles.captionUser}>@{drift.authorUsername} </Text>
             {drift.stake}
           </Text>
           <StatusBanner drift={drift} />
-          <VoteBar votesYes={drift.votesYes} votesNo={drift.votesNo} />
+          <VoteBar drift={drift} />
           {!preview ? (
-            <VoteButtons
-              currentVote={vote.currentVote}
-              canVote={vote.canVote}
-              loadingVote={vote.loadingVote}
-              onVote={vote.vote}
-            />
+            binaryPoll ? (
+              <VoteButtons
+                currentVote={vote.currentVote === 'yes' || vote.currentVote === 'no' ? vote.currentVote : null}
+                canVote={vote.canVote}
+                loadingVote={vote.loadingVote === 'yes' || vote.loadingVote === 'no' ? vote.loadingVote : null}
+                onVote={vote.vote}
+              />
+            ) : (
+              <PollVoteOptions drift={drift} currentVote={vote.currentVote} canVote={vote.canVote} loading={vote.voting} onVote={vote.vote} />
+            )
           ) : null}
         </View>
       </Animated.View>
@@ -139,6 +146,8 @@ export const DriftCard = memo(DriftCardComponent, (prev, next) => {
     left.result === right.result &&
     left.votesYes === right.votesYes &&
     left.votesNo === right.votesNo &&
+    left.pollType === right.pollType &&
+    left.optionTallies === right.optionTallies &&
     left.expiresAt.getTime() === right.expiresAt.getTime()
   );
 });

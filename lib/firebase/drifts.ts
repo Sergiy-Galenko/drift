@@ -124,16 +124,41 @@ export function subscribeVotedDrifts(
   onData: (drifts: Drift[]) => void,
   onError: (message: string) => void,
 ): Unsubscribe {
-  return onSnapshot(
-    query(driftsRef(), where(`voters.${uid}`, 'in', ['yes', 'no']), orderBy('createdAt', 'desc'), limit(30)),
-    (snapshot) => onData(snapshot.docs.map((document) => mapDrift(document)).filter((drift): drift is Drift => drift !== null)),
+  let current: Drift[] = [];
+  let legacy: Drift[] = [];
+  const emit = () => {
+    const merged = new Map([...legacy, ...current].map((drift) => [drift.id, drift]));
+    onData(Array.from(merged.values()).sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime()).slice(0, 30));
+  };
+  const unsubscribeCurrent = onSnapshot(
+    query(driftsRef(), where('voterIds', 'array-contains', uid), orderBy('createdAt', 'desc'), limit(30)),
+    (snapshot) => {
+      current = snapshot.docs.map((document) => mapDrift(document)).filter((drift): drift is Drift => drift !== null);
+      emit();
+    },
     (error) => onError(error.code),
   );
+  const unsubscribeLegacy = onSnapshot(
+    query(driftsRef(), where(`voters.${uid}`, 'in', ['yes', 'no']), orderBy('createdAt', 'desc'), limit(30)),
+    (snapshot) => {
+      legacy = snapshot.docs.map((document) => mapDrift(document)).filter((drift): drift is Drift => drift !== null);
+      emit();
+    },
+    (error) => onError(error.code),
+  );
+
+  return () => {
+    unsubscribeCurrent();
+    unsubscribeLegacy();
+  };
 }
 
 export async function createDrift(input: CreateDriftInput, author: UserProfile): Promise<string> {
   const nextRef = doc(driftsRef());
   const expiresAt = Timestamp.fromDate(new Date(Date.now() + input.durationHours * 3600 * 1000));
+  const pollOptions = input.pollType === 'binary'
+    ? []
+    : input.pollOptions.map((label, index) => ({ id: `option${index + 1}`, label: label.trim() }));
   const drift: WithFieldValue<DriftDoc> = {
     id: nextRef.id,
     authorUid: author.uid,
@@ -145,6 +170,10 @@ export async function createDrift(input: CreateDriftInput, author: UserProfile):
     votesYes: 0,
     votesNo: 0,
     voters: {},
+    voterIds: [],
+    pollType: input.pollType,
+    pollOptions,
+    optionTallies: Object.fromEntries(pollOptions.map((option) => [option.id, 0])),
     status: 'active',
     result: null,
     createdAt: serverTimestamp(),
@@ -238,7 +267,9 @@ export async function settleExpiredDriftIfAuthor(drift: Drift, currentUid: strin
     const snapshot = await transaction.get(ref);
     const current = snapshot.data() as DriftDoc | undefined;
     if (!current || current.authorUid !== currentUid || current.status !== 'active' || current.expiresAt.toMillis() > decidedAt.toMillis()) return;
-    const result = current.votesYes >= current.votesNo ? 'yes' : 'no';
+    const result = current.pollType && current.pollType !== 'binary' && current.pollOptions?.length
+      ? current.pollOptions.reduce((winner, option) => (current.optionTallies?.[option.id] ?? 0) > (current.optionTallies?.[winner.id] ?? 0) ? option : winner).id
+      : current.votesYes >= current.votesNo ? 'yes' : 'no';
     transaction.update(ref, {
       status: 'proof_pending',
       result,

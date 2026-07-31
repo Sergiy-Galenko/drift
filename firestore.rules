@@ -10,7 +10,7 @@ service cloud.firestore {
     }
     function onlyVoteFields(req) {
       return req.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['votesYes', 'votesNo', 'voters', 'viewCount', 'shareCount', 'bookmarkCount', 'commentCount', 'reportCount']);
+        .hasOnly(['votesYes', 'votesNo', 'voters', 'voterIds', 'optionTallies', 'viewCount', 'shareCount', 'bookmarkCount', 'commentCount', 'reportCount']);
     }
     function onlyProofFields(req) {
       return req.resource.data.diff(resource.data).affectedKeys()

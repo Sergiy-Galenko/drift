@@ -1,22 +1,22 @@
 import { create } from 'zustand';
 
 import type { CategoryFilter } from '@/constants/categories';
-import type { Drift, DriftVote } from '@/types/drift';
+import type { Drift, DriftVote, PollVote } from '@/types/drift';
 
 type VoteSnapshot = {
   drift: Drift;
-  vote: DriftVote | undefined;
+  vote: PollVote | undefined;
 };
 
 interface FeedState {
   drifts: Record<string, Drift>;
   activeCategory: CategoryFilter | null;
-  userVotes: Record<string, DriftVote>;
+  userVotes: Record<string, PollVote>;
   voteSnapshots: Record<string, VoteSnapshot>;
   setDrifts: (drifts: Drift[], category: CategoryFilter) => void;
   optimisticVote: (driftId: string, direction: DriftVote) => void;
   rollbackVote: (driftId: string) => void;
-  commitVote: (driftId: string, direction: DriftVote) => void;
+  commitVote: (driftId: string, direction: PollVote) => void;
   upsertDrift: (drift: Drift) => void;
 }
 

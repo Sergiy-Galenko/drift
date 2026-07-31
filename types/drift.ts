@@ -3,10 +3,13 @@ import type { Timestamp } from 'firebase/firestore';
 export type DriftCategory = 'life' | 'career' | 'love' | 'money' | 'health' | 'random';
 export const VOTING_DURATION_HOURS = [1, 6, 24, 72] as const;
 export type VotingDurationHours = (typeof VOTING_DURATION_HOURS)[number];
+export type DriftPollType = 'binary' | 'choice' | 'ranking' | 'plan';
 export type DriftVote = 'yes' | 'no';
 export type DriftStatus = 'active' | 'decided' | 'proof_pending' | 'executed' | 'failed' | 'cancelled';
-export type DriftResult = DriftVote | null;
-export type DriftVoters = Record<string, DriftVote>;
+export type PollVote = DriftVote | string | string[];
+export type DriftResult = string | null;
+export type DriftVoters = Record<string, PollVote>;
+export type PollOption = { id: string; label: string };
 
 export interface DriftDoc {
   id: string;
@@ -19,6 +22,10 @@ export interface DriftDoc {
   votesYes: number;
   votesNo: number;
   voters: DriftVoters;
+  voterIds?: string[];
+  pollType?: DriftPollType;
+  pollOptions?: PollOption[];
+  optionTallies?: Record<string, number>;
   status: DriftStatus;
   result: DriftResult;
   createdAt: Timestamp;
@@ -61,6 +68,8 @@ export type CreateDriftInput = {
   category: DriftCategory;
   isAnonymous: boolean;
   durationHours: VotingDurationHours;
+  pollType: DriftPollType;
+  pollOptions: string[];
   tags?: string[];
 };
 
