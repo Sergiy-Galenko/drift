@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import type { DriftCategory } from '@/types/drift';
+import type { DriftCategory, VotingDurationHours } from '@/types/drift';
 
 type DraftFields = {
   hasDraft: boolean;
@@ -10,6 +10,7 @@ type DraftFields = {
   stake: string;
   context: string;
   category: DriftCategory | null;
+  durationHours: VotingDurationHours;
   isAnonymous: boolean;
   currentStep: number;
 };
@@ -25,6 +26,7 @@ const initialDraft: DraftFields = {
   stake: '',
   context: '',
   category: null,
+  durationHours: 24,
   isAnonymous: false,
   currentStep: 0,
 };

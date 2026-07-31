@@ -14,7 +14,7 @@ import { createDrift } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
 import { useDraftStore } from '@/stores/draftStore';
 import { useUIStore } from '@/stores/uiStore';
-import type { Drift } from '@/types/drift';
+import { VOTING_DURATION_HOURS, type Drift } from '@/types/drift';
 import { firebaseErrorMessage } from '@/utils/formatters';
 import { logger } from '@/utils/logger';
 import { CreateDriftSchema } from '@/utils/validation';
@@ -44,7 +44,8 @@ export default function CreateScreen() {
       status: 'active',
       result: null,
       createdAt: now,
-      expiresAt: new Date(now.getTime() + 24 * 3600 * 1000),
+      expiresAt: new Date(now.getTime() + draft.durationHours * 3600 * 1000),
+      votingDurationHours: draft.durationHours,
       decidedAt: null,
       proofUrl: null,
       proofType: null,
@@ -62,7 +63,7 @@ export default function CreateScreen() {
       isNSFW: false,
       reportCount: 0,
     };
-  }, [draft.category, draft.context, draft.isAnonymous, draft.stake, draft.text, profile]);
+  }, [draft.category, draft.context, draft.durationHours, draft.isAnonymous, draft.stake, draft.text, profile]);
 
   if (!profile) {
     return (
@@ -111,6 +112,7 @@ export default function CreateScreen() {
       context: draft.context || undefined,
       category: draft.category,
       isAnonymous: draft.isAnonymous,
+      durationHours: draft.durationHours,
     });
 
     if (!parsed.success) {
@@ -141,6 +143,10 @@ export default function CreateScreen() {
 
   const handleCategorySelect = (category: (typeof CATEGORY_ORDER)[number]) => {
     draft.saveDraft({ category });
+  };
+
+  const handleDurationSelect = (durationHours: (typeof VOTING_DURATION_HOURS)[number]) => {
+    draft.saveDraft({ durationHours });
   };
 
   const handleAnonymousToggle = () => {
@@ -212,6 +218,26 @@ export default function CreateScreen() {
                       isSelected && styles.categorySelectedText,
                     ]}>
                       {CATEGORIES[category].label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.sectionLabel}>Voting period</Text>
+            <View style={styles.categoryGrid}>
+              {VOTING_DURATION_HOURS.map((durationHours) => {
+                const isSelected = draft.durationHours === durationHours;
+                return (
+                  <Pressable
+                    key={durationHours}
+                    onPress={() => handleDurationSelect(durationHours)}
+                    style={[styles.category, isSelected && styles.categorySelected]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Select ${durationHours}-hour voting period`}
+                  >
+                    <Text style={[styles.categoryText, isSelected && styles.categorySelectedText]}>
+                      {durationHours}h
                     </Text>
                   </Pressable>
                 );

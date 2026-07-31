@@ -35,7 +35,7 @@ export function DriftReelCard({ drift, height }: DriftReelCardProps) {
               <Text style={styles.meta}>{drift.authorReputationScore} rep</Text>
             </View>
           </View>
-          <CountdownRing expiresAt={drift.expiresAt} size={46} strokeWidth={3} />
+          <CountdownRing createdAt={drift.createdAt} expiresAt={drift.expiresAt} size={46} strokeWidth={3} />
         </View>
 
         <View style={styles.copy}>

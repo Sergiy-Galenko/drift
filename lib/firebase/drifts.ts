@@ -29,7 +29,6 @@ import { nullableTimestampToDate, timestampToDate } from './timestamps';
 import type { CategoryFilter } from '@/constants/categories';
 import type { CreateDriftInput, Drift, DriftDoc, ReportDoc } from '@/types/drift';
 import type { UserProfile } from '@/types/user';
-import { isExpired } from '@/utils/countdown';
 
 function driftsRef() {
   return collection(db, 'drifts');
@@ -134,7 +133,7 @@ export function subscribeVotedDrifts(
 
 export async function createDrift(input: CreateDriftInput, author: UserProfile): Promise<string> {
   const nextRef = doc(driftsRef());
-  const expiresAt = Timestamp.fromDate(new Date(Date.now() + 24 * 3600 * 1000));
+  const expiresAt = Timestamp.fromDate(new Date(Date.now() + input.durationHours * 3600 * 1000));
   const drift: WithFieldValue<DriftDoc> = {
     id: nextRef.id,
     authorUid: author.uid,
@@ -150,6 +149,7 @@ export async function createDrift(input: CreateDriftInput, author: UserProfile):
     result: null,
     createdAt: serverTimestamp(),
     expiresAt,
+    votingDurationHours: input.durationHours,
     decidedAt: null,
     proofUrl: null,
     proofType: null,
@@ -228,17 +228,23 @@ export async function incrementDriftShare(driftId: string): Promise<void> {
 }
 
 export async function settleExpiredDriftIfAuthor(drift: Drift, currentUid: string): Promise<void> {
-  if (drift.authorUid !== currentUid || drift.status !== 'active' || !isExpired(drift.expiresAt)) {
+  if (drift.authorUid !== currentUid || drift.status !== 'active' || drift.expiresAt.getTime() > Date.now()) {
     return;
   }
 
-  const result = drift.votesYes >= drift.votesNo ? 'yes' : 'no';
   const decidedAt = Timestamp.now();
-  await updateDoc(driftRef(drift.id), {
-    status: 'proof_pending',
-    result,
-    decidedAt,
-    proofDeadline: Timestamp.fromMillis(decidedAt.toMillis() + 2 * 3600 * 1000),
+  await runTransaction(db, async (transaction) => {
+    const ref = driftRef(drift.id);
+    const snapshot = await transaction.get(ref);
+    const current = snapshot.data() as DriftDoc | undefined;
+    if (!current || current.authorUid !== currentUid || current.status !== 'active' || current.expiresAt.toMillis() > decidedAt.toMillis()) return;
+    const result = current.votesYes >= current.votesNo ? 'yes' : 'no';
+    transaction.update(ref, {
+      status: 'proof_pending',
+      result,
+      decidedAt,
+      proofDeadline: Timestamp.fromMillis(decidedAt.toMillis() + 2 * 3600 * 1000),
+    });
   });
 }
 

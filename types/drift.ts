@@ -1,6 +1,8 @@
 import type { Timestamp } from 'firebase/firestore';
 
 export type DriftCategory = 'life' | 'career' | 'love' | 'money' | 'health' | 'random';
+export const VOTING_DURATION_HOURS = [1, 6, 24, 72] as const;
+export type VotingDurationHours = (typeof VOTING_DURATION_HOURS)[number];
 export type DriftVote = 'yes' | 'no';
 export type DriftStatus = 'active' | 'decided' | 'proof_pending' | 'executed' | 'failed' | 'cancelled';
 export type DriftResult = DriftVote | null;
@@ -21,6 +23,7 @@ export interface DriftDoc {
   result: DriftResult;
   createdAt: Timestamp;
   expiresAt: Timestamp;
+  votingDurationHours?: VotingDurationHours;
   decidedAt: Timestamp | null;
   proofUrl: string | null;
   proofType: 'image' | 'video' | null;
@@ -57,6 +60,7 @@ export type CreateDriftInput = {
   context?: string;
   category: DriftCategory;
   isAnonymous: boolean;
+  durationHours: VotingDurationHours;
   tags?: string[];
 };
 

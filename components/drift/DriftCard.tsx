@@ -79,7 +79,7 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
               </View>
             </View>
             <View style={styles.headerRight}>
-              <CountdownRing expiresAt={drift.expiresAt} size={38} strokeWidth={3} />
+              <CountdownRing createdAt={drift.createdAt} expiresAt={drift.expiresAt} size={38} strokeWidth={3} />
               <MoreIcon size={22} color={Colors.white} />
             </View>
           </View>

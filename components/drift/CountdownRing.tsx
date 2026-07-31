@@ -6,16 +6,17 @@ import { useNow } from '@/hooks/useNow';
 import { formatCountdownShort, getCountdownProgress, isExpiringSoon } from '@/utils/countdown';
 
 type CountdownRingProps = {
+  createdAt: Date;
   expiresAt: Date;
   size?: number;
   strokeWidth?: number;
 };
 
-export function CountdownRing({ expiresAt, size = 44, strokeWidth = 4 }: CountdownRingProps) {
+export function CountdownRing({ createdAt, expiresAt, size = 44, strokeWidth = 4 }: CountdownRingProps) {
   const now = useNow();
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const progress = getCountdownProgress(expiresAt, now);
+  const progress = getCountdownProgress(createdAt, expiresAt, now);
   const urgent = isExpiringSoon(expiresAt, now);
 
   return (

@@ -21,10 +21,10 @@ export function formatCountdownShort(expiresAt: Date, now = Date.now()): string 
   return `${s}s`;
 }
 
-export function getCountdownProgress(expiresAt: Date, now = Date.now()): number {
-  const total = 24 * 3600 * 1000;
+export function getCountdownProgress(createdAt: Date, expiresAt: Date, now = Date.now()): number {
+  const total = expiresAt.getTime() - createdAt.getTime();
   const remaining = Math.max(0, expiresAt.getTime() - now);
-  return remaining / total;
+  return total > 0 ? Math.min(1, remaining / total) : 0;
 }
 
 export function isExpiringSoon(expiresAt: Date, now = Date.now()): boolean {

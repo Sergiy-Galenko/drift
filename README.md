@@ -20,7 +20,7 @@ DRIFT is an Expo / React Native social commitment app. Users post real-life deci
    firebase deploy --only firestore:rules,firestore:indexes,storage
    ```
 
-5. Enable push notifications: run `npx eas init` once to add the EAS project ID to `app.json`, then deploy the Functions.
+5. Enable push notifications: run `npx eas init` once to add the EAS project ID to `app.json`, configure FCM V1 (Android) and APNs (iOS) credentials in EAS, then deploy the Functions.
 
    ```sh
    firebase deploy --only functions

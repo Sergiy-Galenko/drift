@@ -22,6 +22,7 @@ export const CreateDriftSchema = z.object({
   context: z.string().max(300).optional(),
   category: z.enum(['life', 'career', 'love', 'money', 'health', 'random']),
   isAnonymous: z.boolean(),
+  durationHours: z.union([z.literal(1), z.literal(6), z.literal(24), z.literal(72)]),
 });
 
 export const UsernameSchema = z
