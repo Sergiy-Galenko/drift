@@ -14,13 +14,21 @@ DRIFT is an Expo / React Native social commitment app. Users post real-life deci
 
 3. Copy `.env.example` to `.env` and fill all `EXPO_PUBLIC_FIREBASE_*` values.
 
-4. Deploy rules.
+4. Deploy rules and indexes.
 
    ```sh
-   firebase deploy --only firestore:rules,storage
+   firebase deploy --only firestore:rules,firestore:indexes,storage
    ```
 
-5. Start Expo.
+5. Enable push notifications: run `npx eas init` once to add the EAS project ID to `app.json`, then deploy the Functions.
+
+   ```sh
+   firebase deploy --only functions
+   ```
+
+   Push notifications require an Android/iOS development or production build; Expo Go does not support remote push on SDK 54.
+
+6. Start Expo.
 
    ```sh
    npx expo start

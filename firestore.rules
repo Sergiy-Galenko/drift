@@ -18,7 +18,7 @@ service cloud.firestore {
     }
     function onlyEditableUserFields(req) {
       return req.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['displayName', 'avatarUrl', 'bio', 'username', 'settings', 'lastActiveAt', 'isAnonymous']);
+        .hasOnly(['displayName', 'avatarUrl', 'bio', 'username', 'settings', 'lastActiveAt', 'isAnonymous', 'expoPushToken']);
     }
 
     match /drifts/{driftId} {

@@ -10,6 +10,7 @@ import { fontMap } from '@/constants/fonts';
 import { Colors } from '@/constants/tokens';
 import { useRouletteSync } from '@/features/roulette/store/useRouletteStore';
 import { useAuthBootstrap } from '@/hooks/useAuth';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import '@/lib/firebase/config';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -17,6 +18,7 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
   useAuthBootstrap();
+  usePushNotifications();
   const profile = useAuthStore((state) => state.profile);
   useRouletteSync(profile);
   const [fontsLoaded] = useFonts(fontMap);

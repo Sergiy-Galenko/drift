@@ -58,8 +58,8 @@ export default function SettingsScreen() {
         {profile ? (
           <>
             <View style={styles.row}>
-              <Text style={styles.label}>Notifications</Text>
-              <Switch label="Notifications" value={profile.settings.notificationsEnabled} onValueChange={(value) => void update('notificationsEnabled', value)} />
+              <Text style={styles.label}>Push notifications</Text>
+              <Switch label="Push notifications" value={profile.settings.notificationsEnabled} onValueChange={(value) => void update('notificationsEnabled', value)} />
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>Anonymous by default</Text>

@@ -60,6 +60,7 @@ function buildFallbackProfile(user: FirebaseUser): UserProfile {
     lastActiveAt: now,
     isAnonymous: false,
     isVerified: false,
+    expoPushToken: null,
     settings: {
       notificationsEnabled: true,
       anonymousDefault: false,

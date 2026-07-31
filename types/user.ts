@@ -30,6 +30,7 @@ export interface UserDoc {
   lastActiveAt: Timestamp;
   isAnonymous: boolean;
   isVerified: boolean;
+  expoPushToken?: string | null;
   settings: UserSettings;
 }
 

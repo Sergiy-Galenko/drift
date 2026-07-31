@@ -39,12 +39,16 @@ export function firebaseErrorMessage(codeOrMessage: string): string {
 
 export function notificationTitle(type: NotificationType): string {
   switch (type) {
+    case 'voting_started':
+      return 'Voting started';
+    case 'voting_last_hour':
+      return 'One hour left to vote';
     case 'vote_milestone':
       return 'Vote milestone hit';
     case 'proof_reminder':
       return 'Proof deadline approaching';
     case 'proof_deadline':
-      return 'Proof deadline passed';
+      return 'Proof deadline approaching';
     case 'proof_uploaded':
       return 'Proof uploaded';
     case 'drift_executed':
