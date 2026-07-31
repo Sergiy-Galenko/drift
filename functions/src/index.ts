@@ -1,16 +1,55 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { onDocumentCreated, onDocumentDeleted } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentDeleted, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 initializeApp();
 const db = getFirestore();
 const PROOF_WINDOW_MS = 2 * 60 * 60 * 1000;
+const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+
+type PushNotificationType = 'voting_started' | 'voting_last_hour' | 'proof_reminder' | 'proof_deadline';
+
+function pushContent(type: string, data: Record<string, unknown>) {
+  switch (type as PushNotificationType) {
+    case 'voting_started':
+      return { title: 'Voting started', body: 'Your DRIFT is live. Voting closes in 24 hours.' };
+    case 'voting_last_hour':
+      return { title: 'One hour left to vote', body: 'Your DRIFT closes in one hour. Share it while votes are still open.' };
+    case 'proof_reminder':
+      return { title: 'Voting result is in', body: `The result is ${data.result === 'yes' ? 'YES' : 'NO'}. Upload proof within 2 hours.` };
+    case 'proof_deadline':
+      return { title: 'Proof deadline approaching', body: 'You have 30 minutes left to upload proof.' };
+    default:
+      return null;
+  }
+}
+
+async function sendPushNotification(uid: string, type: string, driftId: string, data: Record<string, unknown>) {
+  const content = pushContent(type, data);
+  if (!content) return;
+
+  try {
+    const user = (await db.doc(`users/${uid}`).get()).data();
+    const token = user?.expoPushToken;
+    if (user?.settings?.notificationsEnabled !== true || typeof token !== 'string' || !/^(Exponent|Expo)PushToken\[.+\]$/.test(token)) return;
+
+    const response = await fetch(EXPO_PUSH_URL, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: token, sound: 'default', channelId: 'default', ...content, data: { driftId, type } }),
+    });
+    if (!response.ok) console.error('Expo push failed', await response.text());
+  } catch (error) {
+    console.error('Expo push failed', error);
+  }
+}
 
 async function notify(uid: string, type: string, drift: FirebaseFirestore.DocumentData, driftId: string, data: Record<string, unknown> = {}) {
   const ref = db.collection('notifications').doc(uid).collection('items').doc();
   await ref.set({ id: ref.id, type, driftId, driftText: drift.text ?? null, fromUid: null, fromUsername: null, isRead: false, createdAt: FieldValue.serverTimestamp(), data });
+  await sendPushNotification(uid, type, driftId, data);
 }
 
 function reputationTier(score: number) { return score <= 20 ? 'ghost' : score <= 40 ? 'low' : score <= 60 ? 'mid' : score <= 80 ? 'high' : 'legend'; }
@@ -33,8 +72,44 @@ export const settleExpiredDrifts = onSchedule('every 5 minutes', async () => {
   await Promise.all(expired.docs.map(async (snap) => {
     const drift = snap.data(); const result = (drift.votesYes ?? 0) >= (drift.votesNo ?? 0) ? 'yes' : 'no';
     await snap.ref.update({ status: 'proof_pending', result, decidedAt: now, proofDeadline: Timestamp.fromMillis(now.toMillis() + PROOF_WINDOW_MS) });
-    await notify(drift.authorUid, 'proof_reminder', drift, snap.id, { proofDeadline: now.toMillis() + PROOF_WINDOW_MS });
   }));
+});
+
+export const notifyVotingStarted = onDocumentCreated('drifts/{driftId}', async (event) => {
+  const drift = event.data?.data();
+  if (drift) await notify(drift.authorUid, 'voting_started', drift, event.params.driftId);
+});
+
+export const remindVotingLastHour = onSchedule('every 5 minutes', async () => {
+  const now = Timestamp.now();
+  const oneHourFromNow = Timestamp.fromMillis(now.toMillis() + 60 * 60 * 1000);
+  const closingSoon = await db.collection('drifts')
+    .where('status', '==', 'active')
+    .where('expiresAt', '>=', now)
+    .where('expiresAt', '<=', oneHourFromNow)
+    .limit(400)
+    .get();
+
+  await Promise.all(closingSoon.docs.map(async (snap) => {
+    let driftToNotify: FirebaseFirestore.DocumentData | undefined;
+    await db.runTransaction(async (tx) => {
+      const current = await tx.get(snap.ref);
+      const drift = current.data();
+      const expiresAt = drift?.expiresAt as Timestamp | undefined;
+      if (!drift || drift.status !== 'active' || drift.votingLastHourNotifiedAt || !expiresAt || expiresAt.toMillis() < now.toMillis() || expiresAt.toMillis() > oneHourFromNow.toMillis()) return;
+      tx.update(snap.ref, { votingLastHourNotifiedAt: now });
+      driftToNotify = drift;
+    });
+    if (driftToNotify) await notify(driftToNotify.authorUid, 'voting_last_hour', driftToNotify, snap.id);
+  }));
+});
+
+export const notifyVotingResult = onDocumentUpdated('drifts/{driftId}', async (event) => {
+  const before = event.data?.before.data();
+  const drift = event.data?.after.data();
+  if (before?.status === 'active' && drift?.status === 'proof_pending') {
+    await notify(drift.authorUid, 'proof_reminder', drift, event.params.driftId, { result: drift.result });
+  }
 });
 
 export const sendDeadlineReminders = onSchedule('every 15 minutes', async () => {
@@ -47,7 +122,17 @@ export const sendDeadlineReminders = onSchedule('every 15 minutes', async () => 
       const userRef = db.doc(`users/${drift.authorUid}`); const user = (await userRef.get()).data();
       if (user) { const score = Math.max(0, (user.reputationScore ?? 50) - 10); await userRef.update({ reputationScore: score, reputationTier: reputationTier(score), streakCurrent: 0, driftsFailed: FieldValue.increment(1) }); }
       await notify(drift.authorUid, 'author_failed', drift, snap.id);
-    } else await notify(drift.authorUid, 'proof_deadline', drift, snap.id, { proofDeadline: drift.proofDeadline.toMillis() });
+    } else {
+      let shouldNotify = false;
+      await db.runTransaction(async (tx) => {
+        const current = await tx.get(snap.ref);
+        const currentDrift = current.data();
+        if (!currentDrift || currentDrift.status !== 'proof_pending' || currentDrift.proofDeadlineReminderSentAt) return;
+        tx.update(snap.ref, { proofDeadlineReminderSentAt: Timestamp.now() });
+        shouldNotify = true;
+      });
+      if (shouldNotify) await notify(drift.authorUid, 'proof_deadline', drift, snap.id, { proofDeadline: drift.proofDeadline.toMillis() });
+    }
   }));
 });
 

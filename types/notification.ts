@@ -1,6 +1,8 @@
 import type { Timestamp } from 'firebase/firestore';
 
 export type NotificationType =
+  | 'voting_started'
+  | 'voting_last_hour'
   | 'vote_milestone'
   | 'proof_reminder'
   | 'proof_deadline'

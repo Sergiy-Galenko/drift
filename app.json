@@ -41,6 +41,14 @@
           "cameraPermission": "Drift needs camera access to capture proof."
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/logo-drift.png",
+          "color": "#000000",
+          "defaultChannel": "default"
+        }
+      ],
       "expo-video"
     ],
     "experiments": {

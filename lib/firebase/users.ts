@@ -152,6 +152,7 @@ export async function createUserProfile(uid: string, input: UserProfileInput): P
     lastActiveAt: serverTimestamp(),
     isAnonymous: input.isAnonymous,
     isVerified: false,
+    expoPushToken: null,
     settings: {
       notificationsEnabled: true,
       anonymousDefault: input.isAnonymous,
@@ -181,6 +182,10 @@ export async function updateUserSettings(uid: string, settings: Partial<UserSett
     Object.entries(settings).map(([key, value]) => [`settings.${key}`, value]),
   ) as Record<string, boolean>;
   await updateDoc(userRef(uid), { ...updates, lastActiveAt: serverTimestamp() });
+}
+
+export async function updateExpoPushToken(uid: string, expoPushToken: string | null): Promise<void> {
+  await updateDoc(userRef(uid), { expoPushToken, lastActiveAt: serverTimestamp() });
 }
 
 export async function searchUsers(term: string): Promise<UserProfile[]> {
