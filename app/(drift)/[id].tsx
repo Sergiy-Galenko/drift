@@ -17,8 +17,7 @@ import { useBookmark } from '@/hooks/useBookmark';
 import { useComments } from '@/hooks/useComments';
 import { useDrift } from '@/hooks/useDrift';
 import { useFollow } from '@/hooks/useFollow';
-import { incrementDriftShare } from '@/lib/firebase/drifts';
-import { deleteDrift } from '@/lib/firebase/drifts';
+import { deleteDrift, incrementDriftShare } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import type { Comment } from '@/types/comment';
@@ -143,7 +142,7 @@ export default function DriftDetailScreen() {
         ) : null}
         {uid === drift.authorUid && drift.status === 'active' ? (
           <View style={styles.ownerActions}>
-            <Button label="Edit drift" variant="secondary" onPress={() => router.push({ pathname: '/(modals)/edit-drift', params: { id: drift.id } } as never)} />
+            <Button label="Edit drift" variant="secondary" onPress={() => router.push({ pathname: '/(modals)/edit-drift', params: { id: drift.id } })} />
             <Button label="Delete drift" variant="danger" onPress={deleteOwnDrift} />
           </View>
         ) : null}
@@ -176,7 +175,7 @@ export default function DriftDetailScreen() {
         <View style={styles.commentList}>
           {comments.topLevel.map((comment) => (
             <View key={comment.id} style={styles.commentGroup}>
-              <CommentItem comment={comment} canDelete={comment.authorUid === uid} onLike={comments.likeComment} onReply={setReplyTo} onDelete={deleteOwnComment} onReport={(item) => router.push({ pathname: '/(modals)/report-comment', params: { driftId: drift.id, commentId: item.id } } as never)} />
+              <CommentItem comment={comment} canDelete={comment.authorUid === uid} onLike={comments.likeComment} onReply={setReplyTo} onDelete={deleteOwnComment} onReport={(item) => router.push({ pathname: '/(modals)/report-comment', params: { driftId: drift.id, commentId: item.id } })} />
               {comments.repliesFor(comment.id).map((reply) => (
                 <CommentItem
                   key={reply.id}
@@ -185,7 +184,7 @@ export default function DriftDetailScreen() {
                   canDelete={reply.authorUid === uid}
                   onLike={comments.likeComment}
                   onDelete={deleteOwnComment}
-                  onReport={(item) => router.push({ pathname: '/(modals)/report-comment', params: { driftId: drift.id, commentId: item.id } } as never)}
+                  onReport={(item) => router.push({ pathname: '/(modals)/report-comment', params: { driftId: drift.id, commentId: item.id } })}
                 />
               ))}
             </View>

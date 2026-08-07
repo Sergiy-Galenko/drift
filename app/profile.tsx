@@ -1,1 +1,5 @@
-export { default } from './(tabs)/profile';
+import ProfileScreen from './(tabs)/profile';
+
+export default function ProfileRoute() {
+  return <ProfileScreen showBack />;
+}

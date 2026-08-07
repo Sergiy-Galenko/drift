@@ -29,6 +29,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="activity" />
         <Tabs.Screen name="create" options={{ href: null }} />
         <Tabs.Screen name="profile" options={{ href: null }} />
+        <Tabs.Screen name="deedliner" options={{ href: null }} />
         <Tabs.Screen name="feed" options={{ href: null }} />
         <Tabs.Screen name="explore" options={{ href: null }} />
         <Tabs.Screen name="reels" options={{ href: null }} />

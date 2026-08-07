@@ -24,7 +24,22 @@ import { voteCount } from '@/utils/poll';
 type ProfileTab = 'created' | 'voted' | 'completed' | 'failed' | 'saved';
 const PROFILE_TABS: readonly ProfileTab[] = ['created', 'voted', 'completed', 'failed', 'saved'];
 
-export default function ProfileScreen() {
+function renderTabIcon(item: ProfileTab, active: boolean) {
+  const color = active ? Colors.white : Colors.textTertiary;
+  if (item === 'created') {
+    return <GridIcon size={22} color={color} />;
+  }
+  if (item === 'voted') {
+    return <ReelsIcon size={22} color={color} />;
+  }
+  return <Text style={[styles.tabText, active ? styles.activeTabText : null]}>{item === 'saved' ? 'Saved' : item.toUpperCase()}</Text>;
+}
+
+type ProfileScreenProps = {
+  showBack?: boolean;
+};
+
+export default function ProfileScreen({ showBack = false }: ProfileScreenProps) {
   const router = useRouter();
   const profile = useAuthStore((state) => state.profile);
   const profileUid = profile?.uid;
@@ -54,7 +69,7 @@ export default function ProfileScreen() {
   if (!profile) {
     return (
       <View style={styles.root}>
-        <Header title="Profile" showBack />
+        <Header title="Profile" showBack={showBack} />
         <EmptyState title="No profile" message="Sign in to build reputation." />
       </View>
     );
@@ -75,7 +90,7 @@ export default function ProfileScreen() {
     <View style={styles.root}>
       <Header
         title="Profile"
-        showBack
+        showBack={showBack}
         right={
           <View style={styles.headerActions}>
             <IconButton icon={PaperPlaneIcon} label="Messages" onPress={() => router.push('/(chat)')} />
@@ -121,13 +136,7 @@ export default function ProfileScreen() {
         <View style={styles.tabs}>
           {PROFILE_TABS.map((item) => (
             <Pressable key={item} onPress={() => setTab(item)} style={[styles.tab, tab === item ? styles.activeTab : null]}>
-              {item === 'created' ? (
-                <GridIcon size={22} color={tab === item ? Colors.white : Colors.textTertiary} />
-              ) : item === 'voted' ? (
-                <ReelsIcon size={22} color={tab === item ? Colors.white : Colors.textTertiary} />
-              ) : (
-                <Text style={[styles.tabText, tab === item ? styles.activeTabText : null]}>{item === 'saved' ? 'Saved' : item.toUpperCase()}</Text>
-              )}
+              {renderTabIcon(item, tab === item)}
             </Pressable>
           ))}
         </View>

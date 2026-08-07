@@ -23,30 +23,36 @@ import type { Drift, DriftVote } from '@/types/drift';
 import { formatVoteCount } from '@/utils/formatters';
 import { isBinaryPoll, voteCount } from '@/utils/poll';
 
+// Props for the card
 type DriftCardProps = {
   drift: Drift;
   index?: number;
   preview?: boolean;
 };
 
+// Main card component
 function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
   const router = useRouter();
   const vote = useVote(preview ? null : drift);
   const translateX = useSharedValue(0);
   const binaryPoll = isBinaryPoll(drift);
 
+  // Animated card style for horizontal swipe
   const animatedCard = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
+  // Overlay that fades/colors according to swipe direction and position
   const overlayStyle = useAnimatedStyle(() => ({
     opacity: Math.min(0.18, Math.abs(translateX.value) / 280),
     backgroundColor: interpolateColor(translateX.value, [-120, 0, 120], [Colors.fire, Colors.black, Colors.volt]),
   }));
 
+  // Handle swipe submit (yes/no)
   const submitSwipe = (direction: DriftVote) => {
     void vote.vote(direction);
   };
 
+  // Pan gesture for voting via swipe (enabled for binary polls only & canVote)
   const pan = Gesture.Pan()
     .enabled(vote.canVote && binaryPoll)
     .onUpdate((event) => {
@@ -62,6 +68,7 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
       translateX.value = withSpring(0, { damping: 18 });
     });
 
+  // Open drift detail page if not in preview mode
   const openDrift = () => {
     if (!preview) {
       router.push({ pathname: '/(drift)/[id]', params: { id: drift.id } });
@@ -73,20 +80,32 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
       <Animated.View style={[styles.post, animatedCard]}>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, overlayStyle]} />
         <Pressable disabled={preview} onPress={openDrift} style={styles.pressArea}>
+          {/* Header with author and timer */}
           <View style={styles.header}>
             <View style={styles.authorRow}>
-              <Avatar username={drift.authorUsername} avatarUrl={null} reputationScore={drift.authorReputationScore} size={32} />
+              <Avatar
+                username={drift.authorUsername}
+                avatarUrl={null}
+                reputationScore={drift.authorReputationScore}
+                size={32}
+              />
               <View style={styles.authorWrap}>
                 <Text style={styles.author}>@{drift.authorUsername}</Text>
                 <Text style={styles.rep}>{drift.authorReputationScore} rep</Text>
               </View>
             </View>
             <View style={styles.headerRight}>
-              <CountdownRing createdAt={drift.createdAt} expiresAt={drift.expiresAt} size={38} strokeWidth={3} />
+              <CountdownRing
+                createdAt={drift.createdAt}
+                expiresAt={drift.expiresAt}
+                size={38}
+                strokeWidth={3}
+              />
               <MoreIcon size={22} color={Colors.white} />
             </View>
           </View>
 
+          {/* Media section */}
           <View style={styles.media}>
             <Text style={styles.category}>{drift.category}</Text>
             <Text style={styles.text}>{drift.text}</Text>
@@ -94,6 +113,7 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
           </View>
         </Pressable>
 
+        {/* Social & bookmark actions */}
         <View style={styles.actions}>
           <View style={styles.actionLeft}>
             <HeartIcon size={25} color={Colors.white} />
@@ -103,6 +123,7 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
           <BookmarkIcon size={24} color={Colors.white} />
         </View>
 
+        {/* Votes, status, bars, buttons */}
         <View style={styles.metaBlock}>
           <Text style={styles.voteCount}>{formatVoteCount(voteCount(drift))} votes</Text>
           <Text style={styles.caption}>
@@ -120,7 +141,13 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
                 onVote={vote.vote}
               />
             ) : (
-              <PollVoteOptions drift={drift} currentVote={vote.currentVote} canVote={vote.canVote} loading={vote.voting} onVote={vote.vote} />
+              <PollVoteOptions
+                drift={drift}
+                currentVote={vote.currentVote}
+                canVote={vote.canVote}
+                loading={vote.voting}
+                onVote={vote.vote}
+              />
             )
           ) : null}
         </View>
@@ -129,6 +156,7 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
   );
 }
 
+// Pure memoization for performance
 export const DriftCard = memo(DriftCardComponent, (prev, next) => {
   const left = prev.drift;
   const right = next.drift;
@@ -151,6 +179,22 @@ export const DriftCard = memo(DriftCardComponent, (prev, next) => {
     left.expiresAt.getTime() === right.expiresAt.getTime()
   );
 });
+
+<Modal
+  visible={visible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setVisible(false)}
+>
+  <View style={[styles.modalContent, { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' }]}>
+    <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 24, minWidth: 280, alignItems: 'center' }}>
+      <Text style={{ fontFamily: F.family.displayBold, fontSize: 18, marginBottom: 12 }}>Card Details</Text>
+      {/* TODO: Populate actual card content here */}
+      <Text style={{ marginBottom: 16 }}>Card Content</Text>
+      <Button title="Close" onPress={() => setVisible(false)} />
+    </View>
+  </View>
+</Modal>
 
 const styles = StyleSheet.create({
   post: {
