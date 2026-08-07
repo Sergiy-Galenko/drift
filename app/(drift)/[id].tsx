@@ -73,9 +73,15 @@ export default function DriftDetailScreen() {
 
   const share = async () => {
     if (!drift) return;
+    if (drift.result) {
+      router.push({ pathname: '/(modals)/share-result', params: { id: drift.id } } as never);
+      return;
+    }
     try {
       await Share.share({ message: `Vote on this DRIFT: ${drift.text}` });
-      await incrementDriftShare(drift.id);
+      void incrementDriftShare(drift.id).catch((error: unknown) => {
+        logger.warn('Share count failed', { error: String(error) });
+      });
     } catch (error) {
       logger.warn('Share failed', { error: String(error) });
     }
@@ -108,7 +114,7 @@ export default function DriftDetailScreen() {
         <DriftCard drift={drift} />
         <View style={styles.actions}>
           <IconButton icon={BookmarkIcon} label="Bookmark" active={bookmark.saved} onPress={() => void bookmark.toggle()} />
-          <IconButton icon={ShareIcon} label="Share" onPress={() => void share()} />
+          <IconButton icon={ShareIcon} label={drift.result ? 'Share result card' : 'Share'} onPress={() => void share()} />
           <IconButton
             icon={UsersIcon}
             label="Voters"

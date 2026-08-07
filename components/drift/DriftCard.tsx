@@ -180,22 +180,6 @@ export const DriftCard = memo(DriftCardComponent, (prev, next) => {
   );
 });
 
-<Modal
-  visible={visible}
-  transparent
-  animationType="slide"
-  onRequestClose={() => setVisible(false)}
->
-  <View style={[styles.modalContent, { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' }]}>
-    <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 24, minWidth: 280, alignItems: 'center' }}>
-      <Text style={{ fontFamily: F.family.displayBold, fontSize: 18, marginBottom: 12 }}>Card Details</Text>
-      {/* TODO: Populate actual card content here */}
-      <Text style={{ marginBottom: 16 }}>Card Content</Text>
-      <Button title="Close" onPress={() => setVisible(false)} />
-    </View>
-  </View>
-</Modal>
-
 const styles = StyleSheet.create({
   post: {
     overflow: 'hidden',
