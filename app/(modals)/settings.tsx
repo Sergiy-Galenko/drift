@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   row: {
     borderRadius: R.md,
     borderWidth: S.px,
-    borderColor: Colors.stroke,
+    borderColor: Colors.slate,
     backgroundColor: Colors.bgSurface,
     padding: S.lg,
     flexDirection: 'row',
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    color: Colors.textPrimary,
+    color: Colors.dossier,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.base,
   },

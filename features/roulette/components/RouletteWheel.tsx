@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     borderTopWidth: S.px,
     borderBottomWidth: S.px,
     borderColor: Colors.stroke,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.dossier,
     justifyContent: 'center',
   },
   reel: {
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     gap: S.sm,
   },
   cardName: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.xs,
     textAlign: 'center',
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     width: INDICATOR_WIDTH,
     height: '100%',
     borderRadius: R.pill,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.oxblood,
     opacity: 0.86,
     marginLeft: -INDICATOR_WIDTH / 2,
   },

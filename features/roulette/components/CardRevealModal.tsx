@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
+import { InkStamp } from '@/components/dossier/InkStamp';
+import { FoilSeal } from '@/components/dossier/FoilSeal';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Colors, F, R, S, Shadows } from '@/constants/tokens';
+import { Colors, F, R, S } from '@/constants/tokens';
 
 import { CardArtwork } from './CardArtwork';
 import { RARITY_BADGE_TONES, RARITY_LABELS } from '../config/rouletteConfig';
@@ -46,6 +48,10 @@ export function CardRevealModal({ visible, card, isDuplicate, duplicateCount, on
       <Pressable style={styles.overlay} onPress={onClose}>
         <Animated.View style={[styles.card, card.rarity === 'ultra_rare' ? styles.ultraCard : null, animatedStyle]}>
           <Pressable>
+            <View style={styles.seal}>
+              <FoilSeal rare={card.rarity === 'ultra_rare'} />
+              <InkStamp label="SEAL BROKEN" tone={card.rarity === 'ultra_rare' ? 'gold' : card.rarity === 'rare' ? 'blue' : 'neutral'} />
+            </View>
             <CardArtwork card={card} />
             <View style={styles.body}>
               <View style={styles.titleRow}>
@@ -53,7 +59,7 @@ export function CardRevealModal({ visible, card, isDuplicate, duplicateCount, on
                 <Badge label={RARITY_LABELS[card.rarity]} tone={RARITY_BADGE_TONES[card.rarity]} />
               </View>
               <Text style={styles.description}>{card.description}</Text>
-              {isDuplicate ? <Text style={styles.duplicate}>Duplicate x{duplicateCount}</Text> : <Text style={styles.newCard}>New card collected</Text>}
+              {isDuplicate ? <Text style={styles.duplicate}>DUPLICATE / SHRED FOR INK x{duplicateCount}</Text> : <Text style={styles.newCard}>FILED IN THE VAULT</Text>}
               <Button label="Close" variant="secondary" onPress={onClose} />
             </View>
           </Pressable>
@@ -76,16 +82,12 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     borderRadius: R.lg,
     borderWidth: S.px,
-    borderColor: Colors.strokeStrong,
-    backgroundColor: Colors.bgElevated,
+    borderColor: Colors.paperLine,
+    backgroundColor: Colors.dossier,
     overflow: 'hidden',
-    ...Shadows.modal,
   },
   ultraCard: {
-    borderColor: Colors.accentAmber,
-    shadowColor: Colors.accentAmber,
-    shadowOpacity: 0.42,
-    shadowRadius: 28,
+    borderColor: Colors.goldFoil,
   },
   body: {
     padding: S.lg,
@@ -95,26 +97,31 @@ const styles = StyleSheet.create({
     gap: S.sm,
   },
   title: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.displayBold,
     fontSize: F.size.xl,
   },
   description: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.base,
     lineHeight: F.size.base * F.lineHeight.normal,
   },
   duplicate: {
-    color: Colors.accentAmber,
+    color: Colors.oxblood,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
     textTransform: 'uppercase',
   },
   newCard: {
-    color: Colors.accentVolt,
+    color: Colors.ledger,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
     textTransform: 'uppercase',
+  },
+  seal: {
+    alignItems: 'center',
+    gap: S.xs,
+    paddingTop: S.lg,
   },
 });

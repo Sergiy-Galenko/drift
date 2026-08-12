@@ -18,8 +18,6 @@ export const ROULETTE_CASES: CardCase[] = [
     isUnlocked: false,
     isOpened: false,
     design: {
-      gradient: ['#121212', 'rgba(255,53,0,0.32)', 'rgba(255,149,0,0.18)'],
-      accent: '#FF3500',
       glyph: 'SF',
       patternAngle: -22,
     },
@@ -43,8 +41,6 @@ export const ROULETTE_CASES: CardCase[] = [
     isUnlocked: true,
     isOpened: false,
     design: {
-      gradient: ['#000000', 'rgba(0,216,255,0.34)', 'rgba(255,255,255,0.12)'],
-      accent: '#00D8FF',
       glyph: 'PV',
       patternAngle: 18,
     },
@@ -67,8 +63,6 @@ export const ROULETTE_CASES: CardCase[] = [
     isUnlocked: false,
     isOpened: false,
     design: {
-      gradient: ['#1C1C1C', 'rgba(0,149,246,0.34)', 'rgba(157,111,255,0.16)'],
-      accent: '#0095F6',
       glyph: 'CS',
       patternAngle: -34,
     },
@@ -91,8 +85,6 @@ export const ROULETTE_CASES: CardCase[] = [
     isUnlocked: true,
     isOpened: false,
     design: {
-      gradient: ['#262626', 'rgba(255,149,0,0.38)', 'rgba(202,255,0,0.12)'],
-      accent: '#FF9500',
       glyph: 'DC',
       patternAngle: 26,
     },
@@ -115,8 +107,6 @@ export const ROULETTE_CASES: CardCase[] = [
     isUnlocked: false,
     isOpened: false,
     design: {
-      gradient: ['#000000', 'rgba(202,255,0,0.40)', 'rgba(255,149,0,0.24)'],
-      accent: '#CAFF00',
       glyph: 'LC',
       patternAngle: -12,
     },

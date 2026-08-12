@@ -13,6 +13,7 @@ import { useAuthBootstrap } from '@/hooks/useAuth';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import '@/lib/firebase/config';
 import { useAuthStore } from '@/stores/authStore';
+import '@/lib/sentry';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -49,6 +50,7 @@ export default function RootLayout() {
         <Stack.Screen name="(chat)" />
         <Stack.Screen name="(user)" />
         <Stack.Screen name="(roulette)" />
+        <Stack.Screen name="(dossier)" />
         <Stack.Screen name="profile" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="search" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />

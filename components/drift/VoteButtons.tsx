@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-import { CheckIcon, XIcon } from '@/components/icons';
 import { Spinner } from '@/components/ui/Spinner';
 import { Colors, F, R, S } from '@/constants/tokens';
 import type { DriftVote } from '@/types/drift';
@@ -23,8 +22,8 @@ export function VoteButtons({ currentVote, canVote, loadingVote, onVote }: VoteB
   const press = (direction: DriftVote) => {
     if (!canVote) return;
     const target = direction === 'yes' ? yesScale : noScale;
-    target.value = withSpring(0.96, { damping: 14 }, () => {
-      target.value = withSpring(1, { damping: 14 });
+    target.value = withSpring(0.96, { damping: 19 }, () => {
+      target.value = withSpring(1, { damping: 19 });
     });
     onVote(direction);
   };
@@ -44,8 +43,7 @@ export function VoteButtons({ currentVote, canVote, loadingVote, onVote }: VoteB
             !canVote ? styles.disabled : null,
           ]}
         >
-          {loadingVote === 'yes' ? <Spinner /> : <CheckIcon color={Colors.voteYes} size={18} />}
-          <Text style={styles.yesText}>YES</Text>
+          {loadingVote === 'yes' ? <Spinner /> : <Text style={styles.yesText}>STAMP YES</Text>}
         </Pressable>
       </Animated.View>
       <Animated.View style={[styles.flex, noStyle]}>
@@ -61,8 +59,7 @@ export function VoteButtons({ currentVote, canVote, loadingVote, onVote }: VoteB
             !canVote ? styles.disabled : null,
           ]}
         >
-          {loadingVote === 'no' ? <Spinner /> : <XIcon color={Colors.voteNo} size={18} />}
-          <Text style={styles.noText}>NO</Text>
+          {loadingVote === 'no' ? <Spinner /> : <Text style={styles.noText}>STAMP NO</Text>}
         </Pressable>
       </Animated.View>
     </View>
@@ -79,7 +76,7 @@ const styles = StyleSheet.create({
   },
   button: {
     minHeight: S.x6,
-    borderRadius: R.md,
+    borderRadius: R.xs,
     borderWidth: S.px,
     alignItems: 'center',
     justifyContent: 'center',
@@ -87,18 +84,18 @@ const styles = StyleSheet.create({
     gap: S.sm,
   },
   yes: {
-    backgroundColor: Colors.bgInteractive,
+    backgroundColor: Colors.dossier,
     borderColor: Colors.voteYes,
   },
   no: {
-    backgroundColor: Colors.bgInteractive,
+    backgroundColor: Colors.dossier,
     borderColor: Colors.voteNo,
   },
   yesActive: {
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: Colors.dossier,
   },
   noActive: {
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: Colors.dossier,
   },
   pressed: {
     opacity: 0.82,

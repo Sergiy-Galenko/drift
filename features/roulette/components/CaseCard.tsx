@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -49,7 +48,7 @@ export function CaseCard({ item, opening, onOpen }: CaseCardProps) {
   const disabled = !item.canOpen || opening;
 
   return (
-    <Animated.View style={[animatedStyle, item.isUnlocked && !item.isOpened ? styles.readyGlow : null]}>
+    <Animated.View style={animatedStyle}>
       <Pressable
         accessibilityRole="button"
         disabled={disabled}
@@ -61,19 +60,19 @@ export function CaseCard({ item, opening, onOpen }: CaseCardProps) {
           pressed && !disabled ? styles.pressed : null,
         ]}
       >
-        <LinearGradient colors={item.design.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.caseArt}>
-          <View style={[styles.caseStripe, { backgroundColor: `${item.design.accent}44`, transform: [{ rotate: `${item.design.patternAngle}deg` }] }]} />
-          <View style={[styles.caseGlyphWrap, { borderColor: item.design.accent }]}>
+        <View style={[styles.caseArt, { borderColor: item.isUnlocked ? Colors.goldFoil : Colors.slate }]}>
+          <View style={[styles.caseStripe, { backgroundColor: item.isUnlocked ? Colors.goldFoil : Colors.slate, transform: [{ rotate: `${item.design.patternAngle}deg` }] }]} />
+          <View style={[styles.caseGlyphWrap, { borderColor: item.isUnlocked ? Colors.goldFoil : Colors.slate }]}>
             {item.isUnlocked ? (
               <>
-                <BoxIcon size={22} color={item.isOpened ? Colors.textTertiary : item.design.accent} />
-                <Text style={[styles.caseGlyph, { color: item.design.accent }]}>{item.design.glyph}</Text>
+                <BoxIcon size={22} color={item.isOpened ? Colors.slate : Colors.goldFoil} />
+                <Text style={[styles.caseGlyph, { color: Colors.goldFoil }]}>{item.design.glyph}</Text>
               </>
             ) : (
               <LockIcon size={26} color={Colors.textTertiary} />
             )}
           </View>
-        </LinearGradient>
+        </View>
         <View style={styles.body}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{item.title}</Text>
@@ -96,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: R.md,
     borderWidth: S.px,
     borderColor: Colors.strokeStrong,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.dossier,
     padding: S.lg,
   },
   locked: {
@@ -109,18 +108,13 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.84,
   },
-  readyGlow: {
-    shadowColor: Colors.accentVolt,
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 5,
-  },
   caseArt: {
     width: 72,
     minHeight: 96,
     borderRadius: R.md,
     borderWidth: S.px,
-    borderColor: Colors.strokeStrong,
+    borderColor: Colors.goldFoil,
+    backgroundColor: Colors.dossier,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -135,7 +129,7 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: R.pill,
     borderWidth: S.px,
-    backgroundColor: 'rgba(0,0,0,0.36)',
+    backgroundColor: Colors.wall,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 1,
@@ -156,12 +150,12 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.displayBold,
     fontSize: F.size.lg,
   },
   description: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.sm,
     lineHeight: F.size.sm * F.lineHeight.normal,

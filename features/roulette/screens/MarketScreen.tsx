@@ -27,7 +27,7 @@ export function MarketScreen() {
 
   return (
     <View style={styles.root}>
-      <Header title="Card market" showBack />
+      <Header title="INK EXCHANGE" showBack />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.summary}>
           <Text style={styles.title}>Sell duplicates</Text>
@@ -90,24 +90,24 @@ const styles = StyleSheet.create({
   summary: {
     borderRadius: R.md,
     borderWidth: S.px,
-    borderColor: Colors.stroke,
-    backgroundColor: Colors.bgSurface,
+    borderColor: Colors.paperLine,
+    backgroundColor: Colors.dossier,
     padding: S.lg,
     gap: S.sm,
   },
   title: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.displayBold,
     fontSize: F.size.xl,
   },
   copy: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.sm,
     lineHeight: F.size.sm * F.lineHeight.normal,
   },
   tokens: {
-    color: Colors.accentVolt,
+    color: Colors.ledger,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
   },
@@ -116,8 +116,8 @@ const styles = StyleSheet.create({
     gap: S.md,
     borderRadius: R.md,
     borderWidth: S.px,
-    borderColor: Colors.stroke,
-    backgroundColor: Colors.bgSurface,
+    borderColor: Colors.paperLine,
+    backgroundColor: Colors.dossier,
     padding: S.md,
   },
   artWrap: {
@@ -135,12 +135,12 @@ const styles = StyleSheet.create({
   },
   cardName: {
     flex: 1,
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.base,
   },
   meta: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.sm,
   },
@@ -148,14 +148,14 @@ const styles = StyleSheet.create({
     minHeight: 38,
     borderRadius: R.sm,
     borderWidth: S.px,
-    borderColor: Colors.strokeStrong,
+    borderColor: Colors.paperLine,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: S.md,
   },
   sellButtonReady: {
-    borderColor: Colors.accentVolt,
-    backgroundColor: 'rgba(202,255,0,0.10)',
+    borderColor: Colors.ledger,
+    backgroundColor: Colors.dossier,
   },
   pressed: {
     opacity: 0.82,
@@ -164,11 +164,11 @@ const styles = StyleSheet.create({
     opacity: 0.52,
   },
   sellText: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.sm,
   },
   sellTextReady: {
-    color: Colors.accentVolt,
+    color: Colors.ledger,
   },
 });

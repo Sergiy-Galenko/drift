@@ -89,7 +89,7 @@ export default function ProfileScreen({ showBack = false }: ProfileScreenProps) 
   return (
     <View style={styles.root}>
       <Header
-        title="Profile"
+        title="CASE OWNER"
         showBack={showBack}
         right={
           <View style={styles.headerActions}>
@@ -131,6 +131,10 @@ export default function ProfileScreen({ showBack = false }: ProfileScreenProps) 
             <ReputationRing score={profile.reputationScore} size={28} strokeWidth={3} />
             <ProgressBar progress={Math.min(1, profile.streakCurrent / 7)} tone="amber" />
           </View>
+        </View>
+        <View style={styles.recordLinks}>
+          <Pressable onPress={() => router.push('/(dossier)/track-record')} style={styles.recordLink}><Text style={styles.recordLinkText}>TRACK RECORD</Text></Pressable>
+          <Pressable onPress={() => router.push('/(dossier)/vault')} style={styles.recordLink}><Text style={styles.recordLinkText}>CASE VAULT</Text></Pressable>
         </View>
         <ProfileCardShowcase />
         <View style={styles.tabs}>
@@ -209,6 +213,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: S.lg,
     paddingTop: S.md,
     paddingBottom: S.lg,
+  },
+  recordLinks: {
+    flexDirection: 'row',
+    gap: S.sm,
+    paddingHorizontal: S.lg,
+    paddingBottom: S.lg,
+  },
+  recordLink: {
+    flex: 1,
+    borderWidth: S.px,
+    borderColor: Colors.slate,
+    borderRadius: R.sm,
+    alignItems: 'center',
+    paddingVertical: S.sm,
+  },
+  recordLinkText: {
+    color: Colors.dossier,
+    fontFamily: F.family.monoBold,
+    fontSize: F.size.xs,
   },
   edit: {
     flex: 1,

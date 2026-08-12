@@ -37,6 +37,6 @@ export function SkeletonBlock({ style }: SkeletonBlockProps) {
 
 const styles = StyleSheet.create({
   block: {
-    backgroundColor: Colors.surfaceRaised,
+    backgroundColor: Colors.surfaceHigh,
   },
 });

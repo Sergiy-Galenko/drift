@@ -16,8 +16,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input({ label, e
       <View style={styles.inputArea}>
         <TextInput
           ref={ref}
-          placeholderTextColor={Colors.textMuted}
-          selectionColor={Colors.blue}
+          placeholderTextColor={Colors.slate}
+          selectionColor={Colors.ledger}
           style={[styles.input, right ? styles.inputWithRight : null, error ? styles.errorInput : null, style]}
           {...props}
         />
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     gap: S.sm,
   },
   label: {
-    color: Colors.textSecondary,
+    color: Colors.dossier,
     fontFamily: F.family.monoBold,
     fontSize: F.size.xs,
     textTransform: 'uppercase',
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     borderWidth: S.px,
     borderColor: Colors.strokeStrong,
     backgroundColor: Colors.surfaceRaised,
-    color: Colors.textPrimary,
+    color: Colors.dossier,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.base,
     paddingHorizontal: S.lg,
@@ -65,10 +65,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorInput: {
-    borderColor: Colors.fire,
+    borderColor: Colors.oxblood,
   },
   error: {
-    color: Colors.fire,
+    color: Colors.oxblood,
     fontFamily: F.family.bodyMedium,
     fontSize: F.size.sm,
   },

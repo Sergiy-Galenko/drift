@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors, F, R, S, Shadows } from '@/constants/tokens';
+import { Colors, F, R, S } from '@/constants/tokens';
 import { useUIStore, type ToastItem } from '@/stores/uiStore';
 
 function toneStyle(tone: ToastItem['tone']) {
@@ -62,7 +62,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgElevated,
     padding: S.lg,
     gap: S.xs,
-    ...Shadows.card,
   },
   success: {
     borderColor: Colors.accentIce,

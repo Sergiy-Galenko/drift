@@ -12,7 +12,6 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
@@ -100,7 +99,7 @@ export default function OnboardingScreen() {
         onScroll={onScroll}
         renderItem={({ item }) => (
           <ImageBackground source={item.image} resizeMode="cover" style={[styles.slide, { width }]}>
-            <LinearGradient colors={['rgba(10,10,10,0.18)', 'rgba(10,10,10,0.45)', Colors.bgBase]} style={styles.overlay} />
+            <View style={styles.overlay} />
             <View style={styles.copy}>
               <Text style={styles.logo}>D R I F T</Text>
               <Text style={styles.title}>{item.title}</Text>
@@ -145,6 +144,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.overlayLight,
   },
   copy: {
     paddingHorizontal: S.x3,

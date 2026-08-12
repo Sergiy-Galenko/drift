@@ -11,6 +11,7 @@ import { logger } from '@/utils/logger';
 export function useNotifications() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const uid = useAuthStore((state) => state.firebaseUser?.uid);
   const pushToast = useUIStore((state) => state.pushToast);
 
@@ -18,10 +19,12 @@ export function useNotifications() {
     if (!uid) {
       setItems([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     setLoading(true);
+    setError(null);
     let active = true;
     let unsubscribe: (() => void) | undefined;
     const task = InteractionManager.runAfterInteractions(() => {
@@ -34,11 +37,13 @@ export function useNotifications() {
         (notifications) => {
           setItems(notifications);
           setLoading(false);
+          setError(null);
         },
         (message) => {
           logger.error('Notifications subscription failed', { message });
           pushToast({ title: 'Activity unavailable', message: firebaseErrorMessage(message), tone: 'danger' });
           setLoading(false);
+          setError(message);
         },
       );
     });
@@ -64,7 +69,7 @@ export function useNotifications() {
     [uid],
   );
 
-  return { items, unreadCount, loading, markRead };
+  return { items, unreadCount, loading, error, markRead };
 }
 
 type NotificationsContextValue = ReturnType<typeof useNotifications>;
@@ -72,10 +77,10 @@ type NotificationsContextValue = ReturnType<typeof useNotifications>;
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
 
 export function NotificationsProvider({ children }: PropsWithChildren) {
-  const { items, unreadCount, loading, markRead } = useNotifications();
+  const { items, unreadCount, loading, error, markRead } = useNotifications();
   const value = useMemo(
-    () => ({ items, unreadCount, loading, markRead }),
-    [items, loading, markRead, unreadCount],
+    () => ({ items, unreadCount, loading, error, markRead }),
+    [error, items, loading, markRead, unreadCount],
   );
 
   return createElement(NotificationsContext.Provider, { value }, children);

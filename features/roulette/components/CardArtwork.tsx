@@ -1,5 +1,4 @@
 import { ImageBackground, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { LockIcon } from '@/components/icons';
@@ -14,7 +13,11 @@ type CardArtworkProps = {
   compact?: boolean;
 };
 
-const fallbackGradient = [Colors.bgInteractive, Colors.surfaceRaised, Colors.bgSurface] as const;
+function sealColor(card: Card | undefined): string {
+  if (card?.rarity === 'rare') return Colors.blueInk;
+  if (card?.rarity === 'ultra_rare') return Colors.goldFoil;
+  return Colors.slate;
+}
 
 function CardMotif({ motif, color, compact }: { motif: CardDesignMotif; color: string; compact: boolean }) {
   const size = compact ? 50 : 74;
@@ -140,8 +143,7 @@ function CardMotif({ motif, color, compact }: { motif: CardDesignMotif; color: s
 export function CardArtwork({ card, locked = false, compact = false }: CardArtworkProps) {
   const design = card?.design;
   const imageAsset = card ? getCardImageAsset(card.id) : undefined;
-  const gradient = design?.gradient ?? fallbackGradient;
-  const accent = design?.accent ?? Colors.textTertiary;
+  const accent = sealColor(card);
   const markerOffset = design ? S.md + (design.seed % 28) : S.x2;
 
   if (card && imageAsset && !locked) {
@@ -162,10 +164,10 @@ export function CardArtwork({ card, locked = false, compact = false }: CardArtwo
   }
 
   return (
-    <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.art, compact ? styles.compact : null, locked ? styles.locked : null]}>
+    <View style={[styles.art, compact ? styles.compact : null, locked ? styles.locked : null, { borderColor: accent }]}>
       <View style={[styles.gridLineA, { transform: [{ rotate: `${design?.stripeAngle ?? -28}deg` }] }]} />
-      <View style={[styles.gridLineB, { left: markerOffset, backgroundColor: `${accent}33` }]} />
-      <View style={[styles.signal, { backgroundColor: `${accent}66` }, card?.rarity === 'ultra_rare' ? styles.signalUltra : null]} />
+      <View style={[styles.gridLineB, { left: markerOffset }]} />
+      <View style={[styles.signal, { backgroundColor: accent }]} />
       {card ? (
         <View style={[styles.numberPlate, compact ? styles.numberPlateCompact : null, { borderColor: accent }]}>
           <Text style={[styles.numberText, compact ? styles.numberTextCompact : null, { color: accent }]}>
@@ -174,7 +176,7 @@ export function CardArtwork({ card, locked = false, compact = false }: CardArtwo
         </View>
       ) : null}
       <View style={[styles.cornerDot, { borderColor: accent, right: markerOffset }]} />
-      <View style={[styles.mark, { borderColor: accent }, card?.rarity === 'ultra_rare' ? styles.markUltra : null]}>
+      <View style={[styles.mark, { borderColor: accent }]}>
         {locked || !card ? (
           <LockIcon size={compact ? 22 : 30} color={Colors.textTertiary} />
         ) : (
@@ -182,7 +184,7 @@ export function CardArtwork({ card, locked = false, compact = false }: CardArtwo
         )}
       </View>
       {!locked && card ? <Text style={[styles.glyph, compact ? styles.glyphCompact : null, { color: accent }]}>{card.design.glyph}</Text> : null}
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -193,22 +195,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.bgInteractive,
+    borderWidth: S.px,
+    backgroundColor: Colors.dossier,
   },
   compact: {
     borderRadius: R.sm,
   },
   photoArt: {
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.wall,
   },
   photoImage: {
     borderRadius: R.md,
-  },
-  lockOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.58)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   locked: {
     opacity: 0.82,
@@ -217,13 +214,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '135%',
     height: S.px,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: Colors.paperLine,
   },
   gridLineB: {
     position: 'absolute',
     width: S.px,
     height: '125%',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: Colors.paperLine,
     transform: [{ rotate: '18deg' }],
   },
   signal: {
@@ -233,10 +230,7 @@ const styles = StyleSheet.create({
     right: S.md,
     height: S.sm,
     borderRadius: R.pill,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-  },
-  signalUltra: {
-    backgroundColor: Colors.accentVolt,
+    backgroundColor: Colors.slate,
   },
   cornerDot: {
     position: 'absolute',
@@ -245,7 +239,7 @@ const styles = StyleSheet.create({
     height: S.md,
     borderRadius: R.pill,
     borderWidth: S.px,
-    backgroundColor: 'rgba(0,0,0,0.28)',
+    backgroundColor: Colors.dossier,
   },
   numberPlate: {
     position: 'absolute',
@@ -255,7 +249,7 @@ const styles = StyleSheet.create({
     minHeight: 26,
     borderRadius: R.pill,
     borderWidth: S.px,
-    backgroundColor: 'rgba(0,0,0,0.42)',
+    backgroundColor: Colors.dossier,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: S.sm,
@@ -280,13 +274,7 @@ const styles = StyleSheet.create({
     borderWidth: S.px,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.34)',
-  },
-  markUltra: {
-    shadowColor: Colors.accentVolt,
-    shadowOpacity: 0.65,
-    shadowRadius: 18,
-    elevation: 8,
+    backgroundColor: Colors.wall,
   },
   glyph: {
     position: 'absolute',

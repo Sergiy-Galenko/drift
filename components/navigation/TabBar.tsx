@@ -63,7 +63,7 @@ function TabButton({ routeName, label, icon: Icon, focused, unreadCount = 0, fab
       style={[styles.item, fab ? styles.fabItem : null]}
     >
       <Animated.View style={[fab ? styles.fabWrap : styles.iconWrap, animatedStyle]}>
-        <Icon size={fab ? 24 : 23} color={fab ? Colors.black : Colors.white} filled={focused} />
+        <Icon size={fab ? 24 : 23} color={fab ? Colors.dossier : Colors.dossier} filled={focused} />
         {routeName === 'activity' && unreadCount > 0 ? <View style={styles.dot} /> : null}
       </Animated.View>
     </Pressable>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderTopWidth: S.px,
     borderTopColor: Colors.separator,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.wall,
     paddingHorizontal: S.md,
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -190,10 +190,10 @@ const styles = StyleSheet.create({
   fabWrap: {
     width: 52,
     height: 52,
-    borderRadius: R.pill,
+    borderRadius: R.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.ledger,
   },
   dot: {
     position: 'absolute',

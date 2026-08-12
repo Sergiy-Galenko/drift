@@ -20,11 +20,16 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     justifyContent: 'center',
+    margin: S.lg,
+    borderWidth: S.px,
+    borderColor: Colors.slate,
+    borderRadius: 6,
+    backgroundColor: Colors.surfaceRaised,
     padding: S.x4,
     gap: S.sm,
   },
   title: {
-    color: Colors.textPrimary,
+    color: Colors.dossier,
     fontFamily: F.family.displayBold,
     fontSize: F.size.xl,
     textAlign: 'center',

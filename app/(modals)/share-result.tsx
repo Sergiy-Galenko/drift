@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { Platform, Share, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 
@@ -86,7 +85,7 @@ export default function ShareResultScreen() {
       <Header title="Share result" showBack />
       <View style={styles.content}>
         <View ref={cardRef} collapsable={false} style={styles.cardFrame}>
-          <LinearGradient colors={missed ? ['#43120A', Colors.black] : ['#102600', Colors.black]} style={styles.card}>
+          <View style={[styles.card, missed ? styles.cardMissed : kept ? styles.cardKept : null]}>
             <View style={styles.topLine}>
               <Text style={styles.brand}>DRIFT</Text>
               <Text style={[styles.category, { color: category.color }]}>{category.label.toUpperCase()}</Text>
@@ -111,7 +110,7 @@ export default function ShareResultScreen() {
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
-                <Text style={[styles.statValue, { color: accent }]}>{kept ? '✓' : missed ? '×' : '•'}</Text>
+                <Text style={[styles.statValue, { color: accent }]}>{kept ? 'KEPT' : missed ? 'MISSED' : 'PENDING'}</Text>
                 <Text style={styles.statLabel}>{kept ? 'PROOF ACCEPTED' : missed ? 'DEADLINE MISSED' : 'PROOF PENDING'}</Text>
               </View>
             </View>
@@ -120,7 +119,7 @@ export default function ShareResultScreen() {
               <Text style={styles.author}>@{drift.authorUsername}</Text>
               <Text style={styles.tagline}>People decide. You commit.</Text>
             </View>
-          </LinearGradient>
+          </View>
         </View>
         <Text style={styles.hint}>The image is ready to post in your favourite social app.</Text>
         <Button label="Share image" onPress={() => void share()} loading={sharing} />
@@ -133,25 +132,27 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.bgBase },
   content: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: S.lg, gap: S.lg },
   cardFrame: { width: '100%', maxWidth: 360, aspectRatio: 9 / 16, overflow: 'hidden', borderRadius: R.xl },
-  card: { flex: 1, padding: S.x2, justifyContent: 'space-between' },
+  card: { flex: 1, padding: S.x2, justifyContent: 'space-between', backgroundColor: Colors.dossier, borderWidth: S.px, borderColor: Colors.paperLine },
+  cardKept: { borderColor: Colors.ledger },
+  cardMissed: { borderColor: Colors.oxblood },
   topLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brand: { color: Colors.white, fontFamily: F.family.displayBlack, fontSize: F.size.xl, letterSpacing: 2 },
+  brand: { color: Colors.ink, fontFamily: F.family.displayBlack, fontSize: F.size.xl, letterSpacing: 2 },
   category: { fontFamily: F.family.monoBold, fontSize: F.size.xs, letterSpacing: 0.8 },
   resultBlock: { gap: S.md },
   kicker: { fontFamily: F.family.monoBold, fontSize: F.size.xs, letterSpacing: 1.2 },
-  result: { color: Colors.white, fontFamily: F.family.displayBlack, fontSize: F.size.hero, lineHeight: F.size.hero * F.lineHeight.tight },
+  result: { color: Colors.ink, fontFamily: F.family.displayBlack, fontSize: F.size.hero, lineHeight: F.size.hero * F.lineHeight.tight },
   resultRule: { width: S.x6, height: S.xs, borderRadius: R.pill },
   commitment: { gap: S.md },
-  label: { color: Colors.textSecondary, fontFamily: F.family.monoBold, fontSize: F.size.xs, letterSpacing: 0.9 },
-  commitmentText: { color: Colors.white, fontFamily: F.family.displayBold, fontSize: F.size.x2, lineHeight: F.size.x2 * F.lineHeight.tight },
-  stake: { color: Colors.textSecondary, fontFamily: F.family.bodyRegular, fontSize: F.size.base, lineHeight: F.size.base * F.lineHeight.normal },
-  stats: { flexDirection: 'row', borderTopWidth: S.px, borderBottomWidth: S.px, borderColor: 'rgba(255,255,255,0.2)', paddingVertical: S.lg },
+  label: { color: Colors.slate, fontFamily: F.family.monoBold, fontSize: F.size.xs, letterSpacing: 0.9 },
+  commitmentText: { color: Colors.ink, fontFamily: F.family.displayBold, fontSize: F.size.x2, lineHeight: F.size.x2 * F.lineHeight.tight },
+  stake: { color: Colors.slate, fontFamily: F.family.bodyRegular, fontSize: F.size.base, lineHeight: F.size.base * F.lineHeight.normal },
+  stats: { flexDirection: 'row', borderTopWidth: S.px, borderBottomWidth: S.px, borderColor: Colors.paperLine, paddingVertical: S.lg },
   stat: { flex: 1, alignItems: 'center', gap: S.xs },
-  statDivider: { width: S.px, backgroundColor: 'rgba(255,255,255,0.2)' },
+  statDivider: { width: S.px, backgroundColor: Colors.paperLine },
   statValue: { fontFamily: F.family.displayBlack, fontSize: F.size.x3 },
-  statLabel: { color: Colors.textSecondary, fontFamily: F.family.monoBold, fontSize: F.size.micro, textAlign: 'center' },
+  statLabel: { color: Colors.slate, fontFamily: F.family.monoBold, fontSize: F.size.micro, textAlign: 'center' },
   footer: { gap: S.xs },
-  author: { color: Colors.white, fontFamily: F.family.bodySemi, fontSize: F.size.sm },
-  tagline: { color: Colors.textSecondary, fontFamily: F.family.bodyRegular, fontSize: F.size.xs },
+  author: { color: Colors.ink, fontFamily: F.family.bodySemi, fontSize: F.size.sm },
+  tagline: { color: Colors.slate, fontFamily: F.family.bodyRegular, fontSize: F.size.xs },
   hint: { color: Colors.textSecondary, fontFamily: F.family.bodyRegular, fontSize: F.size.sm, textAlign: 'center' },
 });

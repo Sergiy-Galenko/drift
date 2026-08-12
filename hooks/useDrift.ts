@@ -11,6 +11,7 @@ import { logger } from '@/utils/logger';
 export function useDrift(driftId: string | undefined) {
   const [drift, setDrift] = useState<Drift | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const uid = useAuthStore((state) => state.firebaseUser?.uid);
   const upsertDrift = useFeedStore((state) => state.upsertDrift);
   const pushToast = useUIStore((state) => state.pushToast);
@@ -21,11 +22,13 @@ export function useDrift(driftId: string | undefined) {
     if (!driftId) {
       setDrift(null);
       setLoading(false);
+      setError(null);
       return;
     }
 
     setDrift(null);
     setLoading(true);
+    setError(null);
     if (!viewedDriftIds.current.has(driftId)) {
       viewedDriftIds.current.add(driftId);
       void incrementDriftView(driftId).catch((error: unknown) => {
@@ -54,11 +57,12 @@ export function useDrift(driftId: string | undefined) {
         logger.error('Drift subscription failed', { message });
         pushToast({ title: 'Drift unavailable', message: firebaseErrorMessage(message), tone: 'danger' });
         setLoading(false);
+        setError(message);
       },
     );
 
     return unsubscribe;
   }, [driftId, pushToast, uid, upsertDrift]);
 
-  return { drift, loading };
+  return { drift, loading, error };
 }

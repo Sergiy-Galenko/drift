@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     height: S.md,
     overflow: 'hidden',
     borderRadius: R.pill,
-    backgroundColor: Colors.bgInteractive,
+    backgroundColor: Colors.paperLine,
     flexDirection: 'row',
   },
   yesFill: {
@@ -85,12 +85,12 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     flex: 1,
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.xs,
   },
   optionCount: {
-    color: Colors.accentVolt,
+    color: Colors.ledger,
     fontFamily: F.family.monoBold,
     fontSize: F.size.xs,
   },

@@ -205,3 +205,14 @@ export async function getDiscoverUsers(limitCount = 12): Promise<UserProfile[]> 
   const snapshot = await getDocs(query(usersRef(), orderBy('followersCount', 'desc'), limit(limitCount)));
   return snapshot.docs.map((document) => mapUser(document)).filter((profile): profile is UserProfile => profile !== null);
 }
+
+export function subscribeFulfillmentRegistry(
+  onData: (profiles: UserProfile[]) => void,
+  onError: (message: string) => void,
+): Unsubscribe {
+  return onSnapshot(
+    query(usersRef(), orderBy('driftsExecuted', 'desc'), limit(50)),
+    (snapshot) => onData(snapshot.docs.map((document) => mapUser(document)).filter((profile): profile is UserProfile => profile !== null)),
+    (error) => onError(error.code),
+  );
+}

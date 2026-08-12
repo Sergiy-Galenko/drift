@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 
 import { updateExpoPushToken } from '@/lib/firebase/users';
+import { Colors } from '@/constants/tokens';
 import { useAuthStore } from '@/stores/authStore';
 import { logger } from '@/utils/logger';
 
@@ -25,6 +26,7 @@ export function usePushNotifications(): void {
   const uid = useAuthStore((state) => state.profile?.uid);
   const notificationsEnabled = useAuthStore((state) => state.profile?.settings.notificationsEnabled);
   const savedToken = useAuthStore((state) => state.profile?.expoPushToken);
+  const streak = useAuthStore((state) => state.profile?.streakCurrent ?? 0);
 
   useEffect(() => {
     if (!uid || notificationsEnabled === undefined) {
@@ -32,6 +34,11 @@ export function usePushNotifications(): void {
     }
 
     if (!notificationsEnabled) {
+      void Notifications.getAllScheduledNotificationsAsync().then((scheduled) => Promise.all(
+        scheduled
+          .filter((item) => item.content.data?.kind === 'docket-daily')
+          .map((item) => Notifications.cancelScheduledNotificationAsync(item.identifier)),
+      )).catch(() => undefined);
       if (savedToken) {
         void updateExpoPushToken(uid, null).catch((error: unknown) => {
           logger.warn('Push token removal failed', { error: String(error) });
@@ -52,7 +59,7 @@ export function usePushNotifications(): void {
           name: 'DRIFT reminders',
           importance: Notifications.AndroidImportance.HIGH,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#D7FF00',
+          lightColor: Colors.ledger,
         });
       }
 
@@ -73,6 +80,18 @@ export function usePushNotifications(): void {
       if (!cancelled && token !== savedToken) {
         await updateExpoPushToken(uid, token);
       }
+
+      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+      if (!cancelled && !scheduled.some((item) => item.content.data?.kind === 'docket-daily')) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Docket pending',
+            body: streak > 0 ? `Protect your ${streak}-day record.` : 'Review your open cases.',
+            data: { kind: 'docket-daily' },
+          },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: 20, minute: 0 },
+        });
+      }
     };
 
     void register().catch((error: unknown) => {
@@ -82,5 +101,5 @@ export function usePushNotifications(): void {
     return () => {
       cancelled = true;
     };
-  }, [notificationsEnabled, savedToken, uid]);
+  }, [notificationsEnabled, savedToken, streak, uid]);
 }

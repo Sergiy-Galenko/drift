@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
-import { Colors, R, S, Shadows } from '@/constants/tokens';
+import { Colors, R, S } from '@/constants/tokens';
 
 type BottomSheetProps = {
   visible: boolean;
@@ -40,7 +40,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.separatorStrong,
     padding: S.x2,
     gap: S.lg,
-    ...Shadows.modal,
   },
   handle: {
     width: S.x5,

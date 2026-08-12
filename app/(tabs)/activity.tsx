@@ -7,6 +7,7 @@ import { ActivitySkeleton } from '@/components/activity/ActivitySkeleton';
 import { DriftCardCompact } from '@/components/drift/DriftCardCompact';
 import { Header } from '@/components/navigation/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { useNotificationsContext } from '@/hooks/useNotifications';
 import { subscribeAuthorDrifts } from '@/lib/firebase/drifts';
@@ -38,7 +39,7 @@ function NotificationRow({ item, onPress }: NotificationRowProps) {
 export default function ActivityScreen() {
   const router = useRouter();
   const profileUid = useAuthStore((state) => state.profile?.uid);
-  const { items, unreadCount, loading, markRead } = useNotificationsContext();
+  const { items, unreadCount, loading, error, markRead } = useNotificationsContext();
   const [tab, setTab] = useState<ActivityTab>('mine');
   const [myDrifts, setMyDrifts] = useState<Drift[]>([]);
   const [mineLoading, setMineLoading] = useState(true);
@@ -91,7 +92,7 @@ export default function ActivityScreen() {
 
   return (
     <View style={styles.root}>
-      <Header title="Activity" />
+      <Header title="DOCKET" />
       <View style={styles.tabs}>
         {tabs.map((item) => (
           <Pressable
@@ -103,7 +104,7 @@ export default function ActivityScreen() {
           </Pressable>
         ))}
       </View>
-      {currentLoading && (tab === 'mine' ? myDrifts.length === 0 : items.length === 0) ? (
+      {error && tab === 'updates' ? <ErrorState title="Docket unavailable" message="Recent notices could not be filed." /> : currentLoading && (tab === 'mine' ? myDrifts.length === 0 : items.length === 0) ? (
         <ActivitySkeleton />
       ) : tab === 'mine' ? (
         <FlashList
@@ -128,7 +129,7 @@ export default function ActivityScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <EmptyState title="No activity yet" message="Votes, follows, comments, and proof updates will land here." />
+            <EmptyState title="No open cases" message="Verdicts, evidence, and deadline notices are filed here." />
           }
         />
       )}
@@ -182,10 +183,10 @@ const styles = StyleSheet.create({
     padding: S.lg,
   },
   unread: {
-    borderColor: Colors.accentVolt,
+    borderColor: Colors.ledger,
   },
   title: {
-    color: Colors.textPrimary,
+    color: Colors.dossier,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.base,
   },
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
     fontSize: F.size.sm,
   },
   time: {
-    color: Colors.textMuted,
+    color: Colors.slate,
     fontFamily: F.family.monoMedium,
     fontSize: F.size.xs,
   },

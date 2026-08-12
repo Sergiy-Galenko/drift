@@ -34,20 +34,20 @@ export function StatusBanner({ drift }: StatusBannerProps) {
 
 const styles = StyleSheet.create({
   banner: {
-    borderRadius: R.md,
+    borderRadius: R.xs,
     borderWidth: S.px,
     padding: S.md,
   },
   active: {
     borderColor: Colors.accentAmber,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.dossier,
   },
   failed: {
     borderColor: Colors.accentFire,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.dossier,
   },
   text: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.sm,
   },

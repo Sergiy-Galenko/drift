@@ -3,4 +3,7 @@ export const fontMap = {
   Inter_500Medium: require('@expo-google-fonts/inter/Inter_500Medium.ttf'),
   Inter_600SemiBold: require('@expo-google-fonts/inter/Inter_600SemiBold.ttf'),
   Inter_700Bold: require('@expo-google-fonts/inter/Inter_700Bold.ttf'),
+  SpaceGrotesk_700Bold: require('@expo-google-fonts/space-grotesk/SpaceGrotesk_700Bold.ttf'),
+  JetBrainsMono_500Medium: require('@expo-google-fonts/jetbrains-mono/JetBrainsMono_500Medium.ttf'),
+  JetBrainsMono_700Bold: require('@expo-google-fonts/jetbrains-mono/JetBrainsMono_700Bold.ttf'),
 } as const;

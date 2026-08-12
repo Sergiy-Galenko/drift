@@ -16,6 +16,7 @@ import { StatusBanner } from './StatusBanner';
 import { VoteBar } from './VoteBar';
 import { VoteButtons } from './VoteButtons';
 import { BookmarkIcon, CommentIcon, HeartIcon, MoreIcon, PaperPlaneIcon } from '@/components/icons';
+import { InkStamp } from '@/components/dossier/InkStamp';
 import { Avatar } from '@/components/ui/Avatar';
 import { Colors, F, S } from '@/constants/tokens';
 import { useVote } from '@/hooks/useVote';
@@ -31,15 +32,16 @@ type DriftCardProps = {
 };
 
 // Main card component
-function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
+function DriftCardComponent({ drift, index = 0, preview = false }: DriftCardProps) {
   const router = useRouter();
   const vote = useVote(preview ? null : drift);
   const translateX = useSharedValue(0);
   const binaryPoll = isBinaryPoll(drift);
+  const rotation = `${((index % 3) - 1) * 1.1}deg`;
 
   // Animated card style for horizontal swipe
   const animatedCard = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
+    transform: [{ rotate: rotation }, { translateX: translateX.value }],
   }));
   // Overlay that fades/colors according to swipe direction and position
   const overlayStyle = useAnimatedStyle(() => ({
@@ -101,13 +103,16 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
                 size={38}
                 strokeWidth={3}
               />
-              <MoreIcon size={22} color={Colors.white} />
+              <MoreIcon size={22} color={Colors.ink} />
             </View>
           </View>
 
           {/* Media section */}
           <View style={styles.media}>
-            <Text style={styles.category}>{drift.category}</Text>
+            <View style={styles.caseLine}>
+              <Text style={styles.category}>CASE / {drift.category}</Text>
+              <InkStamp label={stampLabel(drift.status)} tone={stampTone(drift.status)} compact />
+            </View>
             <Text style={styles.text}>{drift.text}</Text>
             {drift.context ? <Text style={styles.context}>{drift.context}</Text> : null}
           </View>
@@ -116,11 +121,11 @@ function DriftCardComponent({ drift, preview = false }: DriftCardProps) {
         {/* Social & bookmark actions */}
         <View style={styles.actions}>
           <View style={styles.actionLeft}>
-            <HeartIcon size={25} color={Colors.white} />
-            <CommentIcon size={24} color={Colors.white} />
-            <PaperPlaneIcon size={24} color={Colors.white} />
+            <HeartIcon size={25} color={Colors.ink} />
+            <CommentIcon size={24} color={Colors.ink} />
+            <PaperPlaneIcon size={24} color={Colors.ink} />
           </View>
-          <BookmarkIcon size={24} color={Colors.white} />
+          <BookmarkIcon size={24} color={Colors.ink} />
         </View>
 
         {/* Votes, status, bars, buttons */}
@@ -180,12 +185,32 @@ export const DriftCard = memo(DriftCardComponent, (prev, next) => {
   );
 });
 
+function stampLabel(status: Drift['status']): string {
+  if (status === 'executed') return 'FULFILLED';
+  if (status === 'failed') return 'BROKEN';
+  if (status === 'proof_pending') return 'PROOF DUE';
+  if (status === 'decided') return 'VERDICT';
+  if (status === 'cancelled') return 'CLOSED';
+  return 'OPEN VOTE';
+}
+
+function stampTone(status: Drift['status']): 'neutral' | 'ledger' | 'oxblood' | 'blue' | 'gold' {
+  if (status === 'executed') return 'ledger';
+  if (status === 'failed') return 'oxblood';
+  if (status === 'proof_pending') return 'gold';
+  if (status === 'active') return 'blue';
+  return 'neutral';
+}
+
 const styles = StyleSheet.create({
   post: {
     overflow: 'hidden',
-    borderBottomWidth: S.px,
-    borderBottomColor: Colors.separator,
-    backgroundColor: Colors.black,
+    marginHorizontal: S.md,
+    marginTop: S.lg,
+    borderWidth: S.px,
+    borderColor: Colors.paperLine,
+    borderRadius: 6,
+    backgroundColor: Colors.dossier,
   },
   pressArea: {
     gap: 0,
@@ -209,12 +234,12 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   author: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.bodySemi,
     fontSize: 13,
   },
   rep: {
-    color: Colors.textTertiary,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.xs,
   },
@@ -224,27 +249,29 @@ const styles = StyleSheet.create({
     gap: S.md,
   },
   media: {
-    minHeight: 360,
+    minHeight: 252,
     justifyContent: 'center',
     gap: S.md,
-    backgroundColor: Colors.surface,
+    borderTopWidth: S.px,
+    borderTopColor: Colors.paperLine,
+    backgroundColor: Colors.dossier,
     paddingHorizontal: S.lg,
     paddingVertical: S.x3,
   },
   category: {
-    color: Colors.volt,
-    fontFamily: F.family.bodySemi,
+    color: Colors.slate,
+    fontFamily: F.family.monoBold,
     fontSize: F.size.xs,
     textTransform: 'uppercase',
   },
   text: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.displayBlack,
     fontSize: 30,
     lineHeight: 35,
   },
   context: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.base,
     lineHeight: F.size.base * F.lineHeight.normal,
@@ -253,6 +280,8 @@ const styles = StyleSheet.create({
     minHeight: 42,
     paddingHorizontal: S.md,
     paddingTop: S.sm,
+    borderTopWidth: S.px,
+    borderTopColor: Colors.paperLine,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -268,17 +297,23 @@ const styles = StyleSheet.create({
     gap: S.sm,
   },
   voteCount: {
-    color: Colors.white,
-    fontFamily: F.family.bodySemi,
+    color: Colors.ink,
+    fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
   },
   caption: {
-    color: Colors.white,
+    color: Colors.ink,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.base,
     lineHeight: F.size.base * F.lineHeight.normal,
   },
   captionUser: {
     fontFamily: F.family.bodySemi,
+  },
+  caseLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: S.sm,
   },
 });

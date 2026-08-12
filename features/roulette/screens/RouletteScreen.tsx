@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 
 import { BoxIcon, GridIcon, MarketIcon } from '@/components/icons';
 import { Header } from '@/components/navigation/Header';
+import { DossierSkeleton } from '@/components/dossier/DossierSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { IconButton } from '@/components/ui/IconButton';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
@@ -25,6 +27,8 @@ export function RouletteScreen() {
   const router = useRouter();
   const haptics = useHaptics();
   const userState = useRouletteStore((state) => state.userState);
+  const loading = useRouletteStore((state) => state.loading);
+  const error = useRouletteStore((state) => state.error);
   const committing = useRouletteStore((state) => state.committing);
   const spin = useRouletteStore((state) => state.spin);
   const grantTokens = useRouletteStore((state) => state.grantTokens);
@@ -64,10 +68,18 @@ export function RouletteScreen() {
     setRevealResult(wheelResult);
   }, [haptics, wheelResult]);
 
+  if (loading && !userState) {
+    return <View style={styles.root}><Header title="OPEN THE ENVELOPE" showBack /><DossierSkeleton rows={3} /></View>;
+  }
+
+  if (error && !userState) {
+    return <View style={styles.root}><Header title="OPEN THE ENVELOPE" showBack /><ErrorState title="Envelope unavailable" message="The reward file could not be opened." /></View>;
+  }
+
   return (
     <View style={styles.root}>
       <Header
-        title="Roulette"
+        title="OPEN THE ENVELOPE"
         showBack
         right={
           <View style={styles.headerActions}>
@@ -149,18 +161,18 @@ const styles = StyleSheet.create({
     minHeight: 92,
     borderRadius: R.md,
     borderWidth: S.px,
-    borderColor: Colors.stroke,
-    backgroundColor: Colors.bgSurface,
+    borderColor: Colors.paperLine,
+    backgroundColor: Colors.dossier,
     padding: S.lg,
     justifyContent: 'space-between',
   },
   metricValue: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.displayBold,
     fontSize: F.size.x2,
   },
   metricLabel: {
-    color: Colors.textTertiary,
+    color: Colors.slate,
     fontFamily: F.family.monoMedium,
     fontSize: F.size.xs,
     textTransform: 'uppercase',
@@ -169,8 +181,8 @@ const styles = StyleSheet.create({
     marginHorizontal: S.lg,
     borderRadius: R.md,
     borderWidth: S.px,
-    borderColor: Colors.stroke,
-    backgroundColor: Colors.bgSurface,
+    borderColor: Colors.paperLine,
+    backgroundColor: Colors.dossier,
     padding: S.lg,
     gap: S.md,
   },
@@ -180,12 +192,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionTitle: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.base,
   },
   progressText: {
-    color: Colors.accentVolt,
+    color: Colors.ledger,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
   },
@@ -200,7 +212,7 @@ const styles = StyleSheet.create({
     gap: S.md,
   },
   reelMeta: {
-    color: Colors.textTertiary,
+    color: Colors.slate,
     fontFamily: F.family.monoMedium,
     fontSize: F.size.xs,
   },
@@ -213,7 +225,7 @@ const styles = StyleSheet.create({
     gap: S.sm,
   },
   stubText: {
-    color: Colors.textMuted,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.xs,
     lineHeight: F.size.xs * F.lineHeight.normal,

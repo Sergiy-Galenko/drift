@@ -49,7 +49,7 @@ export function CasesScreen() {
 
   return (
     <View style={styles.root}>
-      <Header title="Cases" showBack />
+      <Header title="SEALED CASES" showBack />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.summary}>
           <Text style={styles.title}>Special cases</Text>
@@ -89,24 +89,24 @@ const styles = StyleSheet.create({
   summary: {
     borderRadius: R.md,
     borderWidth: S.px,
-    borderColor: Colors.stroke,
-    backgroundColor: Colors.bgSurface,
+    borderColor: Colors.paperLine,
+    backgroundColor: Colors.dossier,
     padding: S.lg,
     gap: S.sm,
   },
   title: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.displayBold,
     fontSize: F.size.xl,
   },
   copy: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.sm,
     lineHeight: F.size.sm * F.lineHeight.normal,
   },
   tokens: {
-    color: Colors.accentVolt,
+    color: Colors.ledger,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
   },

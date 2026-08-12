@@ -1,4 +1,5 @@
-import { FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 
 import { Badge } from '@/components/ui/Badge';
 import { Colors, F, R, S } from '@/constants/tokens';
@@ -23,7 +24,7 @@ function borderStyle(card: Card, unlocked: boolean) {
     case 'rare':
       return styles.rareBorder;
     case 'ultra_rare':
-      return styles.ultraBorder;
+    return styles.ultraBorder;
     case 'common':
       return styles.commonBorder;
   }
@@ -34,20 +35,19 @@ export function CollectionGrid({ state, showcaseCardIds = [], onToggleShowcase }
   const itemWidth = Math.floor((width - S.lg * 2 - S.md) / 2);
 
   return (
-    <FlatList
+    <FlashList
       data={ROULETTE_CARDS}
       keyExtractor={(item) => item.id}
       numColumns={2}
-      columnWrapperStyle={styles.row}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
-      renderItem={({ item }) => {
+      renderItem={({ item, index }) => {
         const entry = state?.cards[item.id];
         const unlocked = Boolean(entry);
         const isShowcased = showcaseCardIds.includes(item.id);
 
         return (
-          <View style={[styles.item, { width: itemWidth }, borderStyle(item, unlocked), item.rarity === 'ultra_rare' && unlocked ? styles.ultraGlow : null]}>
+          <View style={[styles.item, { width: itemWidth }, index % 2 === 0 ? styles.leftItem : null, borderStyle(item, unlocked)]}>
             <CardArtwork card={item} locked={!unlocked} compact />
             <View style={styles.meta}>
               <Text numberOfLines={1} style={[styles.name, !unlocked ? styles.lockedText : null]}>{unlocked ? item.name : 'Locked'}</Text>
@@ -80,32 +80,26 @@ const styles = StyleSheet.create({
     paddingBottom: S.x7,
     gap: S.md,
   },
-  row: {
-    gap: S.md,
-  },
   item: {
     minHeight: 248,
     borderRadius: R.md,
     borderWidth: S.px,
-    backgroundColor: Colors.bgSurface,
+    backgroundColor: Colors.dossier,
     padding: S.md,
     gap: S.md,
     marginBottom: S.md,
+  },
+  leftItem: {
+    marginRight: S.md,
   },
   commonBorder: {
     borderColor: Colors.strokeStrong,
   },
   rareBorder: {
-    borderColor: Colors.accentIce,
+    borderColor: Colors.blueInk,
   },
   ultraBorder: {
-    borderColor: Colors.accentAmber,
-  },
-  ultraGlow: {
-    shadowColor: Colors.accentAmber,
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 6,
+    borderColor: Colors.goldFoil,
   },
   lockedBorder: {
     borderColor: Colors.stroke,
@@ -115,15 +109,15 @@ const styles = StyleSheet.create({
     gap: S.sm,
   },
   name: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.base,
   },
   lockedText: {
-    color: Colors.textTertiary,
+    color: Colors.slate,
   },
   hint: {
-    color: Colors.textMuted,
+    color: Colors.slate,
     fontFamily: F.family.bodyRegular,
     fontSize: F.size.xs,
     lineHeight: F.size.xs * F.lineHeight.normal,
@@ -136,7 +130,7 @@ const styles = StyleSheet.create({
     gap: S.sm,
   },
   duplicate: {
-    color: Colors.textPrimary,
+    color: Colors.ink,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
   },
@@ -144,22 +138,22 @@ const styles = StyleSheet.create({
     minHeight: 34,
     borderRadius: R.sm,
     borderWidth: S.px,
-    borderColor: Colors.strokeStrong,
+    borderColor: Colors.paperLine,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: S.sm,
   },
   showcaseActive: {
-    borderColor: Colors.accentVolt,
-    backgroundColor: 'rgba(202,255,0,0.10)',
+    borderColor: Colors.ledger,
+    backgroundColor: Colors.dossier,
   },
   showcaseText: {
-    color: Colors.textSecondary,
+    color: Colors.slate,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.xs,
     textAlign: 'center',
   },
   showcaseTextActive: {
-    color: Colors.accentVolt,
+    color: Colors.ledger,
   },
 });

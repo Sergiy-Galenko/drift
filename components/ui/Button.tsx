@@ -17,7 +17,7 @@ type ButtonProps = {
 
 export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, icon }: ButtonProps) {
   const isDisabled = disabled || loading;
-  const spinnerColor = variant === 'primary' || variant === 'danger' ? Colors.white : Colors.textPrimary;
+  const spinnerColor = Colors.dossier;
   return (
     <Pressable
       accessibilityRole="button"
@@ -35,7 +35,7 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
       ) : (
         <View style={styles.content}>
           {icon}
-          <Text style={[styles.label, variant === 'primary' ? styles.primaryLabel : styles.defaultLabel]}>{label}</Text>
+          <Text style={[styles.label, variant === 'primary' || variant === 'danger' ? styles.primaryLabel : styles.defaultLabel]}>{label}</Text>
         </View>
       )}
     </Pressable>
@@ -52,20 +52,20 @@ const styles = StyleSheet.create({
     borderWidth: S.px,
   },
   primary: {
-    backgroundColor: Colors.blue,
-    borderColor: Colors.blue,
+    backgroundColor: Colors.ledger,
+    borderColor: Colors.ledger,
   },
   secondary: {
-    backgroundColor: Colors.bgInteractive,
-    borderColor: Colors.strokeStrong,
+    backgroundColor: Colors.surfaceRaised,
+    borderColor: Colors.slate,
   },
   danger: {
-    backgroundColor: Colors.accentFire,
-    borderColor: Colors.accentFire,
+    backgroundColor: Colors.oxblood,
+    borderColor: Colors.oxblood,
   },
   ghost: {
     backgroundColor: 'transparent',
-    borderColor: Colors.stroke,
+    borderColor: Colors.slate,
   },
   pressed: {
     opacity: 0.82,
@@ -83,9 +83,9 @@ const styles = StyleSheet.create({
     fontSize: F.size.base,
   },
   primaryLabel: {
-    color: Colors.white,
+    color: Colors.dossier,
   },
   defaultLabel: {
-    color: Colors.textPrimary,
+    color: Colors.dossier,
   },
 });

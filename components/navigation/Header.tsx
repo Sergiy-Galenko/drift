@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     paddingBottom: S.sm,
     borderBottomWidth: S.px,
     borderBottomColor: Colors.separator,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.wall,
     flexDirection: 'row',
     alignItems: 'center',
     gap: S.sm,
@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontFamily: F.family.displayBold,
     fontSize: F.size.lg,
+    letterSpacing: 0.7,
     textAlign: 'center',
   },
 });

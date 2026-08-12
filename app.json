@@ -5,13 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo-drift.png",
-    "backgroundColor": "#000000",
+    "backgroundColor": "#121214",
     "userInterfaceStyle": "dark",
     "scheme": "drift",
-    "splash": {
-      "backgroundColor": "#000000",
-      "resizeMode": "contain"
-    },
     "ios": {
       "bundleIdentifier": "com.drift.app",
       "supportsTablet": false,
@@ -22,7 +18,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#000000"
+        "backgroundColor": "#121214"
       },
       "package": "com.drift.app",
       "permissions": [
@@ -35,6 +31,15 @@
       "expo-router",
       "expo-font",
       [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#121214",
+          "image": "./assets/logo-drift.png",
+          "imageWidth": 180,
+          "resizeMode": "contain"
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Drift needs access to upload proof of your completed commitments.",
@@ -45,11 +50,12 @@
         "expo-notifications",
         {
           "icon": "./assets/logo-drift.png",
-          "color": "#000000",
+          "color": "#121214",
           "defaultChannel": "default"
         }
       ],
-      "expo-video"
+      "expo-video",
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true

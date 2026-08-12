@@ -21,8 +21,6 @@ export type CardDesignMotif =
   | 'crown';
 
 export type CardDesign = {
-  gradient: readonly [string, string, string];
-  accent: string;
   motif: CardDesignMotif;
   glyph: string;
   stripeAngle: number;
@@ -45,8 +43,6 @@ export interface Card {
 export type CaseUnlockType = 'achievement' | 'purchase';
 
 export type CaseDesign = {
-  gradient: readonly [string, string, string];
-  accent: string;
   glyph: string;
   patternAngle: number;
 };

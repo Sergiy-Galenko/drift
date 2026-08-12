@@ -5,13 +5,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CommentItem } from '@/components/drift/CommentItem';
 import { DriftCard } from '@/components/drift/DriftCard';
 import { ProofMedia } from '@/components/drift/ProofMedia';
+import { CasePanel } from '@/components/dossier/CasePanel';
+import { DossierSkeleton } from '@/components/dossier/DossierSkeleton';
+import { InkStamp } from '@/components/dossier/InkStamp';
 import { BookmarkIcon, CommentIcon, ShareIcon, UploadIcon, UsersIcon } from '@/components/icons';
 import { Header } from '@/components/navigation/Header';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
-import { Spinner } from '@/components/ui/Spinner';
 import { Colors, F, S } from '@/constants/tokens';
 import { useBookmark } from '@/hooks/useBookmark';
 import { useComments } from '@/hooks/useComments';
@@ -30,7 +33,7 @@ export default function DriftDetailScreen() {
   const driftId = typeof params.id === 'string' ? params.id : undefined;
   const uid = useAuthStore((state) => state.firebaseUser?.uid);
   const pushToast = useUIStore((state) => state.pushToast);
-  const { drift, loading } = useDrift(driftId);
+  const { drift, loading, error } = useDrift(driftId);
   const bookmark = useBookmark(driftId);
   const follow = useFollow(drift?.authorUid);
   const comments = useComments(driftId);
@@ -90,8 +93,17 @@ export default function DriftDetailScreen() {
   if (loading) {
     return (
       <View style={styles.root}>
-        <Header title="Drift" showBack />
-        <Spinner label="Loading drift" />
+        <Header title="CASE FILE" showBack />
+        <DossierSkeleton rows={3} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.root}>
+        <Header title="CASE FILE" showBack />
+        <ErrorState title="Case file unavailable" message="The file could not be opened." />
       </View>
     );
   }
@@ -99,7 +111,7 @@ export default function DriftDetailScreen() {
   if (!drift) {
     return (
       <View style={styles.root}>
-        <Header title="Drift" showBack />
+        <Header title="CASE FILE" showBack />
         <EmptyState title="Drift not found" message="This commitment may have been removed." />
       </View>
     );
@@ -109,9 +121,17 @@ export default function DriftDetailScreen() {
 
   return (
     <View style={styles.root}>
-      <Header title="Drift" showBack />
+      <Header title="CASE FILE" showBack />
       <ScrollView contentContainerStyle={styles.content}>
         <DriftCard drift={drift} />
+        <CasePanel style={styles.history}>
+          <Text style={styles.historyTitle}>STAMP HISTORY</Text>
+          <View style={styles.stamps}>
+            <InkStamp label="LOGGED" tone="neutral" compact />
+            <InkStamp label={drift.status === 'executed' ? 'FULFILLED' : drift.status === 'failed' ? 'BROKEN' : drift.status === 'proof_pending' ? 'PROOF DUE' : 'UNDER REVIEW'} tone={drift.status === 'executed' ? 'ledger' : drift.status === 'failed' ? 'oxblood' : drift.status === 'proof_pending' ? 'gold' : 'blue'} compact />
+          </View>
+          <Text style={styles.historyMeta}>FILE / {drift.id.slice(0, 8).toUpperCase()} · {drift.votesYes + drift.votesNo} BALLOTS</Text>
+        </CasePanel>
         <View style={styles.actions}>
           <IconButton icon={BookmarkIcon} label="Bookmark" active={bookmark.saved} onPress={() => void bookmark.toggle()} />
           <IconButton icon={ShareIcon} label={drift.result ? 'Share result card' : 'Share'} onPress={() => void share()} />
@@ -156,7 +176,7 @@ export default function DriftDetailScreen() {
           <ProofMedia url={drift.proofUrl} type={drift.proofType} />
         ) : null}
         <View style={styles.commentsHead}>
-          <CommentIcon color={Colors.accentVolt} />
+          <CommentIcon color={Colors.dossier} />
           <Text style={styles.sectionTitle}>{drift.commentCount} COMMENTS</Text>
         </View>
         {replyTo ? (
@@ -230,12 +250,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: S.md,
   },
   sectionTitle: {
-    color: Colors.textPrimary,
+    color: Colors.dossier,
     fontFamily: F.family.monoBold,
     fontSize: F.size.sm,
   },
   replying: {
-    color: Colors.accentAmber,
+    color: Colors.goldFoil,
     fontFamily: F.family.bodySemi,
     fontSize: F.size.sm,
   },
@@ -245,5 +265,25 @@ const styles = StyleSheet.create({
   },
   commentGroup: {
     gap: S.md,
+  },
+  history: {
+    marginHorizontal: S.md,
+  },
+  historyTitle: {
+    color: Colors.ink,
+    fontFamily: F.family.monoBold,
+    fontSize: F.size.xs,
+  },
+  stamps: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: S.sm,
+    marginTop: S.sm,
+  },
+  historyMeta: {
+    color: Colors.slate,
+    fontFamily: F.family.monoMedium,
+    fontSize: F.size.xs,
+    marginTop: S.md,
   },
 });
