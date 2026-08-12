@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { DriftCardCompact } from '@/components/drift/DriftCardCompact';
 import { Header } from '@/components/navigation/Header';
@@ -32,6 +33,14 @@ export default function ExploreScreen() {
   const [discoverLoading, setDiscoverLoading] = useState(true);
   const { results, loading } = useSearch(term);
   const normalizedTerm = term.trim();
+  const isHandleSearch = normalizedTerm.startsWith('@');
+
+  const updateTerm = (value: string) => {
+    setTerm(value);
+    if (value.trim().startsWith('@')) {
+      setTab('people');
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -70,11 +79,14 @@ export default function ExploreScreen() {
     [currentUid, results.users],
   );
   const tabs = useMemo(
-    () => [
-      { key: 'people' as const, label: `People${visiblePeople.length > 0 ? ` (${visiblePeople.length})` : ''}` },
-      { key: 'posts' as const, label: `Posts${results.drifts.length > 0 ? ` (${results.drifts.length})` : ''}` },
-    ],
-    [results.drifts.length, visiblePeople.length],
+    () =>
+      isHandleSearch
+        ? [{ key: 'people' as const, label: `People${visiblePeople.length > 0 ? ` (${visiblePeople.length})` : ''}` }]
+        : [
+            { key: 'people' as const, label: `People${visiblePeople.length > 0 ? ` (${visiblePeople.length})` : ''}` },
+            { key: 'posts' as const, label: `Posts${results.drifts.length > 0 ? ` (${results.drifts.length})` : ''}` },
+          ],
+    [isHandleSearch, results.drifts.length, visiblePeople.length],
   );
 
   const showSearchResults = normalizedTerm.length > 0;
@@ -84,15 +96,15 @@ export default function ExploreScreen() {
       <Header title="Search" showBack />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
-          <Text style={styles.heroTitle}>Find people, open profiles, and browse their public posts.</Text>
-          <Text style={styles.heroCopy}>Search by username for people or by text for commitments and proof-related posts.</Text>
+          <Text style={styles.heroTitle} translate>Find people, open profiles, and browse their public posts.</Text>
+          <Text style={styles.heroCopy} translate>Start with @ to find a nickname, or use text to search commitments and proof-related posts.</Text>
         </View>
 
         <Input
-          label="Search people or posts"
+          label="Search"
           value={term}
-          onChangeText={setTerm}
-          placeholder="@username, marathon, career..."
+          onChangeText={updateTerm}
+          placeholder="@nickname or marathon, career..."
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="off"
@@ -120,7 +132,7 @@ export default function ExploreScreen() {
                   <UserResultCard key={user.uid} user={user} />
                 ))}
                 {visiblePeople.length === 0 ? (
-                  <EmptyState title="No people found" message="Try another username or remove the @ prefix." />
+                  <EmptyState title="No people found" message={isHandleSearch ? 'Try another @nickname.' : 'Try another nickname or keyword.'} />
                 ) : null}
               </View>
             ) : null}
@@ -139,7 +151,7 @@ export default function ExploreScreen() {
         ) : (
           <>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>People To Follow</Text>
+              <Text style={styles.sectionTitle} translate>People To Follow</Text>
               {discoverLoading ? <Spinner label="Loading people" /> : null}
               {!discoverLoading && discoverUsers.slice(0, 6).map((user) => <UserResultCard key={user.uid} user={user} />)}
               {!discoverLoading && discoverUsers.length === 0 ? (
@@ -148,7 +160,7 @@ export default function ExploreScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Trending Posts</Text>
+              <Text style={styles.sectionTitle} translate>Trending Posts</Text>
               {discoverLoading ? <Spinner label="Loading posts" /> : null}
               {!discoverLoading && trending.map((drift) => <DriftCardCompact key={drift.id} drift={drift} />)}
               {!discoverLoading && trending.length === 0 ? (

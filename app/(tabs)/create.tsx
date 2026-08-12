@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 
 import { DriftCard } from '@/components/drift/DriftCard';
@@ -225,7 +226,7 @@ export default function CreateScreen() {
               style={styles.multiline}
             />
             
-            <Text style={styles.sectionLabel}>Select Category</Text>
+            <Text style={styles.sectionLabel} translate>Select Category</Text>
             <View style={styles.categoryGrid}>
               {CATEGORY_ORDER.map((category) => {
                 const isSelected = draft.category === category;
@@ -251,7 +252,7 @@ export default function CreateScreen() {
               })}
             </View>
 
-            <Text style={styles.sectionLabel}>Voting period</Text>
+            <Text style={styles.sectionLabel} translate>Voting period</Text>
             <View style={styles.categoryGrid}>
               {VOTING_DURATION_HOURS.map((durationHours) => {
                 const isSelected = draft.durationHours === durationHours;
@@ -271,7 +272,7 @@ export default function CreateScreen() {
               })}
             </View>
 
-            <Text style={styles.sectionLabel}>Voting format</Text>
+            <Text style={styles.sectionLabel} translate>Voting format</Text>
             <View style={styles.categoryGrid}>
               {POLL_FORMATS.map((format) => {
                 const isSelected = draft.pollType === format.type;
@@ -305,7 +306,7 @@ export default function CreateScreen() {
                     />
                     {draft.pollOptions.length > 2 ? (
                       <Pressable onPress={() => draft.saveDraft({ pollOptions: draft.pollOptions.filter((_, optionIndex) => optionIndex !== index) })}>
-                        <Text style={styles.removeOption}>Remove</Text>
+                        <Text style={styles.removeOption} translate>Remove</Text>
                       </Pressable>
                     ) : null}
                   </View>
@@ -319,7 +320,7 @@ export default function CreateScreen() {
               style={styles.toggleRow}
               accessibilityRole="button"
             >
-              <Text style={styles.toggleLabel}>POST ANONYMOUSLY</Text>
+              <Text style={styles.toggleLabel} translate>POST ANONYMOUSLY</Text>
               <View style={styles.toggleIndicator}>
                 <Text style={[
                   styles.toggleValue,
@@ -334,7 +335,7 @@ export default function CreateScreen() {
         
         {step === 3 && preview && (
           <View style={styles.previewContainer}>
-            <Text style={styles.previewLabel}>Preview</Text>
+            <Text style={styles.previewLabel} translate>Preview</Text>
             <DriftCard drift={preview} preview />
           </View>
         )}

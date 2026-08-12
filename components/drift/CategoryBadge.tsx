@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { CATEGORIES } from '@/constants/categories';
 import { Colors, F, R, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { DriftCategory } from '@/types/drift';
 
 type CategoryBadgeProps = {
@@ -10,9 +12,10 @@ type CategoryBadgeProps = {
 
 export function CategoryBadge({ category }: CategoryBadgeProps) {
   const config = CATEGORIES[category];
+  const { t } = useTranslation();
   return (
     <View style={[styles.badge, { borderColor: config.color }]}>
-      <Text style={[styles.label, { color: config.color }]}>{config.label}</Text>
+      <Text style={[styles.label, { color: config.color }]}>{t(config.label)}</Text>
     </View>
   );
 }

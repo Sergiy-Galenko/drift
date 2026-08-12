@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { StatusBar } from 'expo-status-bar';
 
 import { EyeIcon, EyeOffIcon } from '@/components/icons';
@@ -8,7 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { useAuth } from '@/hooks/useAuth';
-import { CreatePasswordSchema, EmailSchema, LoginSchema, RegisterSchema, SignInPasswordSchema, UsernameSchema } from '@/utils/validation';
+import { useTranslation } from '@/hooks/useTranslation';
+import { CreatePasswordSchema, EmailSchema, LoginSchema, normalizeUsername, RegisterSchema, SignInPasswordSchema, UsernameSchema } from '@/utils/validation';
 
 type AuthMode = 'login' | 'register';
 type LoginForm = {
@@ -60,6 +62,7 @@ export default function LoginScreen() {
   const [savingUsername, setSavingUsername] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const { t } = useTranslation();
   const loginPasswordRef = useRef<TextInput>(null);
   const registerEmailRef = useRef<TextInput>(null);
   const registerPasswordRef = useRef<TextInput>(null);
@@ -70,7 +73,7 @@ export default function LoginScreen() {
   useEffect(() => {
     if (firebaseUser && !profile && fallbackUsername.length === 0) {
       const seed = registerForm.username || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '';
-      setFallbackUsername(seed.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase());
+      setFallbackUsername(normalizeUsername(seed.replace(/[^a-zA-Z0-9_]/g, '')));
     }
   }, [fallbackUsername.length, firebaseUser, profile, registerForm.username]);
 
@@ -108,7 +111,7 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       if (isRegister) {
-        setFallbackUsername(registerForm.username.trim().toLowerCase());
+        setFallbackUsername(normalizeUsername(registerForm.username));
         await registerWithPassword(registerForm.email, registerForm.password, registerForm.username);
       } else {
         await signInWithPassword(loginForm.email, loginForm.password);
@@ -119,7 +122,7 @@ export default function LoginScreen() {
   };
 
   const saveFallbackUsername = async () => {
-    const parsed = UsernameSchema.safeParse(fallbackUsername.trim());
+    const parsed = UsernameSchema.safeParse(normalizeUsername(fallbackUsername));
     if (!parsed.success) {
       setFallbackError(parsed.error.issues[0]?.message ?? 'Invalid username');
       return;
@@ -168,23 +171,23 @@ export default function LoginScreen() {
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.brand}>
-          <Text style={styles.logo}>D R I F T</Text>
-          <Text style={styles.tagline}>Decide less. Live more.</Text>
-          <Text style={styles.brandCopy}>Public commitments, private credentials.</Text>
+          <Text style={styles.logo} translate>D R I F T</Text>
+          <Text style={styles.tagline} translate>Decide less. Live more.</Text>
+          <Text style={styles.brandCopy} translate>Public commitments, private credentials.</Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.modeSwitch}>
             <Pressable onPress={() => changeMode('login')} style={[styles.modeButton, mode === 'login' ? styles.modeButtonActive : null]}>
-              <Text style={[styles.modeLabel, mode === 'login' ? styles.modeLabelActive : null]}>Log In</Text>
+              <Text style={[styles.modeLabel, mode === 'login' ? styles.modeLabelActive : null]} translate>Log In</Text>
             </Pressable>
             <Pressable onPress={() => changeMode('register')} style={[styles.modeButton, mode === 'register' ? styles.modeButtonActive : null]}>
-              <Text style={[styles.modeLabel, mode === 'register' ? styles.modeLabelActive : null]}>Register</Text>
+              <Text style={[styles.modeLabel, mode === 'register' ? styles.modeLabelActive : null]} translate>Register</Text>
             </Pressable>
           </View>
 
           <View style={styles.formHeader}>
-            <Text style={styles.formTitle}>{isRegister ? 'Create account' : 'Welcome back'}</Text>
+            <Text style={styles.formTitle}>{t(isRegister ? 'Create account' : 'Welcome back')}</Text>
             <Text style={styles.formCopy}>
               {isRegister
                 ? 'Use a public username, your email, and a password you can actually remember.'
@@ -195,26 +198,26 @@ export default function LoginScreen() {
           {isRegister ? (
             <View style={styles.group}>
               <Input
-                label="Public username"
+                label="Public @nickname"
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoComplete="username"
                 textContentType="username"
                 value={registerForm.username}
                 onBlur={() => {
-                  const parsed = UsernameSchema.safeParse(registerForm.username.trim());
+                  const parsed = UsernameSchema.safeParse(normalizeUsername(registerForm.username));
                   setRegisterErrors((current) => ({
                     ...current,
                     username: parsed.success ? undefined : parsed.error.issues[0]?.message,
                   }));
                 }}
-                onChangeText={(value) => updateRegisterForm('username', value)}
-                placeholder="your_handle"
+                onChangeText={(value) => updateRegisterForm('username', normalizeUsername(value))}
+                placeholder="@your_handle"
                 returnKeyType="next"
                 error={registerErrors.username}
                 onSubmitEditing={() => registerEmailRef.current?.focus()}
               />
-              <Text style={styles.helper}>Letters, numbers, and underscores only. This will be visible to everyone.</Text>
+              <Text style={styles.helper} translate>Letters, numbers, and underscores only. People can find you by @nickname.</Text>
             </View>
           ) : null}
 
@@ -304,7 +307,7 @@ export default function LoginScreen() {
                   confirmPasswordVisible ? 'Hide confirmed password' : 'Show confirmed password',
                 )}
               />
-              <Text style={styles.helper}>Passwords must match before the account is created.</Text>
+              <Text style={styles.helper} translate>Passwords must match before the account is created.</Text>
             </View>
           ) : null}
 
@@ -316,32 +319,32 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
 
-          <Text style={styles.terms}>
+          <Text style={styles.terms} translate>
             Your email stays private. Your username, votes, and commitment history are part of your public DRIFT identity.
           </Text>
         </View>
       </ScrollView>
 
       <BottomSheet visible={Boolean(firebaseUser && !profile)} onClose={() => undefined}>
-        <Text style={styles.sheetTitle}>Finish your profile</Text>
-        <Text style={styles.sheetBody}>Choose a public username so people can find your posts, follows, and reputation history.</Text>
+        <Text style={styles.sheetTitle} translate>Finish your profile</Text>
+        <Text style={styles.sheetBody} translate>Choose a public @nickname so people can find your posts, follows, and reputation history.</Text>
         <Input
-          label="Username"
+          label="@Nickname"
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="username"
           value={fallbackUsername}
           onChangeText={(value) => {
-            setFallbackUsername(value);
+            setFallbackUsername(normalizeUsername(value));
             if (fallbackError) {
               setFallbackError(null);
             }
           }}
-          placeholder="your_handle"
+          placeholder="@your_handle"
           error={fallbackError}
         />
         <Button label="Start drifting" onPress={() => void saveFallbackUsername()} loading={savingUsername} />
-        <Text style={styles.locked}>You can edit display details later.</Text>
+        <Text style={styles.locked} translate>You can edit display details later.</Text>
       </BottomSheet>
     </KeyboardAvoidingView>
   );

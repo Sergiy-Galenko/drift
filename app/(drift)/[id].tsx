@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { CommentItem } from '@/components/drift/CommentItem';
@@ -20,6 +21,7 @@ import { useBookmark } from '@/hooks/useBookmark';
 import { useComments } from '@/hooks/useComments';
 import { useDrift } from '@/hooks/useDrift';
 import { useFollow } from '@/hooks/useFollow';
+import { useTranslation } from '@/hooks/useTranslation';
 import { deleteDrift, incrementDriftShare } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
@@ -33,6 +35,7 @@ export default function DriftDetailScreen() {
   const driftId = typeof params.id === 'string' ? params.id : undefined;
   const uid = useAuthStore((state) => state.firebaseUser?.uid);
   const pushToast = useUIStore((state) => state.pushToast);
+  const { t } = useTranslation();
   const { drift, loading, error } = useDrift(driftId);
   const bookmark = useBookmark(driftId);
   const follow = useFollow(drift?.authorUid);
@@ -41,18 +44,18 @@ export default function DriftDetailScreen() {
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
 
   const deleteOwnComment = (comment: Comment) => {
-    Alert.alert('Delete comment?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => void comments.removeComment(comment) },
+    Alert.alert(t('Delete comment?'), t('This cannot be undone.'), [
+      { text: t('Cancel'), style: 'cancel' },
+      { text: t('Delete'), style: 'destructive', onPress: () => void comments.removeComment(comment) },
     ]);
   };
 
   const deleteOwnDrift = () => {
     if (!drift || !uid) return;
-    Alert.alert('Delete drift?', 'Its comments and saved references will no longer be available.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('Delete drift?'), t('Its comments and saved references will no longer be available.'), [
+      { text: t('Cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('Delete'),
         style: 'destructive',
         onPress: () => {
           void deleteDrift(drift.id, uid)
@@ -125,7 +128,7 @@ export default function DriftDetailScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <DriftCard drift={drift} />
         <CasePanel style={styles.history}>
-          <Text style={styles.historyTitle}>STAMP HISTORY</Text>
+          <Text style={styles.historyTitle} translate>STAMP HISTORY</Text>
           <View style={styles.stamps}>
             <InkStamp label="LOGGED" tone="neutral" compact />
             <InkStamp label={drift.status === 'executed' ? 'FULFILLED' : drift.status === 'failed' ? 'BROKEN' : drift.status === 'proof_pending' ? 'PROOF DUE' : 'UNDER REVIEW'} tone={drift.status === 'executed' ? 'ledger' : drift.status === 'failed' ? 'oxblood' : drift.status === 'proof_pending' ? 'gold' : 'blue'} compact />

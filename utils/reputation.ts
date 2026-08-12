@@ -1,4 +1,6 @@
 import { Colors } from '@/constants/tokens';
+import { translate } from '@/lib/i18n';
+import { useLocaleStore } from '@/stores/localeStore';
 import type { UserDoc } from '@/types/user';
 
 export const REPUTATION_EVENTS = {
@@ -26,11 +28,12 @@ export function reputationColor(score: number): string {
 }
 
 export function reputationLabel(score: number): string {
-  if (score <= 20) return 'Ghost';
-  if (score <= 40) return 'Unreliable';
-  if (score <= 60) return 'Average';
-  if (score <= 80) return 'Trusted';
-  return 'Legend';
+  const t = (value: string) => translate(useLocaleStore.getState().locale, value);
+  if (score <= 20) return t('Ghost');
+  if (score <= 40) return t('Unreliable');
+  if (score <= 60) return t('Average');
+  if (score <= 80) return t('Trusted');
+  return t('Legend');
 }
 
 export function reputationLabelUpper(score: number): string {

@@ -15,7 +15,7 @@ import { useUIStore } from '@/stores/uiStore';
 import type { UserProfile } from '@/types/user';
 import { firebaseErrorMessage } from '@/utils/formatters';
 import { logger } from '@/utils/logger';
-import { CreatePasswordSchema, EmailSchema, SignInPasswordSchema, UsernameSchema } from '@/utils/validation';
+import { CreatePasswordSchema, EmailSchema, normalizeUsername, SignInPasswordSchema, UsernameSchema } from '@/utils/validation';
 import { calcReputationTier } from '@/utils/reputation';
 
 function normalizeEmail(email: string): string {
@@ -188,7 +188,7 @@ export function useAuth() {
         return false;
       }
 
-      const parsedUsername = UsernameSchema.safeParse(username.trim());
+      const parsedUsername = UsernameSchema.safeParse(normalizeUsername(username));
       if (!parsedUsername.success) {
         pushToast({ title: 'Invalid username', message: parsedUsername.error.issues[0]?.message, tone: 'warning' });
         return false;
@@ -241,7 +241,7 @@ export function useAuth() {
         return false;
       }
 
-      const parsed = UsernameSchema.safeParse(username.trim());
+      const parsed = UsernameSchema.safeParse(normalizeUsername(username));
       if (!parsed.success) {
         pushToast({ title: 'Invalid username', message: parsed.error.issues[0]?.message, tone: 'warning' });
         return false;

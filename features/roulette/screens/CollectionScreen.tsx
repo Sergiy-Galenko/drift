@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { Header } from '@/components/navigation/Header';
 import { DossierSkeleton } from '@/components/dossier/DossierSkeleton';
@@ -16,11 +17,11 @@ export function CollectionScreen() {
   const toggleShowcaseCard = useRouletteStore((state) => state.toggleShowcaseCard);
   const progress = getRouletteProgress(userState);
 
-  if (loading && !userState) {
+  if (loading) {
     return <View style={styles.root}><Header title="VAULT / CASE ARCHIVE" showBack /><DossierSkeleton rows={4} /></View>;
   }
 
-  if (error && !userState) {
+  if (error) {
     return <View style={styles.root}><Header title="VAULT / CASE ARCHIVE" showBack /><ErrorState title="Vault unavailable" message="The archive could not be opened." /></View>;
   }
 

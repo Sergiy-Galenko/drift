@@ -1,24 +1,31 @@
+import { translate } from '@/lib/i18n';
+import { useLocaleStore } from '@/stores/localeStore';
+
+function t(value: string): string {
+  return translate(useLocaleStore.getState().locale, value);
+}
+
 export function formatCountdown(expiresAt: Date, now = Date.now()): string {
   const ms = expiresAt.getTime() - now;
-  if (ms <= 0) return 'Expired';
+  if (ms <= 0) return t('Expired');
   const totalSecs = Math.floor(ms / 1000);
   const h = Math.floor(totalSecs / 3600);
   const m = Math.floor((totalSecs % 3600) / 60);
   const s = totalSecs % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
+  if (h > 0) return `${h}${t('h')} ${m}${t('m')}`;
+  if (m > 0) return `${m}${t('m')} ${s}${t('s')}`;
+  return `${s}${t('s')}`;
 }
 
 export function formatCountdownShort(expiresAt: Date, now = Date.now()): string {
   const ms = expiresAt.getTime() - now;
-  if (ms <= 0) return 'Done';
+  if (ms <= 0) return t('Done');
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
   const s = Math.floor((ms % 60000) / 1000);
-  if (h > 0) return `${h}h`;
-  if (m > 0) return `${m}m`;
-  return `${s}s`;
+  if (h > 0) return `${h}${t('h')}`;
+  if (m > 0) return `${m}${t('m')}`;
+  return `${s}${t('s')}`;
 }
 
 export function getCountdownProgress(createdAt: Date, expiresAt: Date, now = Date.now()): number {

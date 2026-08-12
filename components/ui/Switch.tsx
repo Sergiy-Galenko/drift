@@ -3,6 +3,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { Colors, R, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type SwitchProps = {
   value: boolean;
@@ -11,6 +12,7 @@ type SwitchProps = {
 };
 
 export function Switch({ value, onValueChange, label }: SwitchProps) {
+  const { t } = useTranslation();
   const progress = useSharedValue(value ? 1 : 0);
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export function Switch({ value, onValueChange, label }: SwitchProps) {
   }));
 
   return (
-    <Pressable accessibilityLabel={label} accessibilityRole="switch" accessibilityState={{ checked: value }} onPress={() => onValueChange(!value)}>
+    <Pressable accessibilityLabel={t(label)} accessibilityRole="switch" accessibilityState={{ checked: value }} onPress={() => onValueChange(!value)}>
       <Animated.View style={[styles.track, trackStyle]}>
         <Animated.View style={[styles.knob, knobStyle]} />
       </Animated.View>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Header } from '@/components/navigation/Header';
@@ -72,7 +73,7 @@ export default function EditDriftScreen() {
         <Input label="Decision" value={text} onChangeText={setText} multiline maxLength={200} style={styles.multiline} />
         <Input label="Stake" value={stake} onChangeText={setStake} multiline maxLength={100} style={styles.smallMultiline} />
         <Input label="Context (optional)" value={context} onChangeText={setContext} multiline maxLength={300} style={styles.multiline} />
-        <Text style={styles.label}>CATEGORY</Text>
+        <Text style={styles.label} translate>CATEGORY</Text>
         <View style={styles.categories}>{CATEGORY_ORDER.map((item) => <Pressable key={item} onPress={() => setCategory(item)} style={[styles.category, category === item ? styles.selected : null]}><Text style={[styles.categoryText, category === item ? styles.selectedText : null]}>{CATEGORIES[item].label}</Text></Pressable>)}</View>
         <Button label="Save changes" onPress={() => void save()} loading={saving} />
       </ScrollView>

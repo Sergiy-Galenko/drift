@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { Spinner } from './Spinner';
 import { Colors, F, R, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
@@ -16,6 +18,7 @@ type ButtonProps = {
 };
 
 export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, icon }: ButtonProps) {
+  const { t } = useTranslation();
   const isDisabled = disabled || loading;
   const spinnerColor = Colors.dossier;
   return (
@@ -31,11 +34,11 @@ export function Button({ label, onPress, variant = 'primary', disabled = false, 
       ]}
     >
       {loading ? (
-        <Spinner label={label} inline color={spinnerColor} />
+        <Spinner label={t(label)} inline color={spinnerColor} />
       ) : (
         <View style={styles.content}>
           {icon}
-          <Text style={[styles.label, variant === 'primary' || variant === 'danger' ? styles.primaryLabel : styles.defaultLabel]}>{label}</Text>
+          <Text style={[styles.label, variant === 'primary' || variant === 'danger' ? styles.primaryLabel : styles.defaultLabel]}>{t(label)}</Text>
         </View>
       )}
     </Pressable>

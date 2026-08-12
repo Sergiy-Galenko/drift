@@ -13,6 +13,10 @@ export const CreatePasswordSchema = z
   .min(6, 'Password must be at least 6 characters')
   .max(72, 'Password must be 72 characters or less');
 
+export function normalizeUsername(value: string): string {
+  return value.trim().replace(/^@+/, '').toLowerCase();
+}
+
 export const CreateDriftSchema = z.object({
   text: z
     .string()

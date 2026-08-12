@@ -2,8 +2,6 @@ import type { Card, CardRarity } from '../types/roulette.types';
 
 export const ROULETTE_INITIAL_SPIN_TOKENS = 3;
 export const ROULETTE_SPIN_COST = 1;
-export const SPIN_PACK_SIZE = 5;
-export const SPIN_PACK_PRICE_LABEL = 'IAP pack';
 export const PROFILE_SHOWCASE_LIMIT = 3;
 
 export const RARITY_WEIGHTS: Record<CardRarity, number> = {

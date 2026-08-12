@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { format, startOfWeek, subWeeks } from 'date-fns';
 
 import { CasePanel } from '@/components/dossier/CasePanel';
@@ -55,16 +56,16 @@ export default function CaseSummaryScreen() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <CasePanel style={styles.cover}>
             <Text style={styles.kicker}>WEEK OF {format(week.start, 'MMM d').toUpperCase()}</Text>
-            <Text style={styles.title}>THE RECORD, NOT THE SPIN.</Text>
-            <Text style={styles.description}>A compact account of last week’s public commitments.</Text>
+            <Text style={styles.title} translate>THE RECORD, NOT THE SPIN.</Text>
+            <Text style={styles.description} translate>A compact account of last week’s public commitments.</Text>
           </CasePanel>
           <View style={styles.results}>
-            <CasePanel style={styles.result}><InkStamp label="FULFILLED" tone="ledger" /><Text style={styles.count}>{week.fulfilled.length}</Text><Text style={styles.resultLabel}>CASES CLOSED</Text></CasePanel>
-            <CasePanel style={styles.result}><InkStamp label="BROKEN" tone="oxblood" /><Text style={styles.count}>{week.broken.length}</Text><Text style={styles.resultLabel}>CASES MISSED</Text></CasePanel>
+            <CasePanel style={styles.result}><InkStamp label="FULFILLED" tone="ledger" /><Text style={styles.count}>{week.fulfilled.length}</Text><Text style={styles.resultLabel} translate>CASES CLOSED</Text></CasePanel>
+            <CasePanel style={styles.result}><InkStamp label="BROKEN" tone="oxblood" /><Text style={styles.count}>{week.broken.length}</Text><Text style={styles.resultLabel} translate>CASES MISSED</Text></CasePanel>
           </View>
           <CasePanel>
-            <Text style={styles.section}>OPEN CARRYOVER</Text>
-            {week.open.length === 0 ? <Text style={styles.emptyLine}>No unresolved cases from the period.</Text> : week.open.map((drift) => <Text key={drift.id} numberOfLines={2} style={styles.caseLine}>{drift.text}</Text>)}
+            <Text style={styles.section} translate>OPEN CARRYOVER</Text>
+            {week.open.length === 0 ? <Text style={styles.emptyLine} translate>No unresolved cases from the period.</Text> : week.open.map((drift) => <Text key={drift.id} numberOfLines={2} style={styles.caseLine}>{drift.text}</Text>)}
           </CasePanel>
           {week.fulfilled.length === 0 && week.broken.length === 0 && week.open.length === 0 ? <EmptyState title="No cases last week" message="The next completed week will be filed here." /> : null}
         </ScrollView>

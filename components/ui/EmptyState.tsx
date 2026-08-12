@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { Colors, F, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type EmptyStateProps = {
   title: string;
@@ -8,10 +10,11 @@ type EmptyStateProps = {
 };
 
 export function EmptyState({ title, message }: EmptyStateProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      <Text style={styles.title}>{t(title)}</Text>
+      <Text style={styles.message}>{t(message)}</Text>
     </View>
   );
 }

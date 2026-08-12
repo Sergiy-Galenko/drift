@@ -51,6 +51,10 @@ function normalizeCards(cards: RouletteUserState['cards'] | undefined): Roulette
   }
 
   return Object.entries(cards).reduce<RouletteUserState['cards']>((map, [cardId, entry]) => {
+    if (!ROULETTE_CARD_BY_ID[cardId]) {
+      return map;
+    }
+
     const count = Number.isFinite(entry.count) ? Math.max(1, Math.floor(entry.count)) : 1;
     map[cardId] = {
       cardId,
@@ -87,6 +91,7 @@ export function makeDefaultRouletteState(uid: string, timestamp = nowIso()): Rou
     cards: {},
     cases: defaultCaseStates(),
     showcaseCardIds: [],
+    lastDailyActivityRewardAt: null,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -107,9 +112,14 @@ export function normalizeRouletteState(uid: string, data?: Partial<RouletteUserS
     showcaseCardIds: Array.isArray(data.showcaseCardIds)
       ? data.showcaseCardIds.filter((cardId): cardId is string => typeof cardId === 'string' && Boolean(ROULETTE_CARD_BY_ID[cardId]))
       : fallback.showcaseCardIds,
+    lastDailyActivityRewardAt: typeof data.lastDailyActivityRewardAt === 'string' ? data.lastDailyActivityRewardAt : null,
     createdAt: data.createdAt || fallback.createdAt,
     updatedAt: data.updatedAt || fallback.updatedAt,
   };
+}
+
+export function hasClaimedDailyActivity(state: RouletteUserState | null, now = nowIso()): boolean {
+  return Boolean(state?.lastDailyActivityRewardAt?.slice(0, 10) === now.slice(0, 10));
 }
 
 function mapSnapshot(uid: string, snapshot: DocumentSnapshot<DocumentData>): RouletteUserState | null {
@@ -374,22 +384,9 @@ export async function setShowcaseCards(uid: string, cardIds: string[]): Promise<
 }
 
 export async function grantSpinTokens(uid: string, quantity: number, source: SpinTokenGrantSource): Promise<void> {
-  if (quantity <= 0) {
-    return;
-  }
+  const amount = Math.floor(quantity);
 
-  if (source === 'purchase_stub') {
-    // TODO: integrate with real backend payment flow.
-    // Expected contract: purchase endpoint verifies the store receipt server-side
-    // and grants tokens from a trusted environment before this client state updates.
-  }
-
-  if (source === 'daily_activity' || source === 'weekly_activity' || source === 'achievement') {
-    // TODO: integrate with real backend activity reward flow.
-    // Expected contract: reward endpoint checks the daily/weekly/achievement claim
-    // idempotently and returns the updated SpinToken balance.
-  }
-
+  if (!Number.isFinite(amount) || amount <= 0) return;
   const ref = rouletteStateRef(uid);
 
   await runTransaction(db, async (transaction) => {
@@ -397,11 +394,16 @@ export async function grantSpinTokens(uid: string, quantity: number, source: Spi
     const current = mapSnapshot(uid, snapshot) ?? makeDefaultRouletteState(uid);
     const timestamp = nowIso();
 
+    if (source === 'daily_activity' && hasClaimedDailyActivity(current, timestamp)) {
+      throw new Error('roulette-daily-already-claimed');
+    }
+
     transaction.set(
       ref,
       {
         ...current,
-        spinTokens: current.spinTokens + Math.floor(quantity),
+        spinTokens: current.spinTokens + amount,
+        lastDailyActivityRewardAt: source === 'daily_activity' ? timestamp : current.lastDailyActivityRewardAt,
         updatedAt: timestamp,
       },
       { merge: true },

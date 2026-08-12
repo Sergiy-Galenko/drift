@@ -1,7 +1,9 @@
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { CATEGORY_ORDER, CATEGORIES, type CategoryFilter } from '@/constants/categories';
 import { Colors, F, R, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type FilterPillsProps = {
   value: CategoryFilter;
@@ -11,6 +13,7 @@ type FilterPillsProps = {
 const filters: CategoryFilter[] = ['all', ...CATEGORY_ORDER];
 
 export function FilterPills({ value, onChange }: FilterPillsProps) {
+  const { t } = useTranslation();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.content}>
       {filters.map((filter) => {
@@ -23,7 +26,7 @@ export function FilterPills({ value, onChange }: FilterPillsProps) {
             onPress={() => onChange(filter)}
             style={[styles.pill, active ? styles.active : null]}
           >
-            <Text style={[styles.label, active ? styles.activeLabel : null]}>{label}</Text>
+            <Text style={[styles.label, active ? styles.activeLabel : null]}>{t(label)}</Text>
           </Pressable>
         );
       })}

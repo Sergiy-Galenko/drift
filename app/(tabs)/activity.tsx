@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 
@@ -10,6 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { useNotificationsContext } from '@/hooks/useNotifications';
+import { useTranslation } from '@/hooks/useTranslation';
 import { subscribeAuthorDrifts } from '@/lib/firebase/drifts';
 import { useAuthStore } from '@/stores/authStore';
 import type { NotificationItem } from '@/types/notification';
@@ -40,6 +42,7 @@ export default function ActivityScreen() {
   const router = useRouter();
   const profileUid = useAuthStore((state) => state.profile?.uid);
   const { items, unreadCount, loading, error, markRead } = useNotificationsContext();
+  const { t } = useTranslation();
   const [tab, setTab] = useState<ActivityTab>('mine');
   const [myDrifts, setMyDrifts] = useState<Drift[]>([]);
   const [mineLoading, setMineLoading] = useState(true);
@@ -69,10 +72,10 @@ export default function ActivityScreen() {
 
   const tabs = useMemo(
     () => [
-      { key: 'mine' as const, label: tabLabel('My drifts', myDrifts.length) },
-      { key: 'updates' as const, label: tabLabel('Updates', unreadCount) },
+      { key: 'mine' as const, label: tabLabel(t('My drifts'), myDrifts.length) },
+      { key: 'updates' as const, label: tabLabel(t('Updates'), unreadCount) },
     ],
-    [myDrifts.length, unreadCount],
+    [myDrifts.length, t, unreadCount],
   );
 
   const openNotification = useCallback(

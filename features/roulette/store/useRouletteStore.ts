@@ -6,7 +6,7 @@ import type { UserProfile } from '@/types/user';
 
 import { ROULETTE_CASES } from '../config/casesData';
 import { getCardsByIds, MAIN_ROULETTE_CARD_IDS, ROULETTE_CARD_BY_ID } from '../config/cardsData';
-import { PROFILE_SHOWCASE_LIMIT, RARITY_ORDER, ROULETTE_SPIN_COST, SPIN_PACK_SIZE } from '../config/rouletteConfig';
+import { PROFILE_SHOWCASE_LIMIT, RARITY_ORDER, ROULETTE_SPIN_COST } from '../config/rouletteConfig';
 import { isAchievementUnlocked, getAchievementLabel } from '../services/achievementService';
 import {
   collectCard,
@@ -14,6 +14,7 @@ import {
   commitSpin,
   getCollectedCount,
   grantSpinTokens,
+  hasClaimedDailyActivity,
   makeDefaultRouletteState,
   sellDuplicateCard,
   setShowcaseCards,
@@ -37,12 +38,13 @@ type RouletteStore = {
   error: string | null;
   startSync: (profile: UserProfile) => () => void;
   refreshAchievementUnlocks: (profile: UserProfile) => void;
-  spin: () => SpinResult | null;
-  openCase: (caseId: string, profile: UserProfile | null) => OpenCaseResult | null;
+  spin: () => Promise<SpinResult | null>;
+  openCase: (caseId: string, profile: UserProfile | null) => Promise<OpenCaseResult | null>;
   grantTokens: (quantity: number, source: SpinTokenGrantSource) => void;
   sellCard: (cardId: string) => void;
   toggleShowcaseCard: (cardId: string) => void;
   clearError: () => void;
+  reset: () => void;
 };
 
 function toast(title: string, message: string, tone: 'success' | 'warning' | 'danger' | 'neutral' = 'neutral') {
@@ -192,7 +194,7 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
     persistAchievementUnlocks(profile.uid, current, profile);
     set({ userState: nextState });
   },
-  spin: () => {
+  spin: async () => {
     const current = get().userState;
 
     if (!current) {
@@ -205,34 +207,26 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
     }
 
     if (current.spinTokens < ROULETTE_SPIN_COST) {
-      toast('No spin tokens', 'Claim an activity token or use the purchase stub.', 'warning');
+      toast('No spin tokens', 'Claim an activity token before spinning again.', 'warning');
       return null;
     }
 
     const card = pickWeightedCard(getCardsByIds(MAIN_ROULETTE_CARD_IDS));
     const previous = current;
     const collected = collectCard({ ...current, spinTokens: current.spinTokens - ROULETTE_SPIN_COST }, card);
-    const result: SpinResult = {
-      card,
-      isDuplicate: collected.isDuplicate,
-      duplicateCount: collected.duplicateCount,
-      spinTokensRemaining: collected.nextState.spinTokens,
-    };
-
     set({ userState: collected.nextState, committing: true, error: null });
 
-    void commitSpin(current.uid, card.id)
-      .then(() => {
-        set({ committing: false });
-      })
-      .catch((error: unknown) => {
-        set({ userState: previous, committing: false, error: String(error) });
-        toast('Spin rolled back', 'Firestore rejected the spin transaction.', 'danger');
-      });
-
-    return result;
+    try {
+      const confirmed = await commitSpin(current.uid, card.id);
+      set({ committing: false });
+      return confirmed;
+    } catch {
+      set({ userState: previous, committing: false });
+      toast('Spin rolled back', 'Firestore rejected the spin transaction.', 'danger');
+      return null;
+    }
   },
-  openCase: (caseId, profile) => {
+  openCase: async (caseId, profile) => {
     const current = get().userState;
     const cardCase = ROULETTE_CASES.find((item) => item.id === caseId);
 
@@ -250,7 +244,7 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
         : false;
     const caseState = current.cases[caseId];
     const isUnlocked = Boolean(caseState?.isUnlocked || cardCase.isUnlocked || achievementUnlocked);
-    const isOpened = Boolean(caseState?.isOpened);
+    const isOpened = Boolean(caseState?.isOpened || cardCase.isOpened);
     const price = cardCase.unlockType === 'purchase' ? cardCase.price ?? 0 : 0;
 
     if (!isUnlocked) {
@@ -287,26 +281,17 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
       card,
       timestamp,
     );
-    const result: OpenCaseResult = {
-      caseId,
-      card,
-      isDuplicate: collected.isDuplicate,
-      duplicateCount: collected.duplicateCount,
-      spinTokensRemaining: collected.nextState.spinTokens,
-    };
-
     set({ userState: collected.nextState, committing: true, error: null });
 
-    void commitCaseOpen(current.uid, caseId, card.id, achievementUnlocked)
-      .then(() => {
-        set({ committing: false });
-      })
-      .catch((error: unknown) => {
-        set({ userState: previous, committing: false, error: String(error) });
-        toast('Case rolled back', 'Firestore rejected the case transaction.', 'danger');
-      });
-
-    return result;
+    try {
+      const confirmed = await commitCaseOpen(current.uid, caseId, card.id, achievementUnlocked);
+      set({ committing: false });
+      return confirmed;
+    } catch {
+      set({ userState: previous, committing: false });
+      toast('Case rolled back', 'Firestore rejected the case transaction.', 'danger');
+      return null;
+    }
   },
   grantTokens: (quantity, source) => {
     const current = get().userState;
@@ -315,10 +300,16 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
       return;
     }
 
+    if (source === 'daily_activity' && hasClaimedDailyActivity(current)) {
+      toast('Daily token claimed', 'Come back tomorrow for another activity token.', 'neutral');
+      return;
+    }
+
     const previous = current;
     const nextState = {
       ...current,
       spinTokens: current.spinTokens + Math.floor(quantity),
+      lastDailyActivityRewardAt: source === 'daily_activity' ? new Date().toISOString() : current.lastDailyActivityRewardAt,
       updatedAt: new Date().toISOString(),
     };
 
@@ -327,11 +318,15 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
     void grantSpinTokens(current.uid, quantity, source)
       .then(() => {
         set({ committing: false });
-        toast(source === 'purchase_stub' ? 'Spin pack added' : 'Token claimed', `${Math.floor(quantity)} spin token${quantity === 1 ? '' : 's'} added.`, 'success');
+        toast('Token claimed', `${Math.floor(quantity)} spin token${quantity === 1 ? '' : 's'} added.`, 'success');
       })
       .catch((error: unknown) => {
-        set({ userState: previous, committing: false, error: String(error) });
-        toast('Token grant rolled back', 'Firestore rejected the token update.', 'danger');
+        set({ userState: previous, committing: false });
+        toast(
+          String(error).includes('roulette-daily-already-claimed') ? 'Daily token claimed' : 'Token grant rolled back',
+          String(error).includes('roulette-daily-already-claimed') ? 'Come back tomorrow for another activity token.' : 'Firestore rejected the token update.',
+          String(error).includes('roulette-daily-already-claimed') ? 'neutral' : 'danger',
+        );
       });
   },
   sellCard: (cardId) => {
@@ -374,8 +369,8 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
         set({ committing: false });
         toast('Card sold', `${result.card.name} sold for ${result.soldFor} spin tokens.`, 'success');
       })
-      .catch((error: unknown) => {
-        set({ userState: previous, committing: false, error: String(error) });
+      .catch(() => {
+        set({ userState: previous, committing: false });
         toast('Sale rolled back', 'Firestore rejected the marketplace sale.', 'danger');
       });
   },
@@ -404,17 +399,19 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
         set({ committing: false });
         toast(isPinned ? 'Removed from profile' : 'Added to profile', 'Your profile card showcase was updated.', 'success');
       })
-      .catch((error: unknown) => {
-        set({ userState: previous, committing: false, error: String(error) });
+      .catch(() => {
+        set({ userState: previous, committing: false });
         toast('Showcase rolled back', 'Firestore rejected the profile showcase update.', 'danger');
       });
   },
   clearError: () => set({ error: null }),
+  reset: () => set({ userState: null, loading: false, committing: false, error: null }),
 }));
 
 export function useRouletteSync(profile: UserProfile | null): void {
   const startSync = useRouletteStore((state) => state.startSync);
   const refreshAchievementUnlocks = useRouletteStore((state) => state.refreshAchievementUnlocks);
+  const reset = useRouletteStore((state) => state.reset);
   const profileRef = useRef(profile);
   const uid = profile?.uid;
 
@@ -424,11 +421,12 @@ export function useRouletteSync(profile: UserProfile | null): void {
     const syncProfile = profileRef.current;
 
     if (!syncProfile) {
+      reset();
       return undefined;
     }
 
     return startSync(syncProfile);
-  }, [startSync, uid]);
+  }, [reset, startSync, uid]);
 
   useEffect(() => {
     if (profile) {
@@ -436,5 +434,3 @@ export function useRouletteSync(profile: UserProfile | null): void {
     }
   }, [profile, refreshAchievementUnlocks]);
 }
-
-export { SPIN_PACK_SIZE };

@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from './BackButton';
 import { Colors, F, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type HeaderProps = {
   title: string;
@@ -13,10 +15,11 @@ type HeaderProps = {
 
 export function Header({ title, showBack = false, right }: HeaderProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + S.md }]}>
       <View style={styles.side}>{showBack ? <BackButton /> : null}</View>
-      <Text numberOfLines={1} style={styles.title}>{title}</Text>
+      <Text numberOfLines={1} style={styles.title}>{t(title)}</Text>
       <View style={styles.side}>{right}</View>
     </View>
   );

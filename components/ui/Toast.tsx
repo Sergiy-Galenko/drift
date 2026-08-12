@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, F, R, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useUIStore, type ToastItem } from '@/stores/uiStore';
 
 function toneStyle(tone: ToastItem['tone']) {
@@ -19,6 +21,7 @@ function toneStyle(tone: ToastItem['tone']) {
 }
 
 export function Toast() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const queue = useUIStore((state) => state.toastQueue);
   const dismissToast = useUIStore((state) => state.dismissToast);
@@ -40,8 +43,8 @@ export function Toast() {
   return (
     <View pointerEvents="none" style={[styles.wrap, { paddingTop: insets.top + S.md }]}>
       <View style={[styles.toast, toneStyle(item.tone)]}>
-        <Text style={styles.title}>{item.title}</Text>
-        {item.message ? <Text style={styles.message}>{item.message}</Text> : null}
+        <Text style={styles.title}>{t(item.title)}</Text>
+        {item.message ? <Text style={styles.message}>{t(item.message)}</Text> : null}
       </View>
     </View>
   );

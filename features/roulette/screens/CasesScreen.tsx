@@ -1,7 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { Header } from '@/components/navigation/Header';
+import { DossierSkeleton } from '@/components/dossier/DossierSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useAuthStore } from '@/stores/authStore';
@@ -18,6 +21,8 @@ export function CasesScreen() {
   const haptics = useHaptics();
   const profile = useAuthStore((state) => state.profile);
   const userState = useRouletteStore((state) => state.userState);
+  const loading = useRouletteStore((state) => state.loading);
+  const error = useRouletteStore((state) => state.error);
   const committing = useRouletteStore((state) => state.committing);
   const openCase = useRouletteStore((state) => state.openCase);
   const [openingCaseId, setOpeningCaseId] = useState<string | null>(null);
@@ -25,9 +30,9 @@ export function CasesScreen() {
   const cases = useMemo(() => getRouletteCaseViews(userState, profile), [profile, userState]);
 
   const handleOpen = useCallback(
-    (caseId: string) => {
+    async (caseId: string) => {
       void haptics.selection();
-      const result = openCase(caseId, profile);
+      const result = await openCase(caseId, profile);
 
       if (!result) {
         return;
@@ -47,13 +52,31 @@ export function CasesScreen() {
     [haptics, openCase, profile],
   );
 
+  if (loading) {
+    return (
+      <View style={styles.root}>
+        <Header title="SEALED CASES" showBack />
+        <DossierSkeleton rows={4} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.root}>
+        <Header title="SEALED CASES" showBack />
+        <ErrorState title="Cases unavailable" message="The case file could not be opened." />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
       <Header title="SEALED CASES" showBack />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.summary}>
-          <Text style={styles.title}>Special cases</Text>
-          <Text style={styles.copy}>Achievement cases open from profile milestones. Purchase cases currently spend spin tokens until the payment backend is wired.</Text>
+          <Text style={styles.title} translate>Special cases</Text>
+          <Text style={styles.copy} translate>Achievement cases open from profile milestones. Purchase cases currently spend spin tokens until the payment backend is wired.</Text>
           <Text style={styles.tokens}>{userState?.spinTokens ?? 0} spin tokens available</Text>
         </View>
         {cases.map((item) => (
@@ -61,7 +84,7 @@ export function CasesScreen() {
             key={item.id}
             item={{ ...item, canOpen: item.canOpen && !committing }}
             opening={openingCaseId === item.id}
-            onOpen={handleOpen}
+            onOpen={(caseId) => void handleOpen(caseId)}
           />
         ))}
       </ScrollView>

@@ -9,6 +9,10 @@ export type SearchResults = {
 };
 
 export async function searchAll(term: string): Promise<SearchResults> {
+  if (term.trim().startsWith('@')) {
+    return { drifts: [], users: await searchUsers(term) };
+  }
+
   const [drifts, users] = await Promise.all([searchDrifts(term), searchUsers(term)]);
   return { drifts, users };
 }

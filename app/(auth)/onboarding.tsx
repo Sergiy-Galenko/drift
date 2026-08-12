@@ -4,19 +4,20 @@ import {
   ImageBackground,
   Pressable,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
   type ImageSourcePropType,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { Button } from '@/components/ui/Button';
 import { Colors, F, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Slide = {
   title: string;
@@ -62,6 +63,7 @@ export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
   const listRef = useRef<FlatList<Slide>>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const { t } = useTranslation();
 
   const complete = async () => {
     await AsyncStorage.setItem('drift_onboarding_v1', 'done');
@@ -84,7 +86,7 @@ export default function OnboardingScreen() {
   return (
     <View style={styles.root}>
       <Pressable onPress={() => void complete()} style={styles.skip}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText} translate>Skip</Text>
       </Pressable>
 
       <FlatList
@@ -101,9 +103,9 @@ export default function OnboardingScreen() {
           <ImageBackground source={item.image} resizeMode="cover" style={[styles.slide, { width }]}>
             <View style={styles.overlay} />
             <View style={styles.copy}>
-              <Text style={styles.logo}>D R I F T</Text>
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.body}>{item.body}</Text>
+              <Text style={styles.logo} translate>D R I F T</Text>
+              <Text style={styles.title}>{t(item.title)}</Text>
+              <Text style={styles.body}>{t(item.body)}</Text>
             </View>
           </ImageBackground>
         )}

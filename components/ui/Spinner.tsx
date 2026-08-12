@@ -1,6 +1,7 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { Colors, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type SpinnerProps = {
   label?: string;
@@ -10,8 +11,9 @@ type SpinnerProps = {
 };
 
 export function Spinner({ label, inline = false, size = 'small', color = Colors.accentVolt }: SpinnerProps) {
+  const { t } = useTranslation();
   return (
-    <View accessibilityLabel={label} style={[styles.wrap, inline ? styles.inlineWrap : null]}>
+    <View accessibilityLabel={label ? t(label) : undefined} style={[styles.wrap, inline ? styles.inlineWrap : null]}>
       <ActivityIndicator color={color} size={size} />
     </View>
   );

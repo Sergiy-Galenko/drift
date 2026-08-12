@@ -1,8 +1,11 @@
-import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Pressable, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { Header } from '@/components/navigation/Header';
+import { DossierSkeleton } from '@/components/dossier/DossierSkeleton';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Colors, F, R, S } from '@/constants/tokens';
 
 import { CardArtwork } from '../components/CardArtwork';
@@ -18,6 +21,8 @@ type MarketEntry = {
 
 export function MarketScreen() {
   const userState = useRouletteStore((state) => state.userState);
+  const loading = useRouletteStore((state) => state.loading);
+  const error = useRouletteStore((state) => state.error);
   const committing = useRouletteStore((state) => state.committing);
   const sellCard = useRouletteStore((state) => state.sellCard);
   const entries = Object.values(userState?.cards ?? {})
@@ -25,13 +30,31 @@ export function MarketScreen() {
     .filter((item): item is MarketEntry => Boolean(item.card))
     .sort((left, right) => right.card.marketValue - left.card.marketValue);
 
+  if (loading) {
+    return (
+      <View style={styles.root}>
+        <Header title="INK EXCHANGE" showBack />
+        <DossierSkeleton rows={4} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.root}>
+        <Header title="INK EXCHANGE" showBack />
+        <ErrorState title="Market unavailable" message="The market file could not be opened." />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
       <Header title="INK EXCHANGE" showBack />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.summary}>
-          <Text style={styles.title}>Sell duplicates</Text>
-          <Text style={styles.copy}>The market converts extra copies into spin tokens. One copy always stays locked into your collection.</Text>
+          <Text style={styles.title} translate>Sell duplicates</Text>
+          <Text style={styles.copy} translate>The market converts extra copies into spin tokens. One copy always stays locked into your collection.</Text>
           <Text style={styles.tokens}>{userState?.spinTokens ?? 0} spin tokens available</Text>
         </View>
 

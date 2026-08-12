@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 
 import { MarketIcon } from '@/components/icons';
@@ -23,10 +24,10 @@ export function ProfileCardShowcase() {
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
-        <Text style={styles.title}>Profile cards</Text>
+        <Text style={styles.title} translate>Profile cards</Text>
         <Pressable onPress={() => router.push('/(roulette)/collection')} style={styles.link}>
           <MarketIcon size={16} color={Colors.accentVolt} />
-          <Text style={styles.linkText}>Manage</Text>
+          <Text style={styles.linkText} translate>Manage</Text>
         </Pressable>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cards}>

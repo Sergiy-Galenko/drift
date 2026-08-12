@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { Colors, F, S } from '@/constants/tokens';
@@ -31,16 +32,16 @@ export function CommentItem({ comment, isReply = false, canDelete = false, onLik
           </Pressable>
           {!isReply ? (
             <Pressable onPress={() => onReply?.(comment)}>
-              <Text style={styles.action}>REPLY</Text>
+              <Text style={styles.action} translate>REPLY</Text>
             </Pressable>
           ) : null}
           {canDelete ? (
             <Pressable onPress={() => onDelete?.(comment)}>
-              <Text style={styles.dangerAction}>DELETE</Text>
+              <Text style={styles.dangerAction} translate>DELETE</Text>
             </Pressable>
           ) : (
             <Pressable onPress={() => onReport?.(comment)}>
-              <Text style={styles.action}>REPORT</Text>
+              <Text style={styles.action} translate>REPORT</Text>
             </Pressable>
           )}
         </View>

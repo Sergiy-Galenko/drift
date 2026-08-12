@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 
 import { BoxIcon, GridIcon, MarketIcon, RouletteIcon } from '@/components/icons';
@@ -20,10 +21,10 @@ export function RouletteEntryCard() {
         </View>
         <View style={styles.body}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>Roulette</Text>
+            <Text style={styles.title} translate>Roulette</Text>
             <Text style={styles.tokens}>{userState?.spinTokens ?? 0} spins</Text>
           </View>
-          <Text style={styles.copy}>Collect commitment cards, unlock cases, and track duplicate pulls.</Text>
+          <Text style={styles.copy} translate>Collect commitment cards, unlock cases, and track duplicate pulls.</Text>
           <View style={styles.progressBlock}>
             <ProgressBar progress={progress.progress} tone="volt" />
             <Text style={styles.progressText}>{progress.collected} / {progress.total} cards collected</Text>
@@ -33,15 +34,15 @@ export function RouletteEntryCard() {
       <View style={styles.actions}>
         <Pressable onPress={() => router.push('/(roulette)/collection')} style={styles.action}>
           <GridIcon size={18} color={Colors.textPrimary} />
-          <Text style={styles.actionText}>Collection</Text>
+          <Text style={styles.actionText} translate>Collection</Text>
         </Pressable>
         <Pressable onPress={() => router.push('/(roulette)/cases')} style={styles.action}>
           <BoxIcon size={18} color={Colors.textPrimary} />
-          <Text style={styles.actionText}>Cases</Text>
+          <Text style={styles.actionText} translate>Cases</Text>
         </Pressable>
         <Pressable onPress={() => router.push('/(roulette)/market')} style={styles.action}>
           <MarketIcon size={18} color={Colors.textPrimary} />
-          <Text style={styles.actionText}>Market</Text>
+          <Text style={styles.actionText} translate>Market</Text>
         </Pressable>
       </View>
     </View>

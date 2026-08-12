@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 
 import { ReputationRing } from '@/components/drift/ReputationRing';
@@ -104,15 +105,15 @@ export default function ProfileScreen({ showBack = false }: ProfileScreenProps) 
           <View style={styles.stats}>
             <View style={styles.statBlock}>
               <Text style={styles.statNumber}>{profile.driftsCreated}</Text>
-              <Text style={styles.statLabel}>posts</Text>
+              <Text style={styles.statLabel} translate>posts</Text>
             </View>
             <View style={styles.statBlock}>
               <Text style={styles.statNumber}>{profile.followersCount}</Text>
-              <Text style={styles.statLabel}>followers</Text>
+              <Text style={styles.statLabel} translate>followers</Text>
             </View>
             <View style={styles.statBlock}>
               <Text style={styles.statNumber}>{profile.followingCount}</Text>
-              <Text style={styles.statLabel}>following</Text>
+              <Text style={styles.statLabel} translate>following</Text>
             </View>
           </View>
         </View>
@@ -125,7 +126,7 @@ export default function ProfileScreen({ showBack = false }: ProfileScreenProps) 
         </View>
         <View style={styles.editRow}>
           <Pressable onPress={() => router.push('/(modals)/edit-profile')} style={styles.edit}>
-            <Text style={styles.editText}>Edit profile</Text>
+            <Text style={styles.editText} translate>Edit profile</Text>
           </Pressable>
           <View style={styles.repMini}>
             <ReputationRing score={profile.reputationScore} size={28} strokeWidth={3} />
@@ -133,8 +134,8 @@ export default function ProfileScreen({ showBack = false }: ProfileScreenProps) 
           </View>
         </View>
         <View style={styles.recordLinks}>
-          <Pressable onPress={() => router.push('/(dossier)/track-record')} style={styles.recordLink}><Text style={styles.recordLinkText}>TRACK RECORD</Text></Pressable>
-          <Pressable onPress={() => router.push('/(dossier)/vault')} style={styles.recordLink}><Text style={styles.recordLinkText}>CASE VAULT</Text></Pressable>
+          <Pressable onPress={() => router.push('/(dossier)/track-record')} style={styles.recordLink}><Text style={styles.recordLinkText} translate>TRACK RECORD</Text></Pressable>
+          <Pressable onPress={() => router.push('/(dossier)/vault')} style={styles.recordLink}><Text style={styles.recordLinkText} translate>CASE VAULT</Text></Pressable>
         </View>
         <ProfileCardShowcase />
         <View style={styles.tabs}>

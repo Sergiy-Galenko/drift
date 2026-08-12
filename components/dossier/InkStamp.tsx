@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { Colors, F, R, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type StampTone = 'neutral' | 'ledger' | 'oxblood' | 'blue' | 'wax' | 'gold';
 
@@ -23,6 +25,7 @@ const tones: Record<StampTone, string> = {
 
 /** The one deliberately emphatic motion in the Dossier UI. */
 export function InkStamp({ label, tone = 'neutral', compact = false }: InkStampProps) {
+  const { t } = useTranslation();
   const scale = useSharedValue(1.18);
   const opacity = useSharedValue(0);
 
@@ -42,7 +45,7 @@ export function InkStamp({ label, tone = 'neutral', compact = false }: InkStampP
   return (
     <Animated.View style={[styles.wrap, compact ? styles.compact : null, { borderColor: tones[tone] }, animatedStyle]}>
       <View style={[styles.inner, { borderColor: tones[tone] }]}>
-        <Text numberOfLines={1} style={[styles.label, compact ? styles.compactLabel : null, { color: tones[tone] }]}>{label}</Text>
+        <Text numberOfLines={1} style={[styles.label, compact ? styles.compactLabel : null, { color: tones[tone] }]}>{t(label)}</Text>
       </View>
     </Animated.View>
   );

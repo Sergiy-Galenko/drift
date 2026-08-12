@@ -1,7 +1,9 @@
 import { forwardRef, type ReactNode } from 'react';
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { Colors, F, R, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type InputProps = TextInputProps & {
   label?: string;
@@ -9,13 +11,15 @@ type InputProps = TextInputProps & {
   right?: ReactNode;
 };
 
-export const Input = forwardRef<TextInput, InputProps>(function Input({ label, error, right, style, ...props }, ref) {
+export const Input = forwardRef<TextInput, InputProps>(function Input({ label, error, right, style, placeholder, ...props }, ref) {
+  const { t } = useTranslation();
   return (
     <View style={styles.wrap}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? <Text style={styles.label}>{t(label)}</Text> : null}
       <View style={styles.inputArea}>
         <TextInput
           ref={ref}
+          placeholder={placeholder ? t(placeholder) : undefined}
           placeholderTextColor={Colors.slate}
           selectionColor={Colors.ledger}
           style={[styles.input, right ? styles.inputWithRight : null, error ? styles.errorInput : null, style]}
@@ -23,7 +27,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input({ label, e
         />
         {right ? <View style={styles.right}>{right}</View> : null}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={styles.error}>{t(error)}</Text> : null}
     </View>
   );
 });

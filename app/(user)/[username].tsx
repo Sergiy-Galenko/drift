@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { DriftCardCompact } from '@/components/drift/DriftCardCompact';
@@ -84,7 +85,7 @@ export default function PublicProfileScreen() {
           <Button label={`${profile.followersCount} followers`} variant="secondary" onPress={() => router.push({ pathname: '/(user)/[username]/followers', params: { username: profile.username } })} />
           <Button label={`${profile.followingCount} following`} variant="secondary" onPress={() => router.push({ pathname: '/(user)/[username]/followers', params: { username: profile.username, mode: 'following' } })} />
         </View>
-        <Text style={styles.sectionTitle}>Posts</Text>
+        <Text style={styles.sectionTitle} translate>Posts</Text>
         {drifts.map((drift) => (
           <DriftCardCompact key={drift.id} drift={drift} />
         ))}

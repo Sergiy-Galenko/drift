@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { FlashList } from '@shopify/flash-list';
 
 import { CasePanel } from '@/components/dossier/CasePanel';
@@ -58,13 +59,13 @@ export default function RegistryScreen() {
           ListHeaderComponent={
             <>
               <CasePanel>
-                <Text style={styles.kicker}>WEEKLY STANDING</Text>
-                <Text style={styles.title}>WHO CARRIED THEIR CASE?</Text>
-                <Text style={styles.description}>Ranked from existing public fulfillment and jury records.</Text>
+                <Text style={styles.kicker} translate>WEEKLY STANDING</Text>
+                <Text style={styles.title} translate>WHO CARRIED THEIR CASE?</Text>
+                <Text style={styles.description} translate>Ranked from existing public fulfillment and jury records.</Text>
               </CasePanel>
               <View style={styles.tabs}>
-                <Pressable onPress={() => setMode('fulfilled')} style={[styles.tab, mode === 'fulfilled' ? styles.tabActive : null]}><Text style={[styles.tabText, mode === 'fulfilled' ? styles.tabTextActive : null]}>FULFILLERS</Text></Pressable>
-                <Pressable onPress={() => setMode('jury')} style={[styles.tab, mode === 'jury' ? styles.tabActive : null]}><Text style={[styles.tabText, mode === 'jury' ? styles.tabTextActive : null]}>JURY SERVICE</Text></Pressable>
+                <Pressable onPress={() => setMode('fulfilled')} style={[styles.tab, mode === 'fulfilled' ? styles.tabActive : null]}><Text style={[styles.tabText, mode === 'fulfilled' ? styles.tabTextActive : null]} translate>FULFILLERS</Text></Pressable>
+                <Pressable onPress={() => setMode('jury')} style={[styles.tab, mode === 'jury' ? styles.tabActive : null]}><Text style={[styles.tabText, mode === 'jury' ? styles.tabTextActive : null]} translate>JURY SERVICE</Text></Pressable>
               </View>
             </>
           }

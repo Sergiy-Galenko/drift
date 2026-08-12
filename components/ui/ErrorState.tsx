@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 
 import { Button } from './Button';
 import { Colors, F, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type ErrorStateProps = {
   title: string;
@@ -10,10 +12,11 @@ type ErrorStateProps = {
 };
 
 export function ErrorState({ title, message, onRetry }: ErrorStateProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      <Text style={styles.title}>{t(title)}</Text>
+      <Text style={styles.message}>{t(message)}</Text>
       {onRetry ? <Button label="Retry" onPress={onRetry} variant="secondary" /> : null}
     </View>
   );

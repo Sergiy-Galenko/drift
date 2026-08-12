@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { FlashList } from '@shopify/flash-list';
 
 import { Badge } from '@/components/ui/Badge';
@@ -57,7 +58,7 @@ export function CollectionGrid({ state, showcaseCardIds = [], onToggleShowcase }
                   {entry && entry.count > 1 ? <Text style={styles.duplicate}>x{entry.count}</Text> : null}
                 </View>
               ) : (
-                <Text style={styles.hint}>Reveal through roulette or cases</Text>
+                <Text style={styles.hint} translate>Reveal through roulette or cases</Text>
               )}
               {unlocked && onToggleShowcase ? (
                 <Pressable onPress={() => onToggleShowcase(item.id)} style={[styles.showcaseButton, isShowcased ? styles.showcaseActive : null]}>

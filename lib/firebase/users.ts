@@ -23,6 +23,7 @@ import { db } from './config';
 import { timestampToDate } from './timestamps';
 import type { UserDoc, UserProfile, UserProfileInput, UserSettings } from '@/types/user';
 import { calcReputationTier } from '@/utils/reputation';
+import { normalizeUsername } from '@/utils/validation';
 
 const USER_PROFILE_BATCH_SIZE = 30;
 const USER_PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -115,7 +116,7 @@ export async function getUserProfiles(uids: readonly string[]): Promise<Map<stri
 }
 
 export async function getUserByUsername(username: string): Promise<UserProfile | null> {
-  const normalized = username.replace(/^@/, '').toLowerCase();
+  const normalized = normalizeUsername(username);
   const snapshot = await getDocs(query(usersRef(), where('username', '==', normalized), limit(1)));
   return snapshot.docs.length > 0 ? mapUser(snapshot.docs[0]) : null;
 }
@@ -129,7 +130,7 @@ export function subscribeUserProfile(
 }
 
 export async function createUserProfile(uid: string, input: UserProfileInput): Promise<void> {
-  const username = input.username.trim().toLowerCase();
+  const username = normalizeUsername(input.username);
   const user: WithFieldValue<UserDoc> = {
     uid,
     username,
@@ -172,7 +173,7 @@ export async function updateUserProfile(
   if (input.displayName !== undefined) update.displayName = input.displayName?.trim() || null;
   if (input.avatarUrl !== undefined) update.avatarUrl = input.avatarUrl;
   if (input.bio !== undefined) update.bio = input.bio?.trim() || null;
-  if (input.username !== undefined) update.username = input.username.trim().toLowerCase();
+  if (input.username !== undefined) update.username = normalizeUsername(input.username);
   await updateDoc(userRef(uid), { ...update, lastActiveAt: serverTimestamp() });
   userProfileCache.delete(uid);
 }
@@ -189,7 +190,7 @@ export async function updateExpoPushToken(uid: string, expoPushToken: string | n
 }
 
 export async function searchUsers(term: string): Promise<UserProfile[]> {
-  const normalized = term.trim().replace(/^@/, '').toLowerCase();
+  const normalized = normalizeUsername(term);
   if (normalized.length === 0) {
     return [];
   }

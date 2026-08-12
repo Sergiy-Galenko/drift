@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 
 import { Header } from '@/components/navigation/Header';
@@ -11,7 +12,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { firebaseErrorMessage } from '@/utils/formatters';
 import { logger } from '@/utils/logger';
-import { BioSchema, UsernameSchema } from '@/utils/validation';
+import { BioSchema, normalizeUsername, UsernameSchema } from '@/utils/validation';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function EditProfileScreen() {
   const [saving, setSaving] = useState(false);
 
   const validateUsername = (value: string) => {
-    const result = UsernameSchema.safeParse(value);
+    const result = UsernameSchema.safeParse(normalizeUsername(value));
     if (!result.success) {
       return result.error.issues[0]?.message;
     }
@@ -74,8 +75,8 @@ export default function EditProfileScreen() {
     setSaving(true);
     try {
       await updateUserProfile(profile.uid, {
-        username: username.trim(),
-        displayName: displayName.trim() || username.trim(),
+        username: normalizeUsername(username),
+        displayName: displayName.trim() || normalizeUsername(username),
         bio: bio.trim(),
       });
 
@@ -110,12 +111,12 @@ export default function EditProfileScreen() {
       <Header title="Edit Profile" showBack />
       <View style={styles.content}>
         <Input
-          label="Username"
+          label="Public @nickname"
           value={username}
-          onChangeText={setUsername}
+          onChangeText={(value) => setUsername(normalizeUsername(value))}
           autoCapitalize="none"
           autoCorrect={false}
-          placeholder="Enter username"
+          placeholder="@your_handle"
           maxLength={30}
         />
 

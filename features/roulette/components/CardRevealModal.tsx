@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { InkStamp } from '@/components/dossier/InkStamp';
@@ -45,9 +46,15 @@ export function CardRevealModal({ visible, card, isDuplicate, duplicateCount, on
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <View style={styles.overlay}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          onPress={onClose}
+        />
         <Animated.View style={[styles.card, card.rarity === 'ultra_rare' ? styles.ultraCard : null, animatedStyle]}>
-          <Pressable>
+          <View>
             <View style={styles.seal}>
               <FoilSeal rare={card.rarity === 'ultra_rare'} />
               <InkStamp label="SEAL BROKEN" tone={card.rarity === 'ultra_rare' ? 'gold' : card.rarity === 'rare' ? 'blue' : 'neutral'} />
@@ -59,12 +66,12 @@ export function CardRevealModal({ visible, card, isDuplicate, duplicateCount, on
                 <Badge label={RARITY_LABELS[card.rarity]} tone={RARITY_BADGE_TONES[card.rarity]} />
               </View>
               <Text style={styles.description}>{card.description}</Text>
-              {isDuplicate ? <Text style={styles.duplicate}>DUPLICATE / SHRED FOR INK x{duplicateCount}</Text> : <Text style={styles.newCard}>FILED IN THE VAULT</Text>}
+              {isDuplicate ? <Text style={styles.duplicate}>DUPLICATE / SHRED FOR INK x{duplicateCount}</Text> : <Text style={styles.newCard} translate>FILED IN THE VAULT</Text>}
               <Button label="Close" variant="secondary" onPress={onClose} />
             </View>
-          </Pressable>
+          </View>
         </Animated.View>
-      </Pressable>
+      </View>
     </Modal>
   );
 }

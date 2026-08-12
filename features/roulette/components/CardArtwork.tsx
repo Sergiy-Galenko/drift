@@ -1,4 +1,5 @@
-import { ImageBackground, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { LockIcon } from '@/components/icons';

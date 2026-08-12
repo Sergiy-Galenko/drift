@@ -2,6 +2,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import type { AppIcon } from '@/components/icons';
 import { Colors, R, S } from '@/constants/tokens';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconButtonProps = {
   icon: AppIcon;
@@ -12,9 +13,10 @@ type IconButtonProps = {
 };
 
 export function IconButton({ icon: Icon, onPress, label, active = false, disabled = false }: IconButtonProps) {
+  const { t } = useTranslation();
   return (
     <Pressable
-      accessibilityLabel={label}
+      accessibilityLabel={t(label)}
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}

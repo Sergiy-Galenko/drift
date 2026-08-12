@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { Platform, Share, StyleSheet, Text, View } from 'react-native';
+import { Platform, Share, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
@@ -87,7 +88,7 @@ export default function ShareResultScreen() {
         <View ref={cardRef} collapsable={false} style={styles.cardFrame}>
           <View style={[styles.card, missed ? styles.cardMissed : kept ? styles.cardKept : null]}>
             <View style={styles.topLine}>
-              <Text style={styles.brand}>DRIFT</Text>
+              <Text style={styles.brand} translate>DRIFT</Text>
               <Text style={[styles.category, { color: category.color }]}>{category.label.toUpperCase()}</Text>
             </View>
 
@@ -98,7 +99,7 @@ export default function ShareResultScreen() {
             </View>
 
             <View style={styles.commitment}>
-              <Text style={styles.label}>THE COMMITMENT</Text>
+              <Text style={styles.label} translate>THE COMMITMENT</Text>
               <Text numberOfLines={5} style={styles.commitmentText}>{drift.text}</Text>
               <Text numberOfLines={2} style={styles.stake}>Stake: {drift.stake}</Text>
             </View>
@@ -106,7 +107,7 @@ export default function ShareResultScreen() {
             <View style={styles.stats}>
               <View style={styles.stat}>
                 <Text style={[styles.statValue, { color: accent }]}>{formatVoteCount(voteCount(drift))}</Text>
-                <Text style={styles.statLabel}>VOTES</Text>
+                <Text style={styles.statLabel} translate>VOTES</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
@@ -117,11 +118,11 @@ export default function ShareResultScreen() {
 
             <View style={styles.footer}>
               <Text style={styles.author}>@{drift.authorUsername}</Text>
-              <Text style={styles.tagline}>People decide. You commit.</Text>
+              <Text style={styles.tagline} translate>People decide. You commit.</Text>
             </View>
           </View>
         </View>
-        <Text style={styles.hint}>The image is ready to post in your favourite social app.</Text>
+        <Text style={styles.hint} translate>The image is ready to post in your favourite social app.</Text>
         <Button label="Share image" onPress={() => void share()} loading={sharing} />
       </View>
     </View>

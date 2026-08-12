@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 
 import { Colors, F, R, S } from '@/constants/tokens';
@@ -18,7 +19,7 @@ export function FeaturedBanner({ drifts }: FeaturedBannerProps) {
   return (
     <View style={styles.wrap}>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>Featured</Text>
+        <Text style={styles.title} translate>Featured</Text>
         <Text style={styles.live}>{drifts.length} live</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.content}>

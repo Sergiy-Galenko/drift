@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 
 import { Header } from '@/components/navigation/Header';
@@ -66,9 +67,9 @@ export default function DeedlinerScreen() {
       <Header title="Deedliner" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.intro}>
-          <Text style={styles.eyebrow}>YOUR COMMITMENTS</Text>
-          <Text style={styles.title}>Keep your word on time.</Text>
-          <Text style={styles.subtitle}>Voting and proof deadlines for the drifts you created.</Text>
+          <Text style={styles.eyebrow} translate>YOUR COMMITMENTS</Text>
+          <Text style={styles.title} translate>Keep your word on time.</Text>
+          <Text style={styles.subtitle} translate>Voting and proof deadlines for the drifts you created.</Text>
         </View>
 
         {loading ? (
@@ -104,7 +105,7 @@ export default function DeedlinerScreen() {
                       }}
                       style={styles.proofButton}
                     >
-                      <Text style={styles.proofButtonText}>UPLOAD PROOF</Text>
+                      <Text style={styles.proofButtonText} translate>UPLOAD PROOF</Text>
                     </Pressable>
                   ) : null}
                 </Pressable>

@@ -79,11 +79,12 @@ export type RouletteUserState = {
   cards: Record<string, UserCardEntry>;
   cases: Record<string, UserCaseState>;
   showcaseCardIds: string[];
+  lastDailyActivityRewardAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
-export type SpinTokenGrantSource = 'daily_activity' | 'weekly_activity' | 'achievement' | 'purchase_stub';
+export type SpinTokenGrantSource = 'daily_activity' | 'weekly_activity' | 'achievement';
 
 export type SpinResult = {
   card: Card;

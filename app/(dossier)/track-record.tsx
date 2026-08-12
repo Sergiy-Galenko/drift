@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 import { eachDayOfInterval, format, startOfDay, subDays } from 'date-fns';
 
@@ -59,25 +60,25 @@ export default function TrackRecordScreen() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <CasePanel style={styles.identityPanel}>
             <Text style={styles.kicker}>SUBJECT / @{profile.username}</Text>
-            <Text style={styles.title}>ACCOUNTABILITY LEDGER</Text>
+            <Text style={styles.title} translate>ACCOUNTABILITY LEDGER</Text>
             <Text style={styles.subline}>{profile.streakCurrent} day active streak · best {profile.streakBest}</Text>
           </CasePanel>
           <CasePanel>
-            <Text style={styles.panelTitle}>35-DAY LOG</Text>
+            <Text style={styles.panelTitle} translate>35-DAY LOG</Text>
             <View style={styles.heatmap}>
               {heatmap.map((day) => <View key={day.key} style={[styles.day, day.active ? styles.dayActive : null]} />)}
             </View>
-            <Text style={styles.caption}>A mark records a case opened that day.</Text>
+            <Text style={styles.caption} translate>A mark records a case opened that day.</Text>
           </CasePanel>
           <View style={styles.metrics}>
-            <CasePanel style={styles.metric}><Text style={styles.metricValue}>{fulfillmentRate}%</Text><Text style={styles.metricLabel}>FULFILLED</Text></CasePanel>
-            <CasePanel style={styles.metric}><Text style={styles.metricValue}>{profile.driftsVotedOn}</Text><Text style={styles.metricLabel}>JURY DUTY</Text></CasePanel>
-            <CasePanel style={styles.metric}><Text style={styles.metricValue}>{profile.reputationScore}</Text><Text style={styles.metricLabel}>REPUTATION</Text></CasePanel>
+            <CasePanel style={styles.metric}><Text style={styles.metricValue}>{fulfillmentRate}%</Text><Text style={styles.metricLabel} translate>FULFILLED</Text></CasePanel>
+            <CasePanel style={styles.metric}><Text style={styles.metricValue}>{profile.driftsVotedOn}</Text><Text style={styles.metricLabel} translate>JURY DUTY</Text></CasePanel>
+            <CasePanel style={styles.metric}><Text style={styles.metricValue}>{profile.reputationScore}</Text><Text style={styles.metricLabel} translate>REPUTATION</Text></CasePanel>
           </View>
           <View style={styles.links}>
-            <Pressable onPress={() => router.push('/(dossier)/registry')} style={styles.link}><Text style={styles.linkText}>OPEN THE REGISTRY</Text></Pressable>
-            <Pressable onPress={() => router.push('/(dossier)/summary')} style={styles.link}><Text style={styles.linkText}>WEEKLY CASE SUMMARY</Text></Pressable>
-            <Pressable onPress={() => router.push('/(dossier)/vault')} style={styles.link}><Text style={styles.linkText}>OPEN CASE VAULT</Text></Pressable>
+            <Pressable onPress={() => router.push('/(dossier)/registry')} style={styles.link}><Text style={styles.linkText} translate>OPEN THE REGISTRY</Text></Pressable>
+            <Pressable onPress={() => router.push('/(dossier)/summary')} style={styles.link}><Text style={styles.linkText} translate>WEEKLY CASE SUMMARY</Text></Pressable>
+            <Pressable onPress={() => router.push('/(dossier)/vault')} style={styles.link}><Text style={styles.linkText} translate>OPEN CASE VAULT</Text></Pressable>
           </View>
         </ScrollView>
       )}

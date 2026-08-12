@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { Spinner } from '@/components/ui/Spinner';
@@ -43,7 +44,7 @@ export function VoteButtons({ currentVote, canVote, loadingVote, onVote }: VoteB
             !canVote ? styles.disabled : null,
           ]}
         >
-          {loadingVote === 'yes' ? <Spinner /> : <Text style={styles.yesText}>STAMP YES</Text>}
+          {loadingVote === 'yes' ? <Spinner /> : <Text style={styles.yesText} translate>STAMP YES</Text>}
         </Pressable>
       </Animated.View>
       <Animated.View style={[styles.flex, noStyle]}>
@@ -59,7 +60,7 @@ export function VoteButtons({ currentVote, canVote, loadingVote, onVote }: VoteB
             !canVote ? styles.disabled : null,
           ]}
         >
-          {loadingVote === 'no' ? <Spinner /> : <Text style={styles.noText}>STAMP NO</Text>}
+          {loadingVote === 'no' ? <Spinner /> : <Text style={styles.noText} translate>STAMP NO</Text>}
         </Pressable>
       </Animated.View>
     </View>

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { LocalizedText as Text } from '@/components/ui/LocalizedText';
 import { useRouter } from 'expo-router';
 
 import { BoxIcon, GridIcon, MarketIcon } from '@/components/icons';
@@ -15,10 +16,10 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { CardRevealModal } from '../components/CardRevealModal';
 import { RouletteWheel } from '../components/RouletteWheel';
 import { getCardsByIds, MAIN_ROULETTE_CARD_IDS } from '../config/cardsData';
-import { ROULETTE_SPIN_COST, SPIN_PACK_PRICE_LABEL } from '../config/rouletteConfig';
+import { ROULETTE_SPIN_COST } from '../config/rouletteConfig';
+import { hasClaimedDailyActivity } from '../services/rouletteService';
 import {
   getRouletteProgress,
-  SPIN_PACK_SIZE,
   useRouletteStore,
 } from '../store/useRouletteStore';
 import type { SpinResult } from '../types/roulette.types';
@@ -38,19 +39,21 @@ export function RouletteScreen() {
   const [wheelSpinning, setWheelSpinning] = useState(false);
   const cards = useMemo(() => getCardsByIds(MAIN_ROULETTE_CARD_IDS), []);
   const progress = getRouletteProgress(userState);
+  const canClaimDailyToken = !hasClaimedDailyActivity(userState);
   const spinDisabled = !userState || userState.spinTokens < ROULETTE_SPIN_COST || wheelSpinning || committing;
 
-  const startSpin = useCallback(() => {
+  const startSpin = useCallback(async () => {
     void haptics.selection();
-    const result = spin();
+    setWheelSpinning(true);
+    const result = await spin();
 
     if (!result) {
+      setWheelSpinning(false);
       return;
     }
 
     setRevealResult(null);
     setWheelResult(result);
-    setWheelSpinning(true);
     setSpinNonce((value) => value + 1);
   }, [haptics, spin]);
 
@@ -68,11 +71,11 @@ export function RouletteScreen() {
     setRevealResult(wheelResult);
   }, [haptics, wheelResult]);
 
-  if (loading && !userState) {
+  if (loading) {
     return <View style={styles.root}><Header title="OPEN THE ENVELOPE" showBack /><DossierSkeleton rows={3} /></View>;
   }
 
-  if (error && !userState) {
+  if (error) {
     return <View style={styles.root}><Header title="OPEN THE ENVELOPE" showBack /><ErrorState title="Envelope unavailable" message="The reward file could not be opened." /></View>;
   }
 
@@ -93,17 +96,17 @@ export function RouletteScreen() {
         <View style={styles.metrics}>
           <View style={styles.metricCard}>
             <Text style={styles.metricValue}>{userState?.spinTokens ?? 0}</Text>
-            <Text style={styles.metricLabel}>Spin tokens</Text>
+            <Text style={styles.metricLabel} translate>Spin tokens</Text>
           </View>
           <View style={styles.metricCard}>
             <Text style={styles.metricValue}>{progress.collected}/{progress.total}</Text>
-            <Text style={styles.metricLabel}>Collected</Text>
+            <Text style={styles.metricLabel} translate>Collected</Text>
           </View>
         </View>
 
         <View style={styles.progressCard}>
           <View style={styles.progressHeader}>
-            <Text style={styles.sectionTitle}>Collection progress</Text>
+            <Text style={styles.sectionTitle} translate>Collection progress</Text>
             <Text style={styles.progressText}>{Math.round(progress.progress * 100)}%</Text>
           </View>
           <ProgressBar progress={progress.progress} tone="volt" />
@@ -111,19 +114,27 @@ export function RouletteScreen() {
 
         <View style={styles.reelBlock}>
           <View style={styles.reelHeader}>
-            <Text style={styles.sectionTitle}>Main pool</Text>
-            <Text style={styles.reelMeta}>70 / 25 / 5 weighted rarity</Text>
+            <Text style={styles.sectionTitle} translate>Main pool</Text>
+            <Text style={styles.reelMeta} translate>70 / 25 / 5 weighted rarity</Text>
           </View>
           <RouletteWheel cards={cards} resultCard={wheelResult?.card ?? null} spinNonce={spinNonce} onSettled={onWheelSettled} />
         </View>
 
         <View style={styles.actions}>
-          <Button label={`Spin - ${ROULETTE_SPIN_COST} token`} onPress={startSpin} disabled={spinDisabled} loading={wheelSpinning} />
+          <Button
+            label={`Spin - ${ROULETTE_SPIN_COST} token`}
+            onPress={() => void startSpin()}
+            disabled={spinDisabled}
+            loading={wheelSpinning || committing}
+          />
           <View style={styles.secondaryActions}>
-            <Button label="Claim +1 activity" variant="secondary" onPress={() => grantTokens(1, 'daily_activity')} disabled={committing} />
-            <Button label={`Buy +${SPIN_PACK_SIZE}`} variant="ghost" onPress={() => grantTokens(SPIN_PACK_SIZE, 'purchase_stub')} disabled={committing} />
+            <Button
+              label="Claim +1 activity"
+              variant="secondary"
+              onPress={() => grantTokens(1, 'daily_activity')}
+              disabled={committing || !canClaimDailyToken}
+            />
           </View>
-          <Text style={styles.stubText}>{SPIN_PACK_PRICE_LABEL} is a stub until the trusted payment backend verifies receipts.</Text>
         </View>
       </ScrollView>
       <CardRevealModal
@@ -223,11 +234,5 @@ const styles = StyleSheet.create({
   secondaryActions: {
     flexDirection: 'row',
     gap: S.sm,
-  },
-  stubText: {
-    color: Colors.slate,
-    fontFamily: F.family.bodyRegular,
-    fontSize: F.size.xs,
-    lineHeight: F.size.xs * F.lineHeight.normal,
   },
 });
