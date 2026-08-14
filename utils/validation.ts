@@ -23,7 +23,7 @@ export const CreateDriftSchema = z.object({
     .min(20, 'Decision must be at least 20 characters')
     .max(200, 'Decision must be 200 characters or less'),
   stake: z.string().min(10, 'Stake must be at least 10 characters').max(100, 'Stake must be 100 characters or less'),
-  context: z.string().max(300).optional(),
+  context: z.string().trim().min(1, 'Description is required').max(300),
   category: z.enum(['life', 'career', 'love', 'money', 'health', 'random']),
   isAnonymous: z.boolean(),
   durationHours: z.union([z.literal(1), z.literal(6), z.literal(24), z.literal(72)]),
