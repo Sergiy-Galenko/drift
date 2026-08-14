@@ -1,13 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getAuth, initializeAuth, getReactNativePersistence, type Auth } from '@firebase/auth';
+import { connectAuthEmulator, getAuth, initializeAuth, getReactNativePersistence, type Auth } from '@firebase/auth';
 import {
+  connectFirestoreEmulator,
   getFirestore,
   initializeFirestore,
   memoryLocalCache,
   type Firestore,
 } from 'firebase/firestore';
-import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import { connectFunctionsEmulator, getFunctions, type Functions } from 'firebase/functions';
+import { connectStorageEmulator, getStorage, type FirebaseStorage } from 'firebase/storage';
 
 const requiredEnvFirebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -65,3 +67,13 @@ function initAuth(): Auth {
 export const db = initFirestore();
 export const auth = initAuth();
 export const storage: FirebaseStorage = getStorage(app);
+export const functions: Functions = getFunctions(app);
+
+const emulatorHost = process.env.EXPO_PUBLIC_FIREBASE_EMULATOR_HOST?.trim();
+
+if (process.env.EXPO_PUBLIC_USE_FIREBASE_EMULATOR === 'true' && emulatorHost) {
+  connectAuthEmulator(auth, `http://${emulatorHost}:9099`, { disableWarnings: true });
+  connectFirestoreEmulator(db, emulatorHost, 8080);
+  connectStorageEmulator(storage, emulatorHost, 9199);
+  connectFunctionsEmulator(functions, emulatorHost, 5001);
+}

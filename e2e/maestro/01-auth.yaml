@@ -1,0 +1,20 @@
+appId: com.drift.app
+---
+- launchApp:
+    clearState: true
+- tapOn: "Register"
+- tapOn:
+    id: "input-public-nickname"
+- inputText: ${DRIFT_E2E_USERNAME}
+- tapOn:
+    id: "input-email"
+- inputText: ${DRIFT_E2E_EMAIL}
+- tapOn:
+    id: "input-password"
+- inputText: ${DRIFT_E2E_PASSWORD}
+- tapOn:
+    id: "input-confirm-password"
+- inputText: ${DRIFT_E2E_PASSWORD}
+- tapOn:
+    id: "button-create-account"
+- assertVisible: "DRIFT"

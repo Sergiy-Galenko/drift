@@ -53,6 +53,7 @@ function TabButton({ routeName, label, icon: Icon, focused, unreadCount = 0, fab
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
+      testID={routeName ? `tab-${routeName}` : label === 'Create drift' ? 'tab-create-drift' : undefined}
       onPress={press}
       onPressIn={() => {
         scale.value = withSpring(fab ? 0.94 : 0.88, Motion.spring.responsive);

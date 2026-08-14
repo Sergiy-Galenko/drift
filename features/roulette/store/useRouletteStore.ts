@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { create } from 'zustand';
 
 import { useUIStore } from '@/stores/uiStore';
+import { trackEvent } from '@/lib/analytics';
 import type { UserProfile } from '@/types/user';
 
 import { ROULETTE_CASES } from '../config/casesData';
@@ -219,6 +220,7 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
     try {
       const confirmed = await commitSpin(current.uid, card.id);
       set({ committing: false });
+      trackEvent('roulette_spun', { rarity: confirmed.card.rarity, duplicate: confirmed.isDuplicate });
       return confirmed;
     } catch {
       set({ userState: previous, committing: false });
@@ -286,6 +288,7 @@ export const useRouletteStore = create<RouletteStore>((set, get) => ({
     try {
       const confirmed = await commitCaseOpen(current.uid, caseId, card.id, achievementUnlocked);
       set({ committing: false });
+      trackEvent('case_opened', { case_id: caseId, rarity: confirmed.card.rarity, duplicate: confirmed.isDuplicate });
       return confirmed;
     } catch {
       set({ userState: previous, committing: false });

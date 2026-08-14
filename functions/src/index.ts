@@ -12,7 +12,7 @@ const EXPO_RECEIPTS_URL = 'https://exp.host/--/api/v2/push/getReceipts';
 const PUSH_RECEIPT_DELAY_MS = 15 * 60 * 1000;
 const PUSH_RECEIPT_TTL_MS = 24 * 60 * 60 * 1000;
 
-type PushNotificationType = 'voting_started' | 'voting_last_hour' | 'proof_reminder' | 'proof_deadline';
+type PushNotificationType = 'voting_started' | 'voting_last_hour' | 'proof_reminder' | 'proof_deadline' | 'weekly_recap';
 type ExpoPushTicket = { status?: string; id?: string; message?: string; details?: { error?: string } };
 type ExpoPushReceipt = { status?: string; message?: string; details?: { error?: string } };
 type PendingPushReceipt = { uid: string; token: string; nextCheckAt?: Timestamp; expiresAt?: Timestamp };
@@ -31,6 +31,8 @@ export function pushContent(type: string, data: Record<string, unknown>) {
       }
     case 'proof_deadline':
       return { title: 'Proof deadline approaching', body: 'You have 30 minutes left to upload proof.' };
+    case 'weekly_recap':
+      return { title: 'Weekly case summary', body: `You closed ${Number(data.fulfilled ?? 0)} case${Number(data.fulfilled ?? 0) === 1 ? '' : 's'} this week.` };
     default:
       return null;
   }
@@ -55,11 +57,11 @@ export function resolvePollResult(drift: FirebaseFirestore.DocumentData): string
   return options.reduce((winner, option) => (tallies[option.id] ?? 0) > (tallies[winner.id] ?? 0) ? option : winner).id;
 }
 
-function rankingPoints(options: PollOption[], ranking: string[]): Record<string, number> {
+export function rankingPoints(options: PollOption[], ranking: string[]): Record<string, number> {
   return Object.fromEntries(ranking.map((optionId, index) => [optionId, options.length - index]));
 }
 
-async function sendPushNotification(uid: string, type: string, driftId: string, data: Record<string, unknown>) {
+async function sendPushNotification(uid: string, type: string, driftId: string | null, data: Record<string, unknown>) {
   const content = pushContent(type, data);
   if (!content) return;
 
@@ -97,13 +99,53 @@ async function sendPushNotification(uid: string, type: string, driftId: string, 
   }
 }
 
-async function notify(uid: string, type: string, drift: FirebaseFirestore.DocumentData, driftId: string, data: Record<string, unknown> = {}) {
+async function notify(uid: string, type: string, drift: FirebaseFirestore.DocumentData, driftId: string | null, data: Record<string, unknown> = {}) {
   const ref = db.collection('notifications').doc(uid).collection('items').doc();
   await ref.set({ id: ref.id, type, driftId, driftText: drift.text ?? null, fromUid: null, fromUsername: null, isRead: false, createdAt: FieldValue.serverTimestamp(), data });
   await sendPushNotification(uid, type, driftId, data);
 }
 
 function reputationTier(score: number) { return score <= 20 ? 'ghost' : score <= 40 ? 'low' : score <= 60 ? 'mid' : score <= 80 ? 'high' : 'legend'; }
+
+function dayKey(date = new Date()): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function weekKey(date = new Date()): string {
+  const monday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+  return monday.toISOString().slice(0, 10);
+}
+
+function previousDayKey(value: string): string {
+  const previous = new Date(`${value}T00:00:00.000Z`);
+  previous.setUTCDate(previous.getUTCDate() - 1);
+  return dayKey(previous);
+}
+
+async function recordRetention(uid: string, key: 'created' | 'votes' | 'proofs'): Promise<void> {
+  const ref = db.doc(`retention/${uid}`);
+  const today = dayKey();
+  const week = weekKey();
+  await db.runTransaction(async (tx) => {
+    const current = (await tx.get(ref)).data() ?? {};
+    const daily = current.dayKey === today ? current.daily ?? {} : {};
+    const weekly = current.weekKey === week ? current.weekly ?? {} : {};
+    tx.set(ref, {
+      uid,
+      dayKey: today,
+      weekKey: week,
+      daily: { ...daily, [key]: Number(daily[key] ?? 0) + 1 },
+      weekly: { ...weekly, [key]: Number(weekly[key] ?? 0) + 1 },
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+}
+
+function nextStreak(user: FirebaseFirestore.DocumentData, today: string): { current: number; best: number } {
+  const current = user.streakLastDate === today ? user.streakCurrent ?? 0 : user.streakLastDate === previousDayKey(today) ? (user.streakCurrent ?? 0) + 1 : 1;
+  return { current, best: Math.max(user.streakBest ?? 0, current) };
+}
 
 async function awardAchievements(uid: string, user: FirebaseFirestore.DocumentData) {
   const achievements = [
@@ -134,7 +176,12 @@ export const settleExpiredDrifts = onSchedule('every 5 minutes', async () => {
 
 export const notifyVotingStarted = onDocumentCreated('drifts/{driftId}', async (event) => {
   const drift = event.data?.data();
-  if (drift) await notify(drift.authorUid, 'voting_started', drift, event.params.driftId);
+  if (drift) {
+    await Promise.all([
+      notify(drift.authorUid, 'voting_started', drift, event.params.driftId),
+      recordRetention(drift.authorUid, 'created'),
+    ]);
+  }
 });
 
 export const remindVotingLastHour = onSchedule('every 5 minutes', async () => {
@@ -166,6 +213,34 @@ export const notifyVotingResult = onDocumentUpdated('drifts/{driftId}', async (e
   if (before?.status === 'active' && drift?.status === 'proof_pending') {
     await notify(drift.authorUid, 'proof_reminder', drift, event.params.driftId, { result: resultLabel(drift, drift.result) });
   }
+});
+
+export const finalizeExecutedDrift = onDocumentUpdated('drifts/{driftId}', async (event) => {
+  const before = event.data?.before.data();
+  const drift = event.data?.after.data();
+  if (before?.status === 'executed' || drift?.status !== 'executed') return;
+
+  const userRef = db.doc(`users/${drift.authorUid}`);
+  const user = (await userRef.get()).data();
+  if (user) {
+    const score = Math.min(100, (user.reputationScore ?? 50) + 5);
+    const streak = nextStreak(user, dayKey());
+    const update = {
+      reputationScore: score,
+      reputationTier: reputationTier(score),
+      driftsExecuted: FieldValue.increment(1),
+      streakCurrent: streak.current,
+      streakBest: streak.best,
+      streakLastDate: dayKey(),
+    };
+    await userRef.update(update);
+    await awardAchievements(drift.authorUid, { ...user, ...update, reputationScore: score, streakBest: streak.best });
+  }
+
+  await Promise.all([
+    recordRetention(drift.authorUid, 'proofs'),
+    notify(drift.authorUid, 'drift_executed', drift, event.params.driftId),
+  ]);
 });
 
 export const checkPushReceipts = onSchedule('every 15 minutes', async () => {
@@ -296,6 +371,7 @@ export const castVote = onCall(async (request) => {
     }
     tx.update(driftRef, updates); tx.set(limitRef, { at: FieldValue.serverTimestamp() });
   });
+  await recordRetention(uid, 'votes');
   return { ok: true };
 });
 
@@ -305,6 +381,14 @@ export const recordView = onCall(async (request) => {
   const rateRef = db.doc(`rateLimits/${uid}_view_${driftId}`); const rate = await rateRef.get();
   if ((rate.data()?.at?.toMillis?.() ?? 0) + 60_000 > Date.now()) return { ok: true };
   await db.runTransaction(async (tx) => { tx.update(db.doc(`drifts/${driftId}`), { viewCount: FieldValue.increment(1) }); tx.set(rateRef, { at: FieldValue.serverTimestamp() }); }); return { ok: true };
+});
+
+export const recordShare = onCall(async (request) => {
+  const uid = request.auth?.uid; const { driftId } = request.data as { driftId?: string };
+  if (!uid || !driftId) throw new HttpsError('invalid-argument', 'Invalid share.');
+  const rateRef = db.doc(`rateLimits/${uid}_share_${driftId}`); const rate = await rateRef.get();
+  if ((rate.data()?.at?.toMillis?.() ?? 0) + 60_000 > Date.now()) return { ok: true };
+  await db.runTransaction(async (tx) => { tx.update(db.doc(`drifts/${driftId}`), { shareCount: FieldValue.increment(1) }); tx.set(rateRef, { at: FieldValue.serverTimestamp() }); }); return { ok: true };
 });
 
 export const countBookmark = onDocumentCreated('bookmarks/{uid}/items/{driftId}', async (event) => {
@@ -326,8 +410,52 @@ export const uncountFollow = onDocumentDeleted('follows/{followId}', async (even
 export const moderateProof = onDocumentCreated('proofModeration/{id}', async (event) => {
   const report = event.data?.data(); if (!report) return; const driftRef = db.doc(`drifts/${report.driftId}`); const driftSnap = await driftRef.get(); if (!driftSnap.exists) return;
   const drift = driftSnap.data()!; const approved = report.decision === 'approved'; await driftRef.update({ status: approved ? 'executed' : 'failed', moderationStatus: approved ? 'approved' : 'rejected', moderatedAt: FieldValue.serverTimestamp() });
-  const userRef = db.doc(`users/${drift.authorUid}`); const user = (await userRef.get()).data(); if (user) { const score = Math.max(0, Math.min(100, (user.reputationScore ?? 50) + (approved ? 5 : -10))); const update = { reputationScore: score, reputationTier: reputationTier(score), driftsExecuted: FieldValue.increment(approved ? 1 : 0), driftsFailed: FieldValue.increment(approved ? 0 : 1), streakCurrent: approved ? FieldValue.increment(1) : 0, streakBest: approved ? Math.max(user.streakBest ?? 0, (user.streakCurrent ?? 0) + 1) : user.streakBest ?? 0 }; await userRef.update(update); await awardAchievements(drift.authorUid, { ...user, ...update, reputationScore: score }); }
-  await notify(drift.authorUid, approved ? 'drift_executed' : 'author_failed', drift, report.driftId, { moderationId: event.params.id });
+  if (!approved) {
+    const userRef = db.doc(`users/${drift.authorUid}`); const user = (await userRef.get()).data();
+    if (user) { const score = Math.max(0, (user.reputationScore ?? 50) - 10); await userRef.update({ reputationScore: score, reputationTier: reputationTier(score), driftsFailed: FieldValue.increment(1), streakCurrent: 0 }); }
+    await notify(drift.authorUid, 'author_failed', drift, report.driftId, { moderationId: event.params.id });
+  }
+});
+
+export const sendWeeklyRecaps = onSchedule('every monday 00:15', async () => {
+  const previousWeek = weekKey(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const summaries = await db.collection('retention').where('weekKey', '==', previousWeek).limit(400).get();
+  await Promise.all(summaries.docs.map(async (snapshot) => {
+    const data = snapshot.data();
+    const created = Number(data.weekly?.created ?? 0);
+    const votes = Number(data.weekly?.votes ?? 0);
+    const fulfilled = Number(data.weekly?.proofs ?? 0);
+    if (created + votes + fulfilled === 0) return;
+    await notify(snapshot.id, 'weekly_recap', { text: null }, null, { created, votes, fulfilled });
+  }));
+});
+
+const ANALYTICS_EVENTS = new Set([
+  'account_registered',
+  'app_opened',
+  'app_returned',
+  'drift_created',
+  'vote_cast',
+  'case_opened',
+  'roulette_spun',
+  'proof_uploaded',
+]);
+
+export const trackAnalytics = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  const { event, data } = request.data as { event?: unknown; data?: unknown };
+  if (!uid || typeof event !== 'string' || !ANALYTICS_EVENTS.has(event)) {
+    throw new HttpsError('invalid-argument', 'Invalid analytics event.');
+  }
+
+  const source = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+  const safeData = Object.fromEntries(Object.entries(source).slice(0, 8).flatMap(([key, value]) =>
+    /^[a-z][a-z0-9_]{0,31}$/i.test(key) && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+      ? [[key, typeof value === 'string' ? value.slice(0, 80) : value]]
+      : [],
+  ));
+  await db.collection('analyticsEvents').add({ uid, event, data: safeData, createdAt: FieldValue.serverTimestamp() });
+  return { ok: true };
 });
 
 export const appealProofDecision = onCall(async (request) => {

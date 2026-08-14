@@ -9,6 +9,7 @@ import { Toast } from '@/components/ui/Toast';
 import { fontMap } from '@/constants/fonts';
 import { Colors } from '@/constants/tokens';
 import { useRouletteSync } from '@/features/roulette/store/useRouletteStore';
+import { useAnalyticsLifecycle } from '@/hooks/useAnalyticsLifecycle';
 import { useAuthBootstrap } from '@/hooks/useAuth';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import '@/lib/firebase/config';
@@ -19,6 +20,7 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
   useAuthBootstrap();
+  useAnalyticsLifecycle();
   usePushNotifications();
   const profile = useAuthStore((state) => state.profile);
   useRouletteSync(profile);

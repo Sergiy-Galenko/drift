@@ -1,0 +1,8 @@
+appId: com.drift.app
+---
+- launchApp
+- tapOn: "Feed"
+- tapOn: "E2E commitment"
+- tapOn:
+    id: "vote-yes"
+- assertVisible: "STAMP YES"

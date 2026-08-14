@@ -11,8 +11,11 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Colors, F, R, S } from '@/constants/tokens';
 import { subscribeAuthorDrifts } from '@/lib/firebase/drifts';
+import { subscribeRetention } from '@/lib/firebase/retention';
 import { useAuthStore } from '@/stores/authStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { Drift } from '@/types/drift';
+import type { RetentionState } from '@/types/retention';
 
 function dayKey(date: Date): string {
   return format(date, 'yyyy-MM-dd');
@@ -22,10 +25,12 @@ export default function TrackRecordScreen() {
   const router = useRouter();
   const uid = useAuthStore((state) => state.profile?.uid);
   const profile = useAuthStore((state) => state.profile);
+  const { t } = useTranslation();
   const [drifts, setDrifts] = useState<Drift[]>([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [retention, setRetention] = useState<RetentionState | null>(null);
 
   useEffect(() => {
     if (!uid) {
@@ -44,6 +49,15 @@ export default function TrackRecordScreen() {
     });
   }, [attempt, uid]);
 
+  useEffect(() => {
+    if (!uid) {
+      setRetention(null);
+      return undefined;
+    }
+
+    return subscribeRetention(uid, setRetention, () => setRetention(null));
+  }, [uid]);
+
   const heatmap = useMemo(() => {
     const today = startOfDay(new Date());
     const days = eachDayOfInterval({ start: subDays(today, 34), end: today });
@@ -52,6 +66,8 @@ export default function TrackRecordScreen() {
   }, [drifts]);
   const resolved = profile ? profile.driftsExecuted + profile.driftsFailed : 0;
   const fulfillmentRate = resolved > 0 && profile ? Math.round((profile.driftsExecuted / resolved) * 100) : 0;
+  const daily = retention?.daily ?? { created: 0, votes: 0, proofs: 0 };
+  const weekly = retention?.weekly ?? { created: 0, votes: 0, proofs: 0 };
 
   return (
     <View style={styles.root}>
@@ -75,6 +91,16 @@ export default function TrackRecordScreen() {
             <CasePanel style={styles.metric}><Text style={styles.metricValue}>{profile.driftsVotedOn}</Text><Text style={styles.metricLabel} translate>JURY DUTY</Text></CasePanel>
             <CasePanel style={styles.metric}><Text style={styles.metricValue}>{profile.reputationScore}</Text><Text style={styles.metricLabel} translate>REPUTATION</Text></CasePanel>
           </View>
+          <CasePanel>
+            <Text style={styles.panelTitle} translate>TODAY'S MISSIONS</Text>
+            <Text style={styles.mission}>{daily.created > 0 ? '✓' : '○'} {t('Create one public commitment')}</Text>
+            <Text style={styles.mission}>{daily.votes >= 3 ? '✓' : '○'} {t('Cast 3 jury votes')} ({Math.min(daily.votes, 3)}/3)</Text>
+            <Text style={styles.mission}>{daily.proofs > 0 ? '✓' : '○'} {t('File one proof')}</Text>
+          </CasePanel>
+          <CasePanel>
+            <Text style={styles.panelTitle} translate>THIS WEEK</Text>
+            <Text style={styles.mission}>{weekly.created} {t('commitments opened')} · {weekly.votes} {t('votes cast')} · {weekly.proofs} {t('proofs filed')}</Text>
+          </CasePanel>
           <View style={styles.links}>
             <Pressable onPress={() => router.push('/(dossier)/registry')} style={styles.link}><Text style={styles.linkText} translate>OPEN THE REGISTRY</Text></Pressable>
             <Pressable onPress={() => router.push('/(dossier)/summary')} style={styles.link}><Text style={styles.linkText} translate>WEEKLY CASE SUMMARY</Text></Pressable>
@@ -94,6 +120,7 @@ const styles = StyleSheet.create({
   title: { color: Colors.ink, fontFamily: F.family.displayBold, fontSize: F.size.xl, marginTop: S.sm },
   subline: { color: Colors.slate, fontFamily: F.family.bodyRegular, fontSize: F.size.sm, marginTop: S.xs },
   panelTitle: { color: Colors.ink, fontFamily: F.family.monoBold, fontSize: F.size.xs, letterSpacing: 0.7 },
+  mission: { color: Colors.slate, fontFamily: F.family.bodyRegular, fontSize: F.size.sm, marginTop: S.sm },
   heatmap: { flexDirection: 'row', flexWrap: 'wrap', gap: S.xs, marginTop: S.md },
   day: { width: 18, height: 18, borderWidth: S.px, borderColor: Colors.paperLine, borderRadius: R.xs },
   dayActive: { borderColor: Colors.ledger, backgroundColor: Colors.ledger },

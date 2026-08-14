@@ -1,0 +1,21 @@
+appId: com.drift.app
+---
+- launchApp
+- tapOn:
+    id: "tab-create-drift"
+- tapOn:
+    id: "input-decision"
+- inputText: "E2E commitment"
+- tapOn:
+    id: "button-next"
+- tapOn:
+    id: "input-stake"
+- inputText: "E2E stake"
+- tapOn:
+    id: "button-next"
+- tapOn: "Select life category"
+- tapOn:
+    id: "button-next"
+- tapOn:
+    id: "button-launch-drift"
+- assertVisible: "E2E commitment"

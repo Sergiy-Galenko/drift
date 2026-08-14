@@ -1,6 +1,17 @@
+import * as Sentry from '@sentry/react-native';
+
 type LogPayload = string | number | boolean | Error | Record<string, unknown> | null | undefined;
 
 function write(method: 'info' | 'warn' | 'error', payload: LogPayload, meta?: Record<string, unknown>) {
+  if (method === 'error') {
+    Sentry.withScope((scope) => {
+      if (meta) {
+        scope.setExtras(meta);
+      }
+      Sentry.captureException(payload instanceof Error ? payload : new Error(String(payload)));
+    });
+  }
+
   if (!__DEV__) {
     return;
   }

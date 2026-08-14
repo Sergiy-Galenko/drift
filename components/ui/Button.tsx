@@ -15,15 +15,21 @@ type ButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   icon?: ReactNode;
+  testID?: string;
 };
 
-export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, icon }: ButtonProps) {
+function buttonTestId(label: string): string {
+  return `button-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+}
+
+export function Button({ label, onPress, variant = 'primary', disabled = false, loading = false, icon, testID }: ButtonProps) {
   const { t } = useTranslation();
   const isDisabled = disabled || loading;
   const spinnerColor = Colors.dossier;
   return (
     <Pressable
       accessibilityRole="button"
+      testID={testID ?? buttonTestId(label)}
       disabled={isDisabled}
       onPress={onPress}
       style={({ pressed }) => [

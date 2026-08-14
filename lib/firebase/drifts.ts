@@ -11,7 +11,6 @@ import {
   query,
   runTransaction,
   serverTimestamp,
-  updateDoc,
   where,
   writeBatch,
   type DocumentData,
@@ -22,9 +21,10 @@ import {
   type WithFieldValue,
 } from 'firebase/firestore';
 import { getDownloadURL, ref as storageRef, uploadBytesResumable } from 'firebase/storage';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 
-import { app, db, storage } from './config';
+import { db, functions, storage } from './config';
+import { trackEvent } from '@/lib/analytics';
 import { nullableTimestampToDate, timestampToDate } from './timestamps';
 import type { CategoryFilter } from '@/constants/categories';
 import type { CreateDriftInput, Drift, DriftDoc, ReportDoc } from '@/types/drift';
@@ -204,6 +204,7 @@ export async function createDrift(input: CreateDriftInput, author: UserProfile):
     lastActiveAt: serverTimestamp(),
   });
   await batch.commit();
+  trackEvent('drift_created', { poll_type: input.pollType, duration_hours: input.durationHours });
   return nextRef.id;
 }
 
@@ -249,11 +250,11 @@ export async function deleteDrift(driftId: string, authorUid: string): Promise<v
 }
 
 export async function incrementDriftView(driftId: string): Promise<void> {
-  await httpsCallable<{ driftId: string }, { ok: boolean }>(getFunctions(app), 'recordView')({ driftId });
+  await httpsCallable<{ driftId: string }, { ok: boolean }>(functions, 'recordView')({ driftId });
 }
 
 export async function incrementDriftShare(driftId: string): Promise<void> {
-  await updateDoc(driftRef(driftId), { shareCount: increment(1) });
+  await httpsCallable<{ driftId: string }, { ok: boolean }>(functions, 'recordShare')({ driftId });
 }
 
 export async function settleExpiredDriftIfAuthor(drift: Drift, currentUid: string): Promise<void> {
@@ -336,6 +337,7 @@ export async function uploadDriftProof(input: UploadProofInput): Promise<string>
     });
   });
 
+  trackEvent('proof_uploaded', { proof_type: proofType });
   return proofUrl;
 }
 

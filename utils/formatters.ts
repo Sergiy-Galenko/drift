@@ -70,5 +70,7 @@ export function notificationTitle(type: NotificationType): string {
       return t('New reply');
     case 'reputation_milestone':
       return t('Reputation milestone');
+    case 'weekly_recap':
+      return t('Weekly case summary');
   }
 }

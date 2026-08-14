@@ -11,6 +11,10 @@ type InputProps = TextInputProps & {
   right?: ReactNode;
 };
 
+function inputTestId(label?: string): string | undefined {
+  return label ? `input-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}` : undefined;
+}
+
 export const Input = forwardRef<TextInput, InputProps>(function Input({ label, error, right, style, placeholder, ...props }, ref) {
   const { t } = useTranslation();
   return (
@@ -19,6 +23,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input({ label, e
       <View style={styles.inputArea}>
         <TextInput
           ref={ref}
+          testID={props.testID ?? inputTestId(label)}
+          accessibilityLabel={props.accessibilityLabel ?? (label ? t(label) : undefined)}
           placeholder={placeholder ? t(placeholder) : undefined}
           placeholderTextColor={Colors.slate}
           selectionColor={Colors.ledger}

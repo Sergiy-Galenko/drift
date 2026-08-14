@@ -34,6 +34,7 @@ export function VoteButtons({ currentVote, canVote, loadingVote, onVote }: VoteB
       <Animated.View style={[styles.flex, yesStyle]}>
         <Pressable
           accessibilityRole="button"
+          testID="vote-yes"
           disabled={!canVote}
           onPress={() => press('yes')}
           style={({ pressed }) => [
@@ -50,6 +51,7 @@ export function VoteButtons({ currentVote, canVote, loadingVote, onVote }: VoteB
       <Animated.View style={[styles.flex, noStyle]}>
         <Pressable
           accessibilityRole="button"
+          testID="vote-no"
           disabled={!canVote}
           onPress={() => press('no')}
           style={({ pressed }) => [

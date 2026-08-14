@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 
 import { auth, isFirebaseConfigured } from '@/lib/firebase/config';
+import { trackEvent } from '@/lib/analytics';
 import { createUserProfile, getUserByUsername, subscribeUserProfile, updateUserProfile } from '@/lib/firebase/users';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
@@ -222,6 +223,7 @@ export function useAuth() {
           bio: null,
           isAnonymous: false,
         });
+        trackEvent('account_registered');
         return true;
       } catch (error) {
         if (!isAuthProviderDisabled(error)) {

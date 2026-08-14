@@ -13,7 +13,8 @@ export type NotificationType =
   | 'drift_featured'
   | 'comment_on_drift'
   | 'comment_reply'
-  | 'reputation_milestone';
+  | 'reputation_milestone'
+  | 'weekly_recap';
 
 export interface NotificationDoc {
   id: string;

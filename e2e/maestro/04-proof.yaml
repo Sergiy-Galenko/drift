@@ -1,0 +1,11 @@
+appId: com.drift.app
+---
+# Run after the author’s E2E commitment moves to proof_pending in the Firebase Emulator.
+- launchApp
+- tapOn: "Profile"
+- tapOn: "E2E commitment"
+- tapOn: "Upload proof"
+- tapOn: "Choose media"
+# Select a fixture from the device’s media library, then continue.
+- tapOn: "Upload proof"
+- assertVisible: "Proof uploaded"
