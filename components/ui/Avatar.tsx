@@ -13,12 +13,25 @@ type AvatarProps = {
   showReputationRing?: boolean;
 };
 
+const AVATAR_COLORS = ['#FF6666', '#A72BF0', '#66FF66', '#ff9204', '#38F3F3', '#FFF444', '#eda5f0', '#0400FF'] as const;
+
+const getColorFromUsername = (username: string): string => {
+  const hash = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+};
+
+const getFirstLetter = (username: string): string => {
+  if (!username.trim()) return '?';
+  return username.trim().charAt(0).toUpperCase();
+};
+
 export function Avatar({ username, avatarUrl, reputationScore = 50, size = 44, showReputationRing = true }: AvatarProps) {
-  const initial = username.slice(0, 1).toUpperCase();
+  const initial = getFirstLetter(username);
+  const backgroundColor = getColorFromUsername(username);
   return (
     <View style={styles.wrap}>
       {showReputationRing ? <ReputationRing score={reputationScore} size={size + S.sm} strokeWidth={2} /> : null}
-      <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}>
+      <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor }]}>
         {avatarUrl ? (
           <Image
             source={avatarUrl}
